@@ -9,9 +9,10 @@ Erlang Solutions Ltd.
 © 1999–2015 Erlang Solutions Ltd.
 
 ++++
-<link rel="stylesheet" type="text/css" href="svg.css"></link>
-<script type="text/javascript" src="snap.svg-min.js"></script>
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
 ++++
+
 
 Overview: *basic Erlang I*
 --------------------------

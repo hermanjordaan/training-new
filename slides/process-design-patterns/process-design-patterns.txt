@@ -13,6 +13,7 @@ Erlang Solutions Ltd.
 <script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
 ++++
 
+
 Process Design Patterns
 -----------------------
 * Client Server Models
