@@ -1,0 +1,381 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Code Updating</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Code Updating</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_overview_code_updating"><h2>Overview: code updating</h2><div class="ulist"><ul><li><p>Software Upgrade</p></li><li><p>Code Server</p></li><li><p>The .erlang File</p></li></ul></div></section>
+<section id="_software_upgrade"><h2>Software Upgrade</h2><div class="imageblock" style=""><div class="content"><img src="images/software_upgrade_1.png" alt="Software upgrade" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>Two versions of a module may be loaded in the run time system at any one time</p></li><li><p>A process may run either version</p></li></ul></div></section>
+<section id="_software_upgrade_2"><h2>Software Upgrade</h2><div class="imageblock" style=""><div class="content"><img src="images/software_upgrade_2.png" alt="Software upgrade" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>If the process runs the old version and a fully qualified function call is made, the module reference is updated to point to the latest version of the code</p></li></ul></div></section>
+<section id="_software_upgrade_3"><h2>Software Upgrade</h2><div class="imageblock" style=""><div class="content"><img src="images/software_upgrade_3.png" alt="Software upgrade" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>When a third version of a module is loaded, the oldest version is purged and any process still running it is killed</p></li></ul></div></section>
+<section id="_software_upgrade_strong_example_strong"><h2>Software Upgrade: <strong>example</strong></h2><svg id="software_upgrade_example_1" style="width:1090px; height:640px;" viewBox="0 0 1090 640" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">.pt17 {font-size:17pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<script>
+
+var s1 = Snap("#software_upgrade_example_1");
+
+var arrow = s1.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s1.rect(10,10,520,290,0).addClass("line").attr({"stroke-width":1});
+s1.rect(560,10,520,290,0).addClass("line").attr({"stroke-width":1});
+s1.rect(10,340,520,290,0).addClass("line").attr({"stroke-width":1});
+s1.rect(560,340,520,290,0).addClass("line").attr({"stroke-width":1});
+
+// line = 32
+s1.text(15,36,"1> c(s).").addClass("code pt17");
+s1.text(15,68,"{ok, s}").addClass("code pt17");
+s1_g1_1 = s1.text(15,100,"2> {s:s(server1), s:s(server2)}.").addClass("code pt17");
+s1_g1_2 = s1.text(15,132,"{true, true}").addClass("code pt17");
+s1_g2_1 = s1.text(15,164,"3> {s:c(server1,1),s:c(server2,1)}.").addClass("code pt17");
+s1_g2_2 = s1.text(15,196,"{2, 2}").addClass("code pt17");
+
+s1.text(15,366,"-module(s).").addClass("code pt17");
+s1.text(15,398,"-export([s/1, c/2, l/0]).").addClass("code pt17");
+s1.text(15,430,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt17");
+s1.text(15,462,"c(N, X) -> N ! {self(), X},").addClass("code pt17");
+s1.text(15,494,"           receive Y -> Y end.").addClass("code pt17");
+s1.text(15,526,"l() -> ").addClass("code pt17");
+s1.text(15,558,"  receive update -> s:l();").addClass("code pt17");
+s1.text(15,590,"          {Pid, X} -> Pid ! X+X, l()").addClass("code pt17");
+s1.text(15,622,"  end.").addClass("code pt17");
+
+s1_g1_3 = s1.rect(165,295,200,50,15).addClass("server");
+s1_g1_4 = s1.text(210,330,"server1").addClass("darkred");
+s1_g1_5 = s1.path("M365,320 C435,330 465,290 445,337").addClass("line_darkred").attr({"marker-end":marker});
+
+s1_g1_6 = s1.rect(720,295,200,50,15).addClass("server");
+s1_g1_7 = s1.text(775,330,"server2").addClass("darkred");
+s1_g1_8 = s1.path("M720,320 C620,320 690,500 533,500").addClass("line_darkred").attr({"marker-end":marker});
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2, s1_g1_3, s1_g1_4, s1_g1_5, s1_g1_6, s1_g1_7, s1_g1_8).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 400, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 400, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_software_upgrade_strong_example_strong_2"><h2>Software Upgrade: <strong>example</strong></h2><svg id="software_upgrade_example_2" style="width:1090px; height:640px;" viewBox="0 0 1090 640" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">.pt17 {font-size:17pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<script>
+
+var s2 = Snap("#software_upgrade_example_2");
+
+var arrow = s2.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s2.rect(10,10,520,290,0).addClass("line").attr({"stroke-width":1});
+s2.rect(560,10,520,290,0).addClass("line").attr({"stroke-width":1});
+s2.rect(10,340,520,290,0).addClass("line").attr({"stroke-width":1});
+s2.rect(560,340,520,290,0).addClass("line").attr({"stroke-width":1});
+
+// line = 32
+s2.text(15,36,"2> {s:s(server1), s:s(server2)}.").addClass("code pt17");
+s2.text(15,68,"{true, true}").addClass("code pt17");
+s2.text(15,100,"3> {s:c(server1,1),s:c(server2,1)}.").addClass("code pt17");
+s2.text(15,132,"{2, 2}").addClass("code pt17");
+s2_g2_1 = s2.text(15,164,"4> c(s), server1 ! update.").addClass("code pt17");
+s2_g2_2 = s2.text(15,196,"update").addClass("code pt17");
+s2_g4_1 = s2.text(15,228,"5> {s:c(server1,1),s:c(server2,1)}.").addClass("code pt17");
+s2_g4_2 = s2.text(15,260,"{1, 2}").addClass("code pt17");
+
+s2.text(15,366,"-module(s).").addClass("code pt17");
+s2.text(15,398,"-export([s/1, c/2, l/0]).").addClass("code pt17");
+s2.text(15,430,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt17");
+s2.text(15,462,"c(N, X) -> N ! {self(), X},").addClass("code pt17");
+s2.text(15,494,"           receive Y -> Y end.").addClass("code pt17");
+s2.text(15,526,"l() -> ").addClass("code pt17");
+s2.text(15,558,"  receive update -> s:l();").addClass("code pt17");
+s2.text(15,590,"          {Pid, X} -> Pid ! X+X, l()").addClass("code pt17");
+s2.text(15,622,"  end.").addClass("code pt17");
+
+s2.text(565,366,"-module(s).").addClass("code pt17");
+s2.text(565,398,"-export([s/1, c/2, l/0]).").addClass("code pt17");
+s2.text(565,430,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt17");
+s2.text(565,462,"c(N, X) -> N ! {self(), X},").addClass("code pt17");
+s2.text(565,494,"           receive Y -> Y end.").addClass("code pt17");
+s2.text(565,526,"l() -> ").addClass("code pt17");
+s2.text(565,548,"  receive update -> s:l();").addClass("code pt17");
+s2.text(565,590,"          {Pid, X} -> Pid ! X X, l()").addClass("code pt17");
+s2.text(565,590,"                             *").addClass("code pt17 darkred");
+s2.text(565,622,"  end.").addClass("code pt17");
+
+s2.rect(165,295,200,50,15).addClass("server");
+s2.text(210,330,"server1").addClass("darkred");
+
+s2_g1 = s2.path("M365,320 C435,330 465,290 445,337").addClass("line_darkred").attr({"marker-end":marker});
+
+s2_g3 = s2.path("M365,320 C435,330 675,275 635,337").addClass("line_darkred hide").attr({"marker-end":marker});
+
+s2.rect(720,295,200,50,15).addClass("server");
+s2.text(765,330,"server2").addClass("darkred");
+s2.path("M720,320 C620,320 690,500 533,500").addClass("line_darkred").attr({"marker-end":marker});
+
+s2_g2 = s2.g(s2_g2_1, s2_g2_2).addClass("hide");
+s2_g4 = s2.g(s2_g4_1, s2_g4_2).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"0"}, 400, mina.linear); };
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 400, mina.linear, s2_anim3); };
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 400, mina.linear); };
+s2_anim4 = function() { s2_g4.animate({"opacity":"1"}, 400, mina.linear); };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_anim2(); s2_counter++; break};
+    case 2: {s2_anim4(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_software_upgrade_strong_example_strong_3"><h2>Software Upgrade: <strong>example</strong></h2><svg id="software_upgrade_example_3" style="width:1090px; height:640px;" viewBox="0 0 1090 640" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">.pt17 {font-size:17pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<script>
+
+var s3 = Snap("#software_upgrade_example_3");
+
+var arrow = s3.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s3.rect(10,10,520,290,0).addClass("line").attr({"stroke-width":1});
+s3.rect(560,10,520,290,0).addClass("line").attr({"stroke-width":1});
+s3_g6_1 = s3.rect(10,340,520,290,0).addClass("line").attr({"stroke-width":1});
+s3.rect(560,340,520,290,0).addClass("line").attr({"stroke-width":1});
+
+// line = 32
+s3.text(15,36,"5> {s:c(server1,1),s:c(server2,1)}.").addClass("code pt17");
+s3.text(15,68,"{1, 2}").addClass("code pt17");
+s3_g1_1 = s3.text(15,100,"6> c(s), server1 ! update.").addClass("code pt17");
+s3_g1_2 = s3.text(15,132,"update").addClass("code pt17");
+s3_g7_1 = s3.text(15,164,"7> catch s:c(server2, 1).").addClass("code pt17");
+s3_g7_2 = s3.text(15,196,"{'EXIT', {badarg, [{s, c, 2}, ...").addClass("code pt17");
+s3_g8_1 = s3.text(15,228,"8> s:c(server1, 4).").addClass("code pt17");
+s3_g8_2 = s3.text(15,260,"4").addClass("code pt17");
+
+s3.text(565,36,"-module(s).").addClass("code pt17");
+s3.text(565,68,"-export([s/1, c/2, l/0]).").addClass("code pt17");
+s3.text(565,100,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt17");
+s3.text(565,132,"c(N, X) -> N!{self(), X),").addClass("code pt17");
+s3.text(565,164,"           receive Y -> Y end.").addClass("code pt17");
+s3.text(565,196,"l() ->").addClass("code pt17");
+s3.text(565,228,"  receive update -> s:l();").addClass("code pt17");
+s3.text(565,260,"          {Pid, X} -> Pid ! X, l()").addClass("code pt17");
+s3.text(565,292,"  end.").addClass("code pt17");
+
+s3_g6_2 = s3.text(15,366,"-module(s).").addClass("code pt17");
+s3_g6_3 = s3.text(15,398,"-export([s/1, c/2, l/0]).").addClass("code pt17");
+s3_g6_4 = s3.text(15,430,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt17");
+s3_g6_5 = s3.text(15,462,"c(N, X) -> N ! {self(), X},").addClass("code pt17");
+s3_g6_6 = s3.text(15,494,"           receive Y -> Y end.").addClass("code pt17");
+s3_g6_7 = s3.text(15,526,"l() -> ").addClass("code pt17");
+s3_g6_8 = s3.text(15,558,"  receive update -> s:l();").addClass("code pt17");
+s3_g6_9 = s3.text(15,590,"          {Pid, X} -> Pid ! X+X, l()").addClass("code pt17");
+s3_g6_10 = s3.text(15,622,"  end.").addClass("code pt17");
+
+s3.text(565,366,"-module(s).").addClass("code pt17");
+s3.text(565,398,"-export([s/1, c/2, l/0]).").addClass("code pt17");
+s3.text(565,430,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt17");
+s3.text(565,462,"c(N, X) -> N ! {self(), X},").addClass("code pt17");
+s3.text(565,494,"           receive Y -> Y end.").addClass("code pt17");
+s3.text(565,526,"l() -> ").addClass("code pt17");
+s3.text(565,548,"  receive update -> s:l();").addClass("code pt17");
+s3.text(565,590,"          {Pid, X} -> Pid ! X X, l()").addClass("code pt17");
+s3.text(565,590,"                             *").addClass("code darkred pt17");
+s3.text(565,622,"  end.").addClass("code pt17");
+
+s3_g2 = s3.path("M365,320 C435,330 675,275 635,337").addClass("line_darkred").attr({"marker-end":marker});
+s3_g3 = s3.path("M365,320 C465,320 440,155 560,155").addClass("line_darkred hide").attr({"marker-end":marker});
+
+s3_g4 = s3.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform("t712 120");
+
+s3_g5_1 = s3.rect(720,295,200,50,15).addClass("server");
+s3_g5_2 = s3.text(765,330,"server2").addClass("darkred");
+s3_g5_3 = s3.path("M720,320 C620,320 690,500 533,500").addClass("line_darkred").attr({"marker-end":marker});
+
+s3_g1 = s3.g(s3_g1_1, s3_g1_2).addClass("hide");
+s3_g5 = s3.g(s3_g5_1, s3_g5_2, s3_g5_3);
+s3_g6 = s3.g(s3_g6_1, s3_g6_2, s3_g6_3, s3_g6_4, s3_g6_5, s3_g6_6, s3_g6_7, s3_g6_8, s3_g6_9, s3_g6_10);
+s3_g7 = s3.g(s3_g7_1, s3_g7_2).addClass("hide");
+s3_g8 = s3.g(s3_g8_1, s3_g8_2).addClass("hide");
+
+s3.rect(165,295,200,50,15).addClass("server");
+s3.text(210,330,"server1").addClass("darkred");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 250, mina.linear, s3_anim2); };
+s3_anim2 = function() { s3_g2.animate({"opacity":"0"}, 250, mina.linear, s3_anim3); };
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 375, mina.linear, s3_anim4); };
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 375, mina.linear, s3_anim5); };
+s3_anim5 = function() {
+    s3_g4.animate({"opacity":"0"}, 375, mina.linear);
+    s3_g5.animate({"opacity":"0"}, 375, mina.linear);
+    s3_g6.animate({"opacity":"0"}, 375, mina.linear);
+  };
+s3_anim6 = function() { s3_g7.animate({"opacity":"1"}, 500, mina.linear, s3_anim7); };
+s3_anim7 = function() { s3_g8.animate({"opacity":"1"}, 500, mina.linear); };
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim6(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_software_upgrade_4"><h2>Software Upgrade</h2><div class="ulist"><ul><li><p>Code is loaded in the run time system by:</p><div class="ulist"><ul><li><p>Calling a function in a module which is not loaded</p></li><li><p>Compiling the module using <strong>c(Module)</strong></p></li><li><p>Explicitly loading it with <strong>code:load_file(Module)</strong></p></li><li><p>From the shell, use the <strong>l(Module)</strong> command</p></li></ul></div></li><li><p>Function calls with the module prefixed are called <strong>fully qualified function calls</strong> (<strong>M:F(Arg1, &#8230;&#8203;)</strong>)</p></li><li><p>If the function call is not fully qualified, the process will continue running the old version of the code</p></li></ul></div></section>
+<section id="_code_server"><h2>Code Server</h2><div class="ulist"><ul><li><p>The code server handles the dynamic loading of modules during run time</p></li><li><p>A module is loaded in the system the first time a fully qualified call is made to it</p></li><li><p>The code server will search the code path sequentially for a compiled version of the module</p></li></ul></div></section>
+<section id="_code_server_2"><h2>Code Server</h2><div class="ulist"><ul><li><p>The code search path consists of a list of directories</p></li><li><p>The directory elements are sequentially searched for the module we want to load</p></li><li><p>Search paths can be viewed with <strong>code:get_path()</strong></p></li><li><p>Default directories include:</p><div class="ulist"><ul><li><p>"." (Current working directory), $ERLANGROOT/lib/</p></li></ul></div></li><li><p>Directories can be added:</p><div class="ulist"><ul><li><p>At the beginning with code:add_patha(Dir)</p></li><li><p>At the end by using code:add_pathz(Dir)</p></li></ul></div></li></ul></div></section>
+<section id="_code_server_3"><h2>Code Server</h2><div class="literalblock"><div class="content"><pre>1&gt; code:add_patha("/Users/ferd/erlang").
+true
+2&gt; code:get_path().
+["/Users/ferd/erlang",
+ ".",
+ "/opt/local/lib/erlang/lib/kernel-2.14/ebin",
+ "/opt/local/lib/erlang/lib/stdlib-1.17/ebin",
+ "/opt/local/lib/erlang/lib/xmerl-1.2.5/ebin",
+ "/opt/local/lib/erlang/lib/wx-0.98.6/ebin",
+ "/opt/local/lib/erlang/lib/odbc-2.10.8",
+ "/opt/local/lib/erlang/lib/observer-0.9.8.3/ebin",
+ [...]|...]
+ </pre></div></div></section>
+<section id="_code_server_4"><h2>Code Server</h2><div class="ulist"><ul><li><p>The code server can remove the old version of a module</p></li><li><p><strong>code:purge(Module)</strong> will remove the old version and kill all processes running it, returning true if any process was killed</p></li><li><p><strong>code:soft_purge(Module)</strong> will remove the old version if no process is running it, returning true if the old version was removed</p></li></ul></div></section>
+<section id="_software_upgrade_strong_example_strong_4"><h2>Software Upgrade: <strong>example</strong></h2><svg id="software_upgrade_example_4" style="width:1000px; height:640px;" viewBox="0 0 1000 640" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">.pt20 {font-size:20pt !important;} .pt18 {font-size:18pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<script>
+
+var s4 = Snap("#software_upgrade_example_4");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.rect(10,10,570,580).addClass("rect_code")
+s4.text(15,40,"1> c(s), c(s), code:soft_purge(s).").addClass("code pt20");
+s4.text(15,80,"true").addClass("code pt20");
+s4_g2_1 = s4.text(15,120,"2> s:s(server).").addClass("code pt20");
+s4_g2_2 = s4.text(15,160,"true").addClass("code pt20");
+s4_g3_1 = s4.text(15,200,"3> c(s), code:soft_purge(s).").addClass("code pt20");
+s4_g3_2 = s4.text(15,240,"false").addClass("code pt20");
+s4_g4_1 = s4.text(15,280,"4> s:c(server, 1).").addClass("code pt20");
+s4_g4_2 = s4.text(15,320,"2").addClass("code pt20");
+s4_g5_1 = s4.text(15,360,"5> code:purge(s).").addClass("code pt20");
+s4_g5_2 = s4.text(15,400,"true").addClass("code pt20");
+s4_g6_1 = s4.text(15,440,"6> catch s:c(server, 1).").addClass("code pt20");
+s4_g6_2 = s4.text(15,480,"{'EXIT', {badarg, [{s, c, 2}, ...").addClass("code pt20");
+s4_g7_1 = s4.text(15,520,"7> c(s), code:purge(s).").addClass("code pt20");
+s4_g7_2 = s4.text(15,560,"false").addClass("code pt20");
+
+s4_g1_1 = s4.rect(660,40,285,140).attr({"fill":"#797979"});
+s4_g1_2 = s4.text(682,120,"server1 = s:l()").addClass("code pt20 bold").attr({"fill":"#F2F2F2"});
+s4_g1_3 = s4.path("M661,179 l-45,104").addClass("line_darkred").attr({"marker-end":marker});
+
+s4_g1 = s4.g(s4_g1_1, s4_g1_2, s4_g1_3).addClass("hide");
+s4_g2 = s4.g(s4_g2_1, s4_g2_2).addClass("hide");
+s4_g3 = s4.g(s4_g3_1, s4_g3_2).addClass("hide");
+s4_g4 = s4.g(s4_g4_1, s4_g4_2).addClass("hide");
+s4_g5 = s4.g(s4_g5_1, s4_g5_2).addClass("hide");
+s4_g6 = s4.g(s4_g6_1, s4_g6_2).addClass("hide");
+s4_g7 = s4.g(s4_g7_1, s4_g7_2).addClass("hide");
+
+s4.rect(447,290,540,330).addClass("rect_code")
+s4.text(452,320,"-module(s).").addClass("code pt18");
+s4.text(452,355,"-export([s/1, c/2, l/0]).").addClass("code pt18");
+s4.text(452,390,"s(N) -> register(N, spawn(s,l,[])).").addClass("code pt18");
+s4.text(452,425,"c(N, X) -> N!{self(), X),").addClass("code pt18");
+s4.text(452,460,"           receive Y -> Y end.").addClass("code pt18");
+s4.text(452,495,"l() ->").addClass("code pt18");
+s4.text(452,530,"  receive update -> s:l();").addClass("code pt18");
+s4.text(452,565,"          {Pid,X} -> Pid ! X+X, l()").addClass("code pt18");
+s4.text(452,600,"  end.").addClass("code pt18");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"0"}, 375, mina.linear); };
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: { s4_g1.animate({"opacity":"1"}, 375, mina.linear); s4_g2.animate({"opacity":"1"}, 250, mina.linear); s4_counter++; break };
+    case 2: { s4_g3.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break };
+    case 3: { s4_g4.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break };
+    case 4: { s4_g5.animate({"opacity":"1"}, 375, mina.linear, s4_anim1); s4_counter++; break };
+    case 5: { s4_g6.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break };
+    case 6: { s4_g7.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break };
+    case 7: { s4_g8.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>If the class is good, mention sticky directories. E.g. if you name a module with the same name as a module in a sticky dir, you will get an error.</p></div></aside></section>
+<section id="_the_erlang_file"><h2>The .erlang File</h2><div class="ulist"><ul><li><p>Placing valid Erlang expressions in a <strong>.erlang</strong> file will result in these expressions being executed every time the ERTS (Erlang Run Time System) is started</p></li><li><p>The file is placed in the user&#8217;s home directory</p></li><li><p>It is useful for setting paths to your own modules and tools, or other common expressions such as:</p><div class="ulist"><ul><li><p><code><strong>code:add_patha(Path).</strong></code></p></li><li><p><code><strong>erlang:set_cookie(node(), Cookie).</strong></code></p></li><li><p><code><strong>io:format(Message).</strong></code></p></li></ul></div></li></ul></div></section>
+<section id="_summary_strong_code_updating_strong"><h2>Summary: <strong>code updating</strong></h2><div class="ulist"><ul><li><p>Software Upgrade</p></li><li><p>Code Server</p></li><li><p>The .erlang File</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'none',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>
