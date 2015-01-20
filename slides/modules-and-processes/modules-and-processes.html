@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Modules and Processes</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Modules and Processes</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_modules_and_processes"><h2>Modules and Processes</h2><div class="ulist"><ul><li><p>Modules</p></li><li><p>System Information</p><div class="ulist"><ul><li><p>Processes</p></li><li><p>Registered Names</p></li><li><p>Saving Calls</p></li></ul></div></li><li><p>Other Process Issues</p></li></ul></div></section>
+<section id="_modules"><h2>Modules</h2><div class="ulist"><ul><li><p>A bug is solved and a patch is loaded in the run time system</p></li><li><p>The bug is still there</p></li><li><p>What went wrong?</p><div class="ulist"><ul><li><p>Loading of the .beam file failed</p></li><li><p>The .beam file was not first in the code search path</p></li><li><p>The .beam file is not in the search path</p></li><li><p>The .beam file hasn&#8217;t been compiled</p></li></ul></div></li><li><p>How do we get detailed module information?</p></li></ul></div></section>
+<section id="_modules_2"><h2>Modules</h2><div class="ulist"><ul><li><p><strong>m(ModuleName)</strong></p></li><li><p>Provides a quick way of printing module information.</p></li><li><p>It always picks the newest (last loaded) version.</p></li><li><p>Information includes</p><div class="ulist"><ul><li><p>Compile time and date</p></li><li><p>Location of the byte code</p></li><li><p>Compile options</p></li><li><p>Exported functions</p></li><li><p>If available, source file location</p></li></ul></div></li></ul></div></section>
+<section id="_modules_3"><h2>Modules</h2><div class="literalblock"><div class="content"><pre>1&gt; m(lists).
+Module lists compiled: Date: June 2 2011, Time: 18.58
+Compiler options:  [{no_auto_import,[{max,2}]},
+                    {inline,[{merge3_12,7}, ...]
+Object file: /usr/local/Cellar/erlang/R14B03/lib/erlang/lib/stdlib-1.17.4/ebin/lists.beam
+Exports:
+all/2                         nthtail/2
+...                           ...</pre></div></div>
+<div class="ulist"><ul><li><p>Was the module compiled?</p></li><li><p>Is the module in the code search path?</p></li><li><p>Is it first in the code search path?</p></li></ul></div></section>
+<section id="_modules_4"><h2>Modules</h2><div class="ulist"><ul><li><p><strong>Module:module_info()</strong></p></li><li><p>Returns a list of tuples with module information.</p><div class="ulist"><ul><li><p>Function exports</p></li><li><p>Module attributes</p></li><li><p>Compile time and date</p></li><li><p>Compiler version</p></li><li><p>Compiler options such as</p><div class="ulist"><ul><li><p>Macro directives</p></li><li><p>Include paths</p></li><li><p>Out directory for compiled modules</p></li></ul></div></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Point out that because they&#8217;re tuples, the information bits returned can be used by other Erlang programs. <strong>*</strong></p></div></aside></section>
+<section id="_modules_5"><h2>Modules</h2><svg id="modules_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#modules_1");
+
+s1.text(30,50,"%%% Purpose : The resource server").addClass("code");
+s1.text(30,94,"-module(server).").addClass("code");
+s1.text(30,138,"-author('trainers@erlang-solutions.com').").addClass("code");
+s1.text(30,182,"-behaviour(gen_server).").addClass("code");
+s1.text(30,226,"-vsn(r7a).").addClass("code");
+s1.text(30,270,"").addClass("code");
+s1.text(30,314,"%% Exports").addClass("code");
+s1.text(30,358,"-export([start_link/0, stop/0, allocate/0, deallocate/1]).").addClass("code");
+s1.text(30,402,"-export([init/1, handle_call/3, terminate/2]).").addClass("code");
+s1.text(30,446,"").addClass("code");
+s1.text(30,490,"%%% API").addClass("code");
+s1.text(30,534,"start_link() ->").addClass("code");
+s1.text(30,578,"    gen_server:start_link({local,?MODULE}, ?MODULE,[],[]).").addClass("code");
+
+s1_g1_1 = s1.rect(20,64,735,176,12).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});
+s1_g1_2 = s1.text(800,140,"Module").addClass("darkred");
+s1_g1_3 = s1.text(785,175,"attributes").addClass("darkred");
+
+s1_g2_1 = s1.rect(20,328,1030,88,12).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});
+s1_g2_2 = s1.text(890,265,"Exported").addClass("darkred");
+s1_g2_3 = s1.text(888,300,"functions").addClass("darkred");
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2, s1_g1_3).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 500, mina.linear); }
+s1_anim2 = function() { s1_g1.animate({"opacity":"0"}, 250, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g2.animate({"opacity":"1"}, 500, mina.linear); }
+s1_anim4 = function() { s1_g2.animate({"opacity":"0"}, 250, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim2(); s1_counter++; break};
+    case 3: {s1_anim4(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_modules_6"><h2>Modules</h2><svg id="modules_2" style="width:1100px; height:640px;" viewBox="0 0 1100 640" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#modules_2");
+
+s2.text(30,76,"1> server:module_info().").addClass("code");
+s2.text(30,120,"[{exports,[{start_link,0},  {stop,0}, {allocate,0},").addClass("code");
+s2.text(30,164,"           {deallocate, 1}, {init,1},{handle_call,3},").addClass("code");
+s2.text(30,208,"           {terminate,2}]},").addClass("code");
+s2.text(30,252," {imports,[]},").addClass("code");
+s2.text(30,296," {attributes,[{author,['trainers@erlang-solutions.com']},").addClass("code");
+s2.text(30,340,"              {behaviour,[gen_server]},").addClass("code");
+s2.text(30,384,"              {vsn,[r7a]}]},").addClass("code");
+s2.text(30,428," {compile,[{options,[{cwd,\"/Users/.../\"},").addClass("code");
+s2.text(30,472,"                     {outdir,\"/Users/.../\"}]},").addClass("code");
+s2.text(30,516,"           {version,\"4.7.4\"},").addClass("code");
+s2.text(30,560,"           {time,{2011,9,7,12,34,30}},").addClass("code");
+s2.text(30,604,"           {source,\"/Users/.../server.erl\"}]}]").addClass("code");
+
+s2_g1_1 = s2.rect(20,88,940,132,12).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});
+s2_g1_2 = s2.text(802,35,"Exported").addClass("darkred");
+s2_g1_3 = s2.text(800,70,"functions").addClass("darkred");
+
+s2_g2_1 = s2.rect(20,264,995,132,12).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});
+s2_g2_2 = s2.text(870,345,"Module").addClass("darkred");
+s2_g2_3 = s2.text(855,380,"attributes").addClass("darkred");
+
+s2_g3_1 = s2.rect(20,396,825,220,12).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});
+s2_g3_2 = s2.text(900,475,"Compile").addClass("darkred");
+s2_g3_3 = s2.text(925,510,"time,").addClass("darkred");
+s2_g3_4 = s2.text(875,545,"options and").addClass("darkred");
+s2_g3_5 = s2.text(900,580,"versions").addClass("darkred");
+
+s2_g1 = s2.g(s2_g1_1, s2_g1_2, s2_g1_3).addClass("hide");
+s2_g2 = s2.g(s2_g2_1, s2_g2_2, s2_g2_3).addClass("hide");
+s2_g3 = s2.g(s2_g3_1, s2_g3_2, s2_g3_3, s2_g3_4, s2_g3_5).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 500, mina.linear); }
+s2_anim2 = function() { s2_g1.animate({"opacity":"0"}, 250, mina.linear, s2_anim3); }
+s2_anim3 = function() { s2_g2.animate({"opacity":"1"}, 500, mina.linear); }
+s2_anim4 = function() { s2_g2.animate({"opacity":"0"}, 250, mina.linear, s2_anim5); }
+s2_anim5 = function() { s2_g3.animate({"opacity":"1"}, 500, mina.linear); }
+s2_anim6 = function() { s2_g3.animate({"opacity":"0"}, 250, mina.linear); }
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim2(); s2_counter++; break};
+    case 3: {s2_anim4(); s2_counter++; break};
+    case 4: {s2_anim6(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_system_information"><h2>System Information</h2><div class="ulist"><ul><li><p>A system is running in embedded mode.</p><div class="ulist"><ul><li><p>It can only be accessed through an ssh session.</p></li></ul></div></li><li><p>You get intermittent crashes at large (days) intervals.</p></li><li><p>The logs are too large and generic to be of any use.</p></li><li><p>The existing debugging tools provide no help.</p></li><li><p>How to retrieve system information?</p></li></ul></div></section>
+<section id="_system_information_2"><h2>System Information</h2><div class="ulist"><ul><li><p><strong>Solution</strong>: use system BIFs</p></li><li><p>System information BIFs can be used to retrieve system information.</p></li><li><p>They provide a good snapshot of the state of the processes.</p></li><li><p>They can be used through a text based interface.</p></li><li><p>No need to recompile the code.</p></li><li><p>Do not affect the real time properties of the system.</p></li></ul></div></section>
+<section id="_system_information_strong_processes_strong"><h2>System Information: <strong>Processes</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>processes()</strong></dt><dd><p>BIF returning a list of all processes on the node</p><div class="ulist"><ul><li><p>Can be used in programs and in the Erlang shell</p></li></ul></div></dd><dt class="hdlist1"><strong>i()</strong></dt><dd><p>Prints the list of processes with extra information:</p><div class="ulist"><ul><li><p>Pid and names,</p></li><li><p>Initial and current module and function calls</p></li><li><p>Heap size, stack size, reductions</p></li><li><p>Number of unread messages</p></li></ul></div></dd></dl></div>
+<div class="paragraph"><p>&#160;&#160;&#160;&#160;Can only be used from the shell</p></div></section>
+<section id="_system_information_strong_processes_strong_2"><h2>System Information: <strong>Processes</strong></h2><div class="pre">1> processes().
+[<0.0.0>,<0.3.0>,<0.5.0>,<0.6.0>,<0.8.0>,<0.9.0>,<0.10.0>,
+ <0.11.0>,<0.12.0>,<0.13.0>,<0.14.0>,<0.15.0>, ...,
+ <0.23.0>,<0.24.0>,<0.25.0>,<0.26.0>,<0.27.0>,<0.31.0>]
+2> i().
+<span class="redcode">Pid           Initial Call           Heap     Reds Msgs
+Registered    Current Function       Stack              </span>
+<0.0.0>       otp_ring0:start/2      1597     2814    0
+init          init:loop/1            2
+<0.3.0>       erlang:apply/2         2584   196279    0
+erl..._loader erl..._loader:loop/3   6
+<0.5.0>       gen_event:init_it/6    610      226     0
+error_logger  gen_event:fetch_msg/5  8
+...
+</div></section>
+<section id="_system_information_strong_processes_strong_3"><h2>System Information: <strong>Processes</strong></h2><div class="ulist"><ul><li><p>process_info(Pid [, Tag]).</p></li><li><p>BIF returning one or all of the process attributes:</p><div class="ulist"><ul><li><p>{initial_call, {M,F,A}}, {current_function, {M,F,A}}</p></li><li><p>{registered_name, Atom},</p></li><li><p>{error_handler, Module},</p></li><li><p>{trap_exit, true | false}, {links, Pids},</p></li><li><p>{status, waiting | running | runnable},</p></li><li><p>{messages, Msgs}, {message_queue_len, N},</p></li><li><p>{stack_size, Size}, {heap_size, Size}, {reductions, N},</p></li><li><p>etc.</p></li></ul></div></li></ul></div></section>
+<section id="_system_information_strong_processes_strong_4"><h2>System Information: <strong>Processes</strong></h2><div class="pre"><span class="redcode">1> process_info(whereis(error_logger)).</span>
+[{registered_name,error_logger},
+ {current_function,{gen_event,fetch_msg,5}},
+ {initial_call,{proc_lib,init_p,5}},
+ {status,waiting}, {message_queue_len,0},
+ {messages,[]},
+ {links,[<0.0.0>,<0.23.0>]},
+ {dictionary,[{'$ancestors',[<0.2.0>]}, ...}]},
+ {trap_exit,true}, {error_handler,error_handler},
+ {priority,normal}, {group_leader,<0.23.0>},
+ {total_heap_size,987},
+ {heap_size,610},
+ {stack_size,8},
+ ...
+</div></section>
+<section id="_system_information_strong_registered_names_strong"><h2>System Information: <strong>Registered Names</strong></h2><div class="pre"><span class="redcode">2> regs().</span>
+** Registered procs on node nonode@nohost **
+<span class="redcode">Name             Pid      Initial Call         Reds Msgs</span>
+application_cont <0.6.0>  erlang:apply/2        436    0
+code_server      <0.18.0> erlang:apply/2     156896    0
+erl_prim_loader  <0.3.0>  erlang:apply/2     197318    0
+error_logger     <0.5.0>  gen_event:init_it/6   226    0
+file_server_2    <0.17.0> file_server:init/1     84    0
+global_group     <0.16.0> global_group:init/1    59    0
+global_name_serv <0.12.0> global:init/1          50    0
+inet_db          <0.15.0> inet_db:init/1        256    0
+...
+** Registered ports on node nonode@nohost **
+<span class="redcode">Name                  Id              Command</span>
+</div></section>
+<section id="_system_information_strong_saving_calls_strong"><h2>System Information: <strong>Saving Calls</strong></h2><div class="ulist"><ul><li><p><strong>process_flag(save_calls, N) </strong> <br>
+<strong>process_info(Pid, last_calls</strong>)</p></li><li><p>Activates call saving mode</p></li><li><p>Saves N (1 .. 10,000) most recent:</p><div class="ulist"><ul><li><p>Global function calls</p></li><li><p>BIF calls</p></li><li><p>Sending/receiving messages</p></li></ul></div></li><li><p>Has to be called by the process saving calls</p></li><li><p>process_info/2 retrieves the calls</p></li></ul></div></section>
+<section id="_system_information_strong_saving_calls_strong_2"><h2>System Information: <strong>Saving Calls</strong></h2><div class="literalblock"><div class="content"><pre>1&gt; process_flag(save_calls, 10).
+0
+2&gt; Integer = 1234.
+1234
+3&gt; process_info(self(), last_calls).
+{last_calls,[{lists,reverse,1},   {erlang,self,0},
+             {orddict,to_list,1}, {lists,foldl,3},
+             {orddict,find,2},    {orddict,to_list,1},
+             {lists,foldl,3},     {orddict,find,2},
+             {lists,reverse,1},              {erlang,process_info,2}]}
+ 
+ 
+ </pre></div></div></section>
+<section id="_system_information_strong_saving_calls_strong_3"><h2>System Information: <strong>Saving Calls</strong></h2><div class="ulist"><ul><li><p><strong>erlang:process_display(Pid, backtrace).</strong></p></li><li><p>Writes the information of the process on Standard Error</p></li><li><p>It will display information on the</p><div class="ulist"><ul><li><p>Stack</p></li><li><p>The Call Chain</p></li></ul></div></li><li><p>The most recent data is printed last</p></li><li><p><strong>process_info(Pid, backtrace)</strong> returns a binary containing a string with the information</p></li></ul></div></section>
+<section id="_system_information_strong_saving_calls_strong_4"><h2>System Information: <strong>Saving Calls</strong></h2><div class="pre"><span class="redcode">4> erlang:process_display(self(), backtrace).</span>
+Program counter: 0x0000000010668028 (unknown function)
+CP: 0x0000000011480448 (erl_eval:do_apply/5 + 2328)
+
+0x0000000012352da0 Return addr 0x0000000011457a70 (shell:exprs/7 + 680)
+y(0)     [{'Integer',1234}]
+y(1)     []
+y(2)     none
+
+0x0000000012352dc0 Return addr 0x0000000011457180 (shell:eval_exprs/7 + 144)
+y(0)     []
+...
+</div>
+<aside class="notes"><div class="paragraph"><p>The code shows the stack trace of the shell process trying to evaluate code.</p></div></aside></section>
+<section id="_system_information_3"><h2>System Information</h2><div class="ulist"><ul><li><p>BIFs can be used to write meta-system programs.</p></li><li><p>Poll the system to detect or break deadlocks.</p></li><li><p>Poll  thesystem to detect processes under heavy load.</p></li><li><p>Analyse system performance.</p></li><li><p>Gather useful data needed to solve hard to detect bugs.</p></li></ul></div></section>
+<section id="_other_process_issues"><h2>Other Process Issues</h2><div class="ulist"><ul><li><p><strong>erlang:suspend_process(Pid) </strong><br>
+<strong>erlang:resume_process(Pid)</strong></p></li><li><p>Suspends and resumes a process</p></li><li><p>Excellent to recreate timing-related bugs</p></li><li><p>Should only be used for testing and debugging purposes.</p></li></ul></div></section>
+<section id="_modules_and_processes_2"><h2>Modules and Processes</h2><div class="ulist"><ul><li><p>Modules</p></li><li><p>System Information</p><div class="ulist"><ul><li><p>Processes</p></li><li><p>Registered Names</p></li><li><p>Saving Calls</p></li></ul></div></li><li><p>Other Process Issues</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

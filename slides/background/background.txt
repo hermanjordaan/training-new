@@ -1,0 +1,203 @@
+Background
+==========
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script>
+++++
+
+
+Background
+----------
+* The Problem
+* Problem Domain
+* Erlang Properties
+* Important Dates
+* Who is using Erlang?
+* Erlang References
+* What's in a name?
+
+++++
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script>
+++++
+
+
+The problem
+-----------
+* Ericsson has a “best seller” product (the AXE telephone exchanges)
+* The product is very successful, but costly and difficult to maintain
+
+++++
+<div style="margin:50px auto;"">
+  <img src="images/ericsson.png" style="height:100px; width:auto; float:left; margin-top:120px;" />
+  <img src="images/axe.jpg" style="height:auto; width:400px; float:left;" />
+</div>
+++++
+
+
+The problem
+-----------
+[role="darkred"]
+* How to simplify the developing and maintenance processes?
+
+image::images/maintain.jpg[Maintenance, 800, auto]
+
+
+Problem domain
+--------------
+++++
+<div style="position:absolute; top:0; left:0; z-index:1;">
+<svg id="problem_domain" style="height:800px; width:1200px;">
+<script>
+  
+var s1 = Snap("#problem_domain");
+
+var s1_g1 = s1.text(300,100,"Not Just Telecom").transform("r31.5").attr({"fill":"red", "font-size":"72pt"}).addClass("hide");
+
+s1.click( function() { s1_g1.animate({"opacity":"0.7"}, 750) } );
+
+</script>
+</svg>
+</div>
+++++
+
+[role="closer"]
+* Actions must be performed at a certain point in time or within a certain time.
+* System may be distributed over several computers.
+* The system is used to control hardware.
+* The software system is very large.
+* The system exhibits complex functionality such as feature interaction.
+* The systems should be in continuous operation over many years.
+* Software maintenance (reconfiguration etc.) should be performed without stopping the system.
+* There are stringent quality, and reliability requirements.
+* Fault tolerance both to hardware failures, and software errors, must be provided.
+* The system must be able to handle very large numbers of concurrent activities.
+
+[role="ref"]
+Bjarne Däcker, November 2000 - Licentiate Thesis
+
+
+Erlang *Properties*
+-------------------
+*Declarative*::
+Functional programming language; high abstraction level; pattern matching and concise readable programs.
+
+*Concurrency*::
+Either transparent or explicit concurrency; lightweight processes and highly scalable.
+
+*Soft Real-Time*::
+Response times in the order of milliseconds; per-process garbage collection.
+
+
+Erlang *Properties*
+-------------------
+*Robustness*::
+Simple and consistent error recovery; supervision hierarchies and "Programming for the correct case".
+
+*Distribution*::
+Explicit or transparent distribution; network-aware runtime system.
+
+*Hot code loading*::
+Easily change code in a running system; enables non-stop operations; simplifies testing.
+
+
+Erlang *Properties*
+-------------------
+*External interfaces*::
+"Ports" to the outside world behave as Erlang processes.
+
+*Portability*::
+Erlang runs on any UNIX, UNIX-like, Windows and OSX operating system; it also runs on Android, VX Works; it supports heterogenous networks.
+
+*SMP Support*::
+Symmetric multiprocessing support; takes full advantages of multicore architectures.
+
+Important Dates
+---------------
+
+image::images/dates.png[Timeline, auto, auto]
+
+[NOTE.speaker]
+--
+Computer Science Lab founded under the direction of Bjarne Dacker, employing Mike Williams, Robert Virding and Joe Armstrong, to mention but a few.  +  
+1987: Experiments were with ML, Prolog, Ada, Modula, Chill, Smalltalk, Eri Pascal and Plex  +  
+1991: First virtual Machine was migrated from Prolog to C by Mike Williams  +  
+First Product: Mobility Server, roaming over DECT networks, small, private digital networks. It was a small team.  +  
+1994: After First Product, feedback went straight back to the language inventors.  +  
+1995: Major projects included the ANX - Ericsson’s Broadband Solution, GPRS – Packet Switching over GSM, AXD301 Switch – An Asynchronous Transfer Mode (ATM) Switch.  +  
+In parallel, the OTP project was started, handling design patterns and middleware.
+--
+
+
+Who is using Erlang?
+--------------------
+
+image::images/logos.png[Users, auto, auto]
+
+
+Erlang books
+------------
+
+image::images/books.png[Books, auto, auto]
+
+
+Erlang References
+-----------------
+*Official Home Page*::
+http://www.erlang.org
+
+*Source Code*::
+https://github.com/erlang/otp
+
+*Binary Packages, News, Events*::
+https://www.erlang-solutions.com
+
+*Community*::
+https://erlangcentral.org
+
+*Conferences*::
+http://www.erlang-factory.com
+
+*Resources*::
+https://github.com/0xAX/erlang-bookmarksErlang-bookmarks
+
+
+What's in a name?
+-----------------
+[role="left"]
+image::images/Erlang.png[Erlang, auto, 350]
+
+[role="right"]
+* *Erlang, Agner Krarup, 1878-1929*
+** Danish mathematician. One of the founders of the theory of tele-traffic and queue theory used for dimensioning telephone exchanges and networks
+* *pass:q[<u>                Aⁿ/n!                </u>]* +  
+*1+ A + A²/2! + ... + Aⁿ/n!*
+** Erlang's formula. This formula computes the probability that all lines are busy in a system with *n* lines and a total traffic intensity *A* (measured in erlang)
+* *erlang*
+** Unit of measurement for traffic intensity, e.g. the average number of simultaneous calls through a telephone exchange.
+
+
+[NOTE.speaker]
+--
+Named after the Danish Mathematician.  +  
+Erlang, unlike belief in higher Ericsson Management, does not mean ERicsson LANGuage.
+--
+
+
+Background
+----------
+* The Problem
+* Problem Domain
+* Erlang Properties
+* Important Dates
+* Who is using Erlang?
+* Erlang References
+* What's in a name?

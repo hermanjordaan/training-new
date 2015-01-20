@@ -1,0 +1,320 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Advanced Constructs</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Advanced Constructs</h1><p>Erlang Solutions Ltd.</p></section><section id="_advanced_constructs"><h2>Advanced Constructs</h2><div class="ulist"><ul><li><p>List Comprehensions</p></li><li><p>Binaries</p></li><li><p>References</p></li><li><p>Operators</p></li><li><p>Macros</p></li><li><p>Include Files</p></li></ul></div></section>
+<section id="_list_comprehensions"><h2>List Comprehensions</h2><div class="literalblock centered"><div class="content"><pre>[Expression || Generator1 , ..., GeneratorN,
+ Filter1, ..., FilterN]</pre></div></div>
+<div class="ulist"><ul><li><p>A feature common in functional programming languages</p></li><li><p>Analogous to set comprehensions in the Zermelo-Frankel set theory</p></li><li><p>A syntactical and semantical notation to generate lists</p></li></ul></div></section>
+<section id="_list_comprehensions_2"><h2>List Comprehensions</h2><div class="literalblock centered"><div class="content"><pre>[X || X &lt;-[1,2,3,4], X &lt; 3]</pre></div></div>
+<div class="ulist"><ul><li><p>The above example should be read as the list of X where X comes from the list [1,2,3,4] and X is less than 3</p></li><li><p><strong>Pattern &lt;- List</strong> is the <strong>generator</strong></p></li><li><p><strong>Filter</strong> is either a boolean expression or a function which returns true or false</p></li></ul></div></section>
+<section id="_list_comprehensions_strong_examples_strong"><h2>List Comprehensions: <strong>examples</strong></h2><div class="pre"><span class="redcode">1> [Int || Int <- [zero, 1, two, three, 4, 5],</span>
+ <span class="redcode">1>         is_integer(Int)].</span>
+[1,4,5]
+<span class="redcode">2> [{X,Y} || X <- [1,2,3], Y <- [a,b,c]].</span>
+[{1,a},{1,b},{1,c},{2,a},{2,b},{2,c},{3,a},{3,b},{3,c}]
+<span class="redcode">3> [X || X <- [1,2,3,4], Y <- [3,4,5,6], X == Y].</span>
+[3,4]
+<span class="redcode">4> [X+1 || X <- [1,2,3,4], X rem 2 == 0].</span>
+[3,5]
+</div>
+<div class="ulist"><ul><li><p>Filtering, cartesian products, intersections, and selective mapping using list comprehensions</p></li></ul></div></section>
+<section id="_list_comprehensions_strong_examples_strong_2"><h2>List Comprehensions: <strong>examples</strong></h2><div class="literalblock"><div class="content"><pre>map(Fun, List) -&gt;
+    [Fun(X) || X &lt;- List].
+filter(Predicate, List) -&gt;
+    [X || X &lt;- List, Predicate(X)].
+append(ListOfLists) -&gt;
+    [X || List &lt;- ListOfLists, X &lt;- List].
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Rewriting lists library functions using list comprehensions</p></li></ul></div></section>
+<section id="_list_comprehensions_strong_examples_strong_3"><h2>List Comprehensions: <strong>examples</strong></h2><div class="literalblock"><div class="content"><pre>perm([])  -&gt;
+    [[]];
+perm(List) -&gt;
+    [[H|T] || H &lt;- List, T &lt;- perm(List -- [H])].
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>perm([c,a,t]) -&gt; [[c,a,t],[c,t,a],[a,c,t],[a,t,c],[t,c,a],[t,a,c]]</p></li><li><p>We take <strong>H</strong> from <strong>List</strong> in all possible ways, and append all permutations of <strong>List</strong> with <strong>H</strong> removed to it</p></li></ul></div></section>
+<section id="_list_comprehensions_strong_variables_strong"><h2>List Comprehensions: <strong>variables</strong></h2><div class="ulist"><ul><li><p>All variables in the generator pattern are considered fresh</p></li><li><p>Bound variables in the generator and before the LC expression which are used in the filter retain their value</p></li><li><p>No variable can be exported from a LC expression</p></li><li><p>The compiler gives a warning when you shadow variables</p></li></ul></div></section>
+<section id="_list_comprehensions_strong_variables_strong_2"><h2>List Comprehensions: <strong>variables</strong></h2><div class="pre">
+<span class="redcode">1></span> X <span class="redcode">= 1,</span> Y <span class="redcode">= 2.</span>
+2
+<span class="redcode">2> [{X,</span> Y<span class="redcode">} || X <- lists:seq(1,3)].</span>
+[{1,2},{2,2},{3,2}]
+<span class="redcode">3> List = [{1,one}, {2,two}, {3,three}].</span>
+[{1,one},{2,two},{3,three}]
+<span class="redcode">4> [Z || {X1, Z} <- List, X1 == </span>X<span class="redcode">].</span>
+[one]
+
+
+
+
+
+</div>
+<aside class="notes"><div class="paragraph"><p>Ask the class how many have written pivot sort in C or any other programming language:</p></div>
+<div class="paragraph"><p>qsort([]) &#8594; <br>
+  []; <br>
+qsort([X|Xs]) &#8594; <br>
+  qsort([Y || Y&#8592;Xs, Y =&lt; X]) <code> [X] </code> qsort([Y || Y&#8592;Xs, Y &gt; X]).</p></div></aside></section>
+<section id="_binaries"><h2>Binaries</h2><div class="ulist"><ul><li><p>A binary is a reference to a chunk of untyped memory</p></li><li><p>Originally used by the ERTS for code loading over the network</p></li><li><p>Effective when moving large amounts of data among processes</p></li><li><p>BIFs</p><div class="ulist"><ul><li><p><strong>binary_to_term/1</strong>, <strong>term_to_binary/1</strong>,<br>
+<strong>binary_to_list/1</strong>, <strong>split_binary/2</strong>, <strong>concat_binary/1</strong></p></li><li><p><strong>is_binary/1</strong> as a guard</p></li></ul></div></li></ul></div></section>
+<section id="_binaries_2"><h2>Binaries</h2><div class="literalblock"><div class="content"><pre>Bin = &lt;&lt;E1, E2, …, En&gt;&gt;
+&lt;&lt;E1, E2, …, En&gt;&gt; = Bin
+
+Bin = &lt;&lt;1, 2, 3&gt;&gt;
+binary_to_list(Bin) == [1,2,3]
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>A <strong>Bin</strong> is a low level sequence of bytes</p></li><li><p>They  can be used to construct and pattern match Binaries</p></li><li><p>Each element specifies a segment of the binary</p></li><li><p>A segment is a set of bits, not necessarily a byte</p></li></ul></div></section>
+<section id="_binaries_3"><h2>Binaries</h2><div class="literalblock"><div class="content"><pre>Bin = &lt;&lt;E1:[Size/Type], E2:[Size/Type], ..., En&gt;&gt;
+
+Bin = &lt;&lt;1,2,3:16&gt;&gt; == list_to_binary([1,2,0,3])
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p><strong>Size</strong> and <strong>Types</strong> can be specified or omitted</p></li><li><p><strong>Size</strong> is in bits. Total size must be a multiple of 8 (a byte)</p></li><li><p><strong>Type</strong> is a list of type specifiers separated by hyphens</p></li><li><p>Valid types are <strong>integer</strong>, <strong>float</strong> or <strong>binary</strong></p></li></ul></div></section>
+<section id="_binaries_4"><h2>Binaries</h2><div class="ulist"><ul><li><p>Valid signs are <strong>signed</strong> and <strong>unsigned</strong> (Default)</p><div class="ulist"><ul><li><p>If the first bit is 0, the integer is positive</p></li><li><p>If it is 1, it is negative</p></li></ul></div></li><li><p>Valid endian values are <strong>big</strong> (Default) and <strong>little</strong></p><div class="ulist"><ul><li><p>Little endian, the first byte is the most significant</p></li><li><p>Big endian, the first byte is the least significant</p></li></ul></div></li><li><p>Default size of</p><div class="ulist"><ul><li><p><strong>integers</strong> is 8</p></li><li><p><strong>floats</strong> is 64</p></li><li><p><strong>binaries</strong> is the size of the binary</p></li></ul></div></li></ul></div></section>
+<section id="_binaries_5"><h2>Binaries</h2><div class="pre" style="text-align:center;">
+<< 5:4/little-signed-integer-unit:8>> == <<5,0,0,0>>
+
+<< 5:4/big-signed-integer-unit:8>> == <<0,0,0,5>>
+
+
+</div>
+<div class="ulist"><ul><li><p><strong>unit:Val</strong> is the default size of the type times the unit</p><div class="ulist"><ul><li><p>Val is an integer between 1 - 255</p></li><li><p>Default unit is type dependent. It is 1 for float / integer, 8 for binary</p></li></ul></div></li><li><p>The element created has a size of (4*8) 32 bits</p></li></ul></div></section>
+<section id="_binaries_6"><h2>Binaries</h2><div class="literalblock"><div class="content"><pre>A = 1, Bin = &lt;&lt;A, 17, 42:16&gt;&gt;
+&lt;&lt;D:16, E, F/binary&gt;&gt; = Bin
+
+D = 273, E = 0, binary_to_list(F) = [42]
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>A Bin can be used to pattern match binaries</p></li><li><p>Length and types can be specified or omitted</p></li><li><p>Default types are unsigned integers</p></li><li><p>Binary segments types must have a size divisible by 8</p></li></ul></div></section>
+<section id="_binaries_7"><h2>Binaries</h2><div class="ulist"><ul><li><p><code><strong>B=&lt;&lt;1&gt;&gt;</strong></code> will not compile. It is interpreted as <code><strong>B =&lt; &lt;1&gt;&gt;</strong></code>. Write <code><strong>B = &lt;&lt;1&gt;&gt;</strong></code></p></li><li><p><code><strong>&lt;&lt;X+1:8&gt;&gt;</strong></code> will not compile. Write <code><strong>&lt;&lt;(X+1):8&gt;&gt;</strong></code></p></li><li><p><code><strong>&lt;&lt;"hello"&gt;&gt;</strong></code> is the same as writing <code><strong>&lt;&lt;$h,$e,$l,$l,$o&gt;&gt;</strong></code></p></li><li><p><code><strong>foo(N, &lt;&lt;X:N, T/binary&gt;&gt;) -&gt; ...</strong></code> will not compile. The two instances of N are unrelated</p></li><li><p><code><strong>&lt;&lt;X:7/binary-unit:1, Y/binary&gt;&gt;</strong></code> will never match. The size and unit, when multiplied, must be divisible by 8.</p></li></ul></div></section>
+<section id="_binaries_8"><h2>Binaries</h2><div class="ulist"><ul><li><p><code><strong>&lt;&lt;X:7/binary, Y:1/binary&gt;&gt; = Z</strong></code> will match because binaries have a default unit of 8. It is equivalent to <code><strong>&lt;&lt;X:7/binary-unit:8, Y:1/binary-unit:8&gt;&gt; = Z</strong></code>. 7*8 = 56 bits binary.</p></li><li><p><code><strong>&lt;&lt;X:7/integer, Y/binary&gt;&gt; = Z</strong></code> will fail because integers have a default unit of 1. When multiplied by 7, it isn&#8217;t divisible by 8.</p></li><li><p><code><strong>&lt;&lt;X:7/bitstring-unit:1, Y/bitstring&gt;&gt; = Z</strong></code> will work, because the <code><strong>bitstring</strong></code> type doesn&#8217;t require 8-bit alignment.</p></li></ul></div></section>
+<section id="_binaries_strong_examples_strong"><h2>Binaries: <strong>examples</strong></h2><div class="pre"><span class="redcode">1> <<5:4, 5:4>>.</span>
+<<"U">>
+<span class="redcode">2> <<Int1:2, Int2:6>> = <<128>>.</span>
+<<128>>
+<span class="redcode">3> {Int1, Int2}.</span>
+{2,0}
+<span class="redcode">4> <<5:4/little-signed-integer-unit:4>>.</span>
+<<5,0>>
+<span class="redcode">5> <<5:4/big-signed-integer-unit:4>>.</span>
+<<0,5>>
+<span class="redcode">6> <<5:2,5:8>>.</span>
+<<65,1:2>>
+
+</div></section>
+<section id="_binaries_strong_examples_strong_2"><h2>Binaries: <strong>examples</strong></h2><div class="pre"><span class="redcode">1> A = 1.</span>
+1
+<span class="redcode">2> Bin = <<A, 17, 42:16>>.</span>
+<<1,17,0,42>>
+<span class="redcode">3> <<D:16, E, F/binary>> = Bin.</span>
+<<1,17,0,42>>
+<span class="redcode">4> [D,E,F].</span>
+[273,0,<<"*">>]
+<span class="redcode">5> <<X:7/bitstring,Y:1/bitstring>> = <<42:8>>.</span>
+<<"*">>
+<span class="redcode">6> {X, Y}.</span>
+{<<21:7>>,<<0:1>>}
+
+
+</div></section>
+<section id="_binaries_strong_examples_strong_3"><h2>Binaries: <strong>examples</strong></h2><div class="literalblock"><div class="content"><pre>&lt;&lt;?IP_VERSION:4, HLen:4, SrvcType:8, TotLen:16,
+  ID:16, Flgs:3, FragOff:13,
+  TTL:8, Proto:8, HdrChkSum:16,
+  SrcIP:32, DestIP:32,
+  RestDgram/binary&gt;&gt;
+   
+   </pre></div></div>
+<div class="ulist"><ul><li><p>IP datagram of IP protocol version 4</p></li></ul></div></section>
+<section id="_binaries_9"><h2>Binaries</h2><div class="ulist"><ul><li><p>Concatenating binaries will copy the chunks and create a completely new binary</p></li><li><p>Concatenate your binary once you have all the chunks</p></li><li><p>There is no need to append binary chunks sent to a port</p></li><li><p>There is no need to flatten lists of binary chunks</p></li></ul></div></section>
+<section id="_binaries_strong_binary_comprehensions_strong"><h2>Binaries: <strong>binary comprehensions</strong></h2><div class="pre" style="text-align:center; line-height:1.5em;">
+ 
+<span class="redcode">[</span> ... <span class="redcode">||</span> X <span class="redcode"><-</span> List, Test, ... <span class="redcode">]</span>
+<span class="redcode"><<</span> <<...>> <span class="redcode">||</span> <<X>> <span class="redcode"><=</span> Bin, Test, ... <span class="redcode">>></span>
+
+
+</div>
+<div class="ulist"><ul><li><p>Structure similar to list comprehensions</p></li><li><p><strong>Bin</strong> must be a binary rather than a list</p></li><li><p>A list generator can be used in a binary comprehension and a binary generator can be used in a list comprehension</p></li></ul></div></section>
+<section id="_binaries_binary_comprehensions"><h2>Binaries: binary comprehensions</h2><div class="pre">
+<span class="redcode">1> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</span>
+<<0,1,2,3>>
+<span class="redcode">2> << <<(X+1)/integer>> || &lt;&lt;X&gt;&gt; <= <<3,7,5,4,7>> >>.</span>
+<<4,8,6,5,8>>
+<span class="redcode">3> << <<(bnot X)>> || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</span>
+<<"ÿþýü">>
+<span class="redcode">4> << &lt;&lt;X&gt;&gt; || X <- [0,1,2,3] >>.</span>
+<<0,1,2,3>>
+<span class="redcode">5> [ X || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>>].</span>
+[0,1,2,3]
+<span class="redcode">6> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<1,2,3,4>>, X rem 2 =:= 0 >>.</span>
+<<2,4>>
+
+</div>
+<aside class="notes"><div class="paragraph"><p>Point out that a list generator can be used in a binary comprehension and that a binary generator can be used in a list comprehension</p></div></aside></section>
+<section id="_references"><h2>References</h2><div class="ulist"><ul><li><p>References can be created using the BIF <strong>make_ref/0</strong></p></li><li><p>They can be compared for equality</p></li><li><p>Erlang references are unique[ish]</p><div class="ulist"><ul><li><p>No two references created by different calls will match for the life of a node*</p></li></ul></div></li><li><p>References can be used to guarantee unique replies to messages, and not just any message complying to the specified protocol</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>A reference is related to a node&#8217;s name and is an incrementing value. It is important to note that reference are unique for the time a VM runs. If an Erlang VM is restarted with the same name, references might repeat themselves.</p></div></aside></section>
+<section id="_references_2"><h2>References</h2><div class="pre">call(Message) ->
+  <span class="redcode">Ref = make_ref(),</span>
+  frequency ! {request, 
+          {<span class="redcode">Ref</span>,self()},Message},
+  receive 
+     {reply, <span class="redcode">Ref</span>, Reply} ->
+        Reply
+  end.
+
+reply({<span class="redcode">Ref</span>, Pid}, Message) ->
+   Pid ! {reply, <span class="redcode">Ref</span>, Message}.
+
+
+
+</div>
+<div class="ulist"><ul><li><p>Recall the robust server call? How do we differentiate between messages following the same protocol?</p></li></ul></div></section>
+<section id="_operators_logical"><h2>Operators: logical</h2><div class="pre"><span class="redcode">not</span> ((1 < 3) <span class="redcode">or 
+</span> lists:member(Key,List))
+
+and        andalso
+or         orelse
+xor        not
+
+</div>
+<div class="ulist"><ul><li><p>Booleans are represented by the atoms <strong>true</strong> and <strong>false</strong>.</p></li></ul></div></section>
+<section id="_operators_strong_bitwise_strong"><h2>Operators: <strong>bitwise</strong></h2><div class="ulist"><ul><li><p>Bit level operations can be applied on integers</p></li><li><p>The operands have the same precedence as + or –</p></li><li><p>Logical comparisons on a bit level include:</p><div class="ulist"><ul><li><p><strong>band</strong>, <strong>bor</strong>, <strong>bxor</strong> and <strong>bnot</strong></p></li></ul></div></li><li><p>Shifting bits left or right can also be done:</p><div class="ulist"><ul><li><p><strong>bsl</strong>, <strong>bsr</strong></p></li></ul></div></li></ul></div></section>
+<section id="_operators_strong_bitwise_strong_2"><h2>Operators: <strong>bitwise</strong></h2><div class="literalblock"><div class="content"><pre>1&gt; 9 band 17.
+1
+2&gt; 9 bor 17.
+25
+3&gt; 9 bxor 17.
+24
+4&gt; bnot 9.
+-10
+5&gt; bnot (bnot 9).
+9
+6&gt; 6 bsr 1.
+3
+7&gt; 6 bsl 1.
+12</pre></div></div></section>
+<section id="_macros"><h2>Macros</h2><div class="literalblock left"><div class="content"><pre>-define(Name, Replacement).
+-define(Name(Var1, ..., VarN), 
+        Replacement).
+
+
+-define(TIMEOUT, 1000).
+...
+
+  receive
+       after ?TIMEOUT -&gt; ok
+  end</pre></div></div>
+<div class="ulist right"><ul><li><p>Macros are defined using the define construct</p></li><li><p>They are used whenever the <strong>?Name</strong> syntax is encountered</p></li></ul></div></section>
+<section id="_macros_2"><h2>Macros</h2><div class="left" style="width: 600px;">
+<div class="pre">
+-define(<span class="redcode">DOUBLE(Y)</span>, Y*2).
+
+
+foo(X) -> span class="redcode">?DOUBLE(X)</span>.
+ <span style="color:#4B5056">%% Becomes </span>
+foo(X)  -> X*2.
+</div>
+</div>
+<div class="ulist right"><ul><li><p>All occurrences of the  <strong>?DOUBLE</strong> macro will be expanded upon compilation by the pre-processor to <strong>X*2</strong></p></li></ul></div>
+<div class="pre" style="clear:both;">1> macro:foo(10).
+20
+
+
+
+
+
+</div></section>
+<section id="_macros_3"><h2>Macros</h2><div class="pre">-define(CALLSTRING(Call), print(<span class="redcode">??Call</span>)).
+
+<span class="redcode">?CALLSTRING</span>(foo(X)<span class="redcode">)</span>
+%% Becomes
+print(<span class="redcode">"foo(X)"</span>)
+
+
+</div>
+<div class="ulist"><ul><li><p>All occurrences of the <strong>??Name</strong> will expand to a string containing the tokens of the macro</p></li></ul></div></section>
+<section id="_macros_strong_predefined_macros_strong"><h2>Macros: <strong>predefined macros</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>?MODULE</strong></dt><dd><p>Expands to the name of the module it is used in</p></dd><dt class="hdlist1"><strong>?MODULE_STRING</strong></dt><dd><p>Expands to the module string</p></dd><dt class="hdlist1"><strong>?FILE</strong></dt><dd><p>Expands to the file name it is placed in</p></dd><dt class="hdlist1"><strong>?LINE</strong></dt><dd><p>Expands to the line of code it is defined in</p></dd><dt class="hdlist1"><strong>?MACHINE</strong></dt><dd><p>Expands to the current machine name</p></dd></dl></div></section>
+<section id="_macros_strong_example_of_flow_control_strong"><h2>Macros: <strong>example of flow control</strong></h2><div class="pre"><span class="redcode">-ifdef(debug).</span>
+  -define(SYS_DEBUG(Str, Args), io:format(Str, Args)).
+<span class="redcode">-else.</span>
+  -define(SYS_DEBUG(Str, Args), ok).
+<span class="redcode">-endif.</span>
+
+
+</div>
+<div class="ulist"><ul><li><p>In the code use it as follows:</p><div class="ulist"><ul><li><p>?SYS_DEBUG("~p:call(~p) called~n",[?MODULE, Request])</p></li></ul></div></li><li><p>To turn on the debug print outs, compile using c/2</p><div class="ulist"><ul><li><p>c(Module, [{debug, true}]) or compile:file/2</p></li></ul></div></li><li><p>To view a file with expanded macros use the <em>P</em> directive</p><div class="ulist"><ul><li><p>c(Module, ['P']) or compile:file/2</p></li></ul></div></li></ul></div></section>
+<section id="_macros_strong_flow_of_control_strong"><h2>Macros: <strong>flow of control</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>-undef(Macro)</strong></dt><dd><p><strong>Macro</strong> behaves as if it had never been defined</p></dd><dt class="hdlist1"><strong>-ifdef(Macro)</strong></dt><dd><p>if Macro is defined, execute the statements which follow</p></dd><dt class="hdlist1"><strong>-ifndef(Macro</strong></dt><dd><p>If Macro is not defined, execute the statements which follow</p></dd><dt class="hdlist1"><strong>-else</strong></dt><dd><p>If not <strong>ifdef</strong> or not <strong>ifndef</strong>, then execute the statements</p></dd><dt class="hdlist1"><strong>-endif</strong></dt><dd><p>terminates the <strong>ifdef</strong> and <strong>ifndef</strong> constructs</p></dd></dl></div></section>
+<section id="_macros_strong_flow_control_strong"><h2>Macros: <strong>flow control</strong></h2><div class="pre"><span class="redcode">-ifdef(Macro).</span>
+  -define(Name1, Replacement1).
+<span class="redcode">-else.</span>
+  -define(Name2, Replacement2).
+<span class="redcode">-endif.</span>
+
+
+</div>
+<div class="ulist"><ul><li><p>Macro directives have to be properly nested</p></li><li><p>They may not be placed in functions</p></li></ul></div></section>
+<section id="_include_files"><h2>Include Files</h2><div class="ulist"><ul><li><p>All shared record and macro definitions should be placed in include files.</p></li><li><p>The suffix <strong>.hrl</strong> is recommended but not enforced</p></li><li><p>Include files are added in a file using the <strong>-include("File.hrl").</strong> directive "quotes" included</p></li><li><p>The compiler will look for the include file in the compiler include path list</p></li><li><p>By default, the include path lists includes the current working directory</p></li></ul></div></section>
+<section id="_advanced_constructs_2"><h2>Advanced Constructs</h2><div class="ulist"><ul><li><p>List Comprehensions</p></li><li><p>Binaries</p></li><li><p>References</p></li><li><p>Operators</p></li><li><p>Macros</p></li><li><p>Include Files</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

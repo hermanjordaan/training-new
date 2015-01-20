@@ -1,0 +1,717 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Sequential Erlang</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Sequential Erlang</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script></div></div>
+<section id="_overview_strong_sequential_erlang_i_strong"><h2>Overview: <strong>sequential Erlang I</strong></h2><div class="ulist"><ul><li><p>Sequential Erlang I</p><div class="ulist"><ul><li><p>Conditional Evaluation</p></li><li><p>Guards</p></li><li><p>Recursion</p></li></ul></div></li><li><p>Sequential Erlang II</p></li><li><p>Sequential Erlang III</p></li></ul></div></section>
+<section id="_conditional_evaluation_strong_case_strong"><h2>Conditional Evaluation: <strong>case</strong></h2><svg id="conditional_evaluation_case_1" style="height:600px; width:1000px;">
+<style type="text/css">.line {stroke: #860404;}</style>
+<script>
+
+var s1 = Snap("#conditional_evaluation_case_1");
+
+var arrow = s1.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s1.text(300,200,"case").addClass("code bold");
+s1.text(300,200,"     lists:member(foo, List) of").addClass("code");
+s1.text(300,200,"                             of").addClass("code bold");
+s1.text(300,245,"    true -> ok;").addClass("code");
+s1.text(300,290,"    false -> {error, unknown}").addClass("code");
+s1.text(300,335,"end").addClass("code bold");
+
+var s1_g1_1 = s1.text(400,50,"expression").addClass("darkred");
+var s1_g1_2 = s1.path("M480,60 l35,110").attr({"marker-end":marker}).addClass("line");
+
+var s1_g2_1 = s1.text(40,230,"case").addClass("darkred");
+var s1_g2_2 = s1.text(20,265,"clauses").addClass("darkred");
+var s1_g2_3 = s1.path("M135,235 l190,0").attr({"marker-end":marker}).addClass("line");
+var s1_g2_4 = s1.path("M135,235 l190,42").attr({"marker-end":marker}).addClass("line");
+
+var s1_g3_1 = s1.text(880,120,"clause").addClass("darkred");
+var s1_g3_2 = s1.text(860,155,"separator").addClass("darkred");
+var s1_g3_3 = s1.circle(553,238,15).addClass("line darkred");
+var s1_g3_4 = s1.path("M920,170 Q900,250 574,238").attr({"marker-end":marker}).addClass("line");
+
+var s1_g4_1 = s1.text(802,360,"no separator").addClass("darkred");
+var s1_g4_2 = s1.text(800,395,"in last clause").addClass("darkred");
+var s1_g4_3 = s1.circle(823,280,15).addClass("line darkred");
+var s1_g4_4 = s1.path("M885,335 l-46,-42").attr({"marker-end":marker}).addClass("line");
+
+var s1_g5_1 = s1.text(350,450,"patterns").addClass("darkred");
+var s1_g5_2 = s1.ellipse(414,258,65,54).addClass("line darkred");
+var s1_g5_3 = s1.path("M400,420 l12,-103").attr({"marker-end":marker}).addClass("line");
+
+var s1_g6_1 = s1.text(550,430,"clause body").addClass("darkred");
+var s1_g6_2 = s1.rect(520,257,293,45,12).addClass("line darkred").attr({"stroke-dasharray":"8,6"});
+var s1_g6_3 = s1.path("M640,400 l30,-93").attr({"marker-end":marker}).addClass("line");
+
+var s1_g1 = s1.g(s1_g1_1, s1_g1_2).addClass("hide");
+var s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3, s1_g2_4).addClass("hide");
+var s1_g3 = s1.g(s1_g3_1, s1_g3_2, s1_g3_3, s1_g3_4).addClass("hide");
+var s1_g4 = s1.g(s1_g4_1, s1_g4_2, s1_g4_3, s1_g4_4).addClass("hide");
+var s1_g5 = s1.g(s1_g5_1, s1_g5_2, s1_g5_3).addClass("hide");
+var s1_g6 = s1.g(s1_g6_1, s1_g6_2, s1_g6_3).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 250, mina.linear); s1_g1.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 250, mina.linear); s1_g2.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    case 4: {s1_g4.animate({"opacity":"1"}, 250, mina.linear); s1_g3.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    case 5: {s1_g5.animate({"opacity":"1"}, 250, mina.linear); s1_g4.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    case 6: {s1_g6.animate({"opacity":"1"}, 250, mina.linear); s1_g5.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    case 7: {s1_g6.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Mention that the case clause consists of the reserved words case of &amp; end.</p></div></aside></section>
+<section id="_conditional_evaluation_strong_case_strong_2"><h2>Conditional Evaluation: <strong>case</strong></h2><div class="left">
+<div class="pre"><span class="redcode">case</span> &lt;expression&gt; <span class="redcode">of</span>
+    Pattern1 ->
+        &lt;expression 1&gt;,
+        &lt;expression 2&gt;,
+        ...
+        &lt;expression N&gt;;
+   Pattern2 -&gt;
+        &lt;expression 1&gt;,
+        &lt;expression 2&gt;,
+        ...
+        &lt;expression N&gt;;
+   _ -&gt;
+        &lt;expression 1&gt;,
+        ...
+        &lt;expression N&gt;
+<span class="redcode">end</span>
+</div></div>
+<div class="ulist right"><ul><li><p>One branch should always succeed</p></li><li><p>Using an unbound variable or '_' ensures that the clause will always match</p></li><li><p>The _ clause is not mandatory</p></li><li><p>An exception is raised if no clause matches</p></li><li><p>Returns the value of the last executed expression</p></li></ul></div></section>
+<section id="_defensive_programming"><h2>Defensive Programming</h2><div class="left">
+<div class="pre">convert(Day) ->
+  case Day of
+      monday    -> 1;
+      tuesday   -> 2;
+      wednesday -> 3;
+      thursday  -> 4;
+      friday    -> 5;
+      saturday  -> 6;
+      sunday    -> 7;
+      <span class="redcode">Other ->
+         {error, unknown_day}</span>
+  end.
+</div></div>
+<div class="ulist right"><ul><li><p>Defensive programming: program in the convert function for the error case or &#8230;&#8203;</p></li><li><p>&#8230;&#8203; let it fail here by deleting the <strong>Other</strong> clause.</p></li><li><p>This will raise an exception</p></li><li><p>The caller will have to handle the error that they have caused.</p></li></ul></div></section>
+<section id="_guards"><h2>Guards</h2><div class="left">
+<div class="pre">factorial(N) <span class="redcode">when</span> N > 0 ->
+    N * factorial(N - 1);
+factorial(0) -> 1.
+
+
+ <b>This is <span class="redcode">NOT</span> the same as...</b>
+
+factorial(0) -> 1;
+factorial(N) ->
+    N * factorial(N - 1).
+</div></div>
+<div class="ulist right"><ul><li><p>The reserved word <strong>when</strong> introduces a guard</p></li><li><p>Fully guarded clauses can be re-ordered</p></li><li><p>Guards can be used in function heads, case clauses, receive and if expressions.</p></li></ul></div></section>
+<section id="_guards_strong_examples_strong"><h2>Guards: <strong>examples</strong></h2><div class="literalblock"><div class="content"><pre>number(Num) when is_integer(Num) -&gt; integer;
+number(Num) when is_float(Num) -&gt; float;
+number(_Other) -&gt; false.</pre></div></div>
+<div class="ulist closer"><ul><li><p>is_number(X), is_integer(X), is_float(X)</p><div class="ulist"><ul><li><p>X is a number</p></li></ul></div></li><li><p>is_atom(X), is_pid(X), is_tuple(X), is_list(X)</p><div class="ulist"><ul><li><p>X is the specified datatype</p></li></ul></div></li><li><p>length(List) == Int, tuple_size(Tuple) == Size, X &gt; Y + Z</p><div class="ulist"><ul><li><p>Some BIFs and mathematical applications can be applied in guards</p></li></ul></div></li><li><p>X == Y        X /= Y        X =:= Y        X =/= Y</p><div class="ulist"><ul><li><p>X is (not) equal to Y, X is exactly (not) equal to Y  (1==1.0 ✓, 1=:=1.0 ×)</p></li></ul></div></li><li><p>X =&lt; Y        X &gt;= Y</p><div class="ulist"><ul><li><p>NB, not &lt;= or =&gt;</p></li></ul></div></li></ul></div></section>
+<section id="_guards_2"><h2>Guards</h2><div class="literalblock"><div class="content"><pre>valid_age(Age) when Age &gt;= 18, Age =&lt; 99 -&gt;
+    true;
+valid_age(_) -&gt;
+    false.
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>All variables in guards have to be bound</p></li><li><p>Guards have to be free of side effects</p></li><li><p>If all the guards have to succeed, use , to separate them</p></li><li><p>If one guard has to succeed, use ; to separate them</p></li><li><p>There are restrictions on BIFs and expressions in guards</p><div class="ulist"><ul><li><p>See the Erlang reference manual for complete details</p></li></ul></div></li></ul></div></section>
+<section id="_conditional_evaluation_strong_if_strong"><h2>Conditional Evaluation: <strong>if</strong></h2><svg id="conditional_evaluation_if_1" style="height:550px; width:900px;">
+<style type="text/css">.line {stroke: #860404;}</style>
+<script>
+
+var s2 = Snap("#conditional_evaluation_if_1");
+
+var arrow = s2.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s2.text(300,200,"if").addClass("code bold");
+s2.text(300,245,"   X < 1  -> smaller;").addClass("code");
+s2.text(300,290,"   X > 1  -> greater;").addClass("code");
+s2.text(300,335,"   X == 1 -> equal").addClass("code");
+s2.text(300,380,"end").addClass("code bold");
+
+var s2_g1_1 = s2.text(40,287,"if clauses").addClass("darkred");
+var s2_g1_2 = s2.path("M184,280 l158,0").attr({"marker-end":marker}).addClass("line");
+var s2_g1_3 = s2.path("M184,280 l158,-45").attr({"marker-end":marker}).addClass("line");
+var s2_g1_4 = s2.path("M184,280 l158,45").attr({"marker-end":marker}).addClass("line");
+
+var s2_g2_1 = s2.text(740,100,"clause").addClass("darkred");
+var s2_g2_2 = s2.text(720,135,"separator").addClass("darkred");
+var s2_g2_3 = s2.circle(658,238,15).addClass("line darkred");
+var s2_g2_4 = s2.circle(658,283,15).addClass("line darkred");
+var s2_g2_5 = s2.path("M760,150 l-86,76").attr({"marker-end":marker}).addClass("line");
+var s2_g2_6 = s2.path("M760,150 l-86,121").attr({"marker-end":marker}).addClass("line");
+
+var s2_g3_1 = s2.text(622,430,"no separator").addClass("darkred");
+var s2_g3_2 = s2.text(620,465,"in last clause").addClass("darkred");
+var s2_g3_3 = s2.circle(632,328,15).addClass("line darkred");
+var s2_g3_4 = s2.path("M705,400 l-58,-58").attr({"marker-end":marker}).addClass("line");
+
+var s2_g4_1 = s2.text(190,515,"guard expressions").addClass("darkred");
+var s2_g4_2 = s2.rect(340,212,128,134,12).addClass("line darkred").attr({"stroke-dasharray":"8,6"});
+var s2_g4_3 = s2.path("M310,490 l80,-140").attr({"marker-end":marker}).addClass("line");
+
+var s2_g5_1 = s2.text(390,450,"clause body").addClass("darkred");
+var s2_g5_2 = s2.rect(520,305,105,42,12).addClass("line darkred").attr({"stroke-dasharray":"8,6"});
+var s2_g5_3 = s2.path("M475,420 l60,-68").attr({"marker-end":marker}).addClass("line");
+
+var s2_g1 = s2.g(s2_g1_1, s2_g1_2, s2_g1_3, s2_g1_4).addClass("hide");
+var s2_g2 = s2.g(s2_g2_1, s2_g2_2, s2_g2_3, s2_g2_4, s2_g2_5, s2_g2_6).addClass("hide");
+var s2_g3 = s2.g(s2_g3_1, s2_g3_2, s2_g3_3, s2_g3_4).addClass("hide");
+var s2_g4 = s2.g(s2_g4_1, s2_g4_2, s2_g4_3).addClass("hide");
+var s2_g5 = s2.g(s2_g5_1, s2_g5_2, s2_g5_3).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 250, mina.linear); s2_g1.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 250, mina.linear); s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 4: {s2_g4.animate({"opacity":"1"}, 250, mina.linear); s2_g3.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 5: {s2_g5.animate({"opacity":"1"}, 250, mina.linear); s2_g4.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 6: {s2_g5.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_conditional_evaluation_strong_if_strong_2"><h2>Conditional Evaluation: <strong>if</strong></h2><div class="left">
+<div class="pre"><span class="redcode">if</span> Guard1 ->
+        &lt;expression 1&gt;,
+        &lt;expression 2&gt;,
+        ...
+        &lt;expression N&gt;;
+   Guard2 -&gt;
+        &lt;expression 1&gt;,
+        &lt;expression 2&gt;,
+        ...
+        &lt;expression N&gt;;
+   ...
+   true -&gt;
+        &lt;expression 1&gt;,
+        ...
+        &lt;expression N&gt;
+<span class="redcode">end</span>
+</div></div>
+<div class="ulist right"><ul><li><p>One branch must always succeed</p></li><li><p>By using <strong>true</strong> as the last guard, we ensure that a clause will always succeed</p></li><li><p>The <strong>true</strong> guard is not mandatory</p></li><li><p>An exception is raised if no clause succeeds</p></li><li><p>Returns the value of the last executed expression</p></li></ul></div></section>
+<section id="_general_switch"><h2>General Switch</h2><div class="pre">if <span class="redcode">f(Args)</span> -> ok;
+   true    -> error
+end<div style="color:red; font-family:'Lucida Grande'; font-weight:bold; font-size:2em; position:absolute; left:500px; top:15px;">×</div>
+case <span class="redcode">f(Args)</span> of
+    true -> ok;
+    false -> error
+end<div style="color:green; font-family:'Lucida Grande'; font-size:2em; position:absolute; left:500px; top:150px;">✓</div>
+</div>
+<div class="ulist"><ul><li><p>The if construct fails because it involves a user-defined function, which are forbidden in guards</p></li><li><p>The case construct succeeds because it accepts user-defined functions.</p></li></ul></div></section>
+<section id="_recursion_strong_traversing_lists_strong"><h2>Recursion: <strong>traversing lists</strong></h2><div class="literalblock left"><div class="content"><pre>average(X) -&gt; sum(X) / len(X).
+
+sum([H|T]) -&gt; H + sum(T);
+sum([]) -&gt; 0.
+
+len([_|T]) -&gt; 1 + len(T);
+len([]) -&gt; 0.
+  </pre></div></div>
+<div class="ulist right"><ul><li><p>Note the pattern of recursion is the same in both cases</p></li><li><p>Taking a list and evaluating an element is a very common pattern</p></li></ul></div></section>
+<section id="_recursion_strong_self_describing_code_strong"><h2>Recursion: <strong>self-describing code</strong></h2><div class="literalblock left"><div class="content"><pre>sum([]) -&gt; 0;
+
+sum([H|T]) -&gt; H + sum(T).
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>You can read the programs as an executable description:</p></li><li><p>"The sum of an empty list is 0."</p></li><li><p>"The sum of a non-empty list is the head of the list added to the sum of the tail"</p></li></ul></div></section>
+<section id="_recursion_strong_traversing_lists_strong_2"><h2>Recursion: <strong>traversing lists</strong></h2><div class="literalblock left"><div class="content"><pre>printAll([]) -&gt;
+    io:format("~n", []);
+
+printAll([X|Xs]) -&gt;
+    io:format("~p ", [X]),
+    printAll(Xs).
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Here we&#8217;re traversing the list imperatively:</p></li><li><p>"If there are no more elements to process, stop"</p></li><li><p>"If there are further elements, process the head, and then call the function recursively on the tail."</p></li></ul></div></section>
+<section id="_recursion_strong_traversing_lists_strong_3"><h2>Recursion: <strong>traversing lists</strong></h2><div class="literalblock left w_600"><div class="content"><pre>printAll(Ys) -&gt;
+    case Ys of
+      [] -&gt;
+        io:format("~n", []);
+      [X|Xs] -&gt;
+        io:format("~p ", [X]),
+        printAll(Xs)
+    end.
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Same function again: shows the loop clearly. The call to printAll(Xs) is like a jump back to the top of the loop.</p></li><li><p>This is a tail recursive function: the only recursive calls come at the end of the bodies of the clauses.</p></li></ul></div></section>
+<section id="_recursion_strong_more_patterns_strong"><h2>Recursion: <strong>more patterns</strong></h2><div class="literalblock left w_600"><div class="content"><pre>double([H|T])-&gt; [2*H|double(T)];
+double([]) -&gt; [].
+
+member(H, [H|_]) -&gt; true;
+member(H, [_|T]) -&gt; member(H,T);
+member(_, [])    -&gt; false.
+
+even([H|T]) when H rem 2 == 0 -&gt;
+    [H|even(T)];
+even([_|T]) -&gt;
+    even(T);
+even([]) -&gt;
+    [].
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>double/1 maps elements in a list and returns a new list</p></li><li><p>member/2 is a predicate looking for an element in a list</p></li><li><p>even/1 filters a list of integers and returns the subset of even numbers</p></li><li><p>The function member/2 is the only one which is tail recursive</p></li></ul></div>
+<aside class="notes">If the class is good, explain tail recursion. Else, don’t worry. It will only confuse them.
+A function is said to be tail recursive if the last thing the function does is call itself recursively.
+The last things double and even do is create a new list. (Even, only if the element is event)</aside></section>
+<section id="_recursion_strong_accumulators_strong"><h2>Recursion: <strong>accumulators</strong></h2><div class="literalblock left w_600"><div class="content"><pre>average(X) -&gt; average(X, 0, 0).
+
+average([H|T], Length, Sum) -&gt;
+  average(T, Length+1, Sum+H);
+average([], Length, Sum) -&gt;
+  Sum/Length.
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Only traverses the list once.</p></li><li><p>Executes in constant space (tail recursive)</p></li><li><p><strong>Length</strong> and <strong>Sum</strong> play the role of accumulators</p></li><li><p><strong>average([])</strong> is not defined</p></li><li><p>Evaluating <strong>average([])</strong> would cause a run time error.</p></li></ul></div>
+<aside class="notes">Let the students solve this with pen and paper.
+Mention that Length and Sum take the role of imperative variables.
+Tell the students to ALWAYS use pen and paper to write recursive functions.
+When solving this problem, stress how the lists and accumulators change in every iteration.</aside></section>
+<section id="_summary_strong_sequential_erlang_i_strong"><h2>Summary: <strong>sequential Erlang I</strong></h2><div class="ulist"><ul><li><p>Sequential Erlang I</p><div class="ulist"><ul><li><p>Conditional evaluation</p></li><li><p>Guards</p></li><li><p>Recursion</p></li></ul></div></li><li><p>Sequential Erlang II</p></li><li><p>Sequential Erlang III</p></li></ul></div></section>
+<section id="_overview_strong_sequential_erlang_ii_strong"><h2>Overview: <strong>sequential Erlang II</strong></h2><div class="ulist"><ul><li><p>Sequential Erlang I</p></li><li><p>Sequential Erlang II</p><div class="ulist"><ul><li><p>BIFs</p></li><li><p>Libraries</p></li><li><p>Manual Pages</p></li><li><p>The Debugger</p></li></ul></div></li><li><p>Sequential Erlang III</p></li></ul></div></section>
+<section id="_built_in_functions"><h2>Built-in Functions</h2><div class="literalblock left"><div class="content"><pre>date()
+
+time()
+
+length(List)
+
+size(Tuple)
+
+atom_to_list(Atom)
+
+list_to_tuple(List)
+
+integer_to_list(2235)
+
+tuple_to_list(Tuple)
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Do what you cannot do (or is difficult to do) in Erlang</p></li><li><p>Mostly written in C for fast execution</p></li><li><p>BIFs are by convention regarded as being in the <strong>erlang</strong> module.</p></li></ul></div></section>
+<section id="_built_in_functions_2"><h2>Built-in Functions</h2><div class="ulist"><ul><li><p>There are BIFs for:</p><div class="ulist"><ul><li><p>Process and port handling</p></li><li><p>Object access and examination</p></li><li><p>Meta programming</p></li><li><p>Type conversion</p></li><li><p>System information</p></li><li><p>Distribution</p></li><li><p>Others</p></li></ul></div></li><li><p>For a complete list, see the manual page for the erlang module.</p></li></ul></div></section>
+<section id="_built_in_functions_3"><h2>Built-in Functions</h2><div class="imageblock left" style=""><div class="content"><img src="images/bifs.png" alt="Use BIFs with care" width="500" height="auto"></div></div>
+<div class="ulist right"><ul><li><p>Built-in functions can modify the real time properties of the system</p></li><li><p>A process executing a BIF will not be suspended until the BIF has completed executing</p></li><li><p>Other processes will thus not be allowed to execute on the same scheduler</p></li><li><p>Use BIFs with care!</p></li></ul></div></section>
+<section id="_built_in_functions_strong_examples_strong"><h2>Built-in Functions: <strong>examples</strong></h2><div class="literalblock"><div class="content"><pre>1&gt; date().
+{2010,9,25}
+2&gt; atom_to_list(abcd).
+"abcd"
+3&gt; tuple_to_list(list_to_tuple([1,2,3,4])).
+[1,2,3,4]
+4&gt; length([1,2,3,4,5]).
+5
+ 
+ 
+ </pre></div></div></section>
+<section id="_built_in_functions_strong_meta_calls_strong"><h2>Built-in Functions: <strong>meta calls</strong></h2><div class="literalblock centered redcode"><div class="content"><pre>apply(Module, Function, Arguments)
+M:function(Arg1, ...)
+M:F(Arg1, ...)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>apply/3</strong> is a BIF used to dynamically evaluate functions</p></li><li><p>The function must be exported</p></li><li><p>The arguments can possibly be an empty list</p></li><li><p>All the arguments can be established at runtime</p></li><li><p>Extremely powerful when implementing generic code</p></li></ul></div></section>
+<section id="_built_in_functions_strong_meta_calls_strong_2"><h2>Built-in Functions: <strong>meta calls</strong></h2><div class="pre">
+<svg id="built_in_functions_meta_calls_1" style="height:500px; width:1010px;">
+<style type="text/css">.line {stroke: #860404;}</style>
+<script>
+
+var s3 = Snap("#built_in_functions_meta_calls_1");
+
+var arrow = s3.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s3.text(10,40,"1> Module = io.").addClass("code bold");
+s3.text(10,80,"io").addClass("code");
+s3.text(10,110,"2> Function = format.").addClass("code bold");
+s3.text(10,160,"format").addClass("code");
+s3.text(10,200,"3> Arguments = [\"Hello World \", []].").addClass("code bold");
+s3.text(10,240,"[\"Hello World \",[]]").addClass("code");
+s3.text(10,280,"4> apply(Module, Function, Arguments).").addClass("code bold");
+s3.text(10,320,"Hello World ok").addClass("code");
+s3.text(10,360,"5> io:Function(\"Hello World \", []).").addClass("code bold");
+s3.text(10,400,"Hello World ok").addClass("code");
+s3.text(10,440,"6> Module:Function(\"Hello World \", []).").addClass("code bold");
+s3.text(10,480,"Hello World ok").addClass("code");
+
+s3.text(650,30,"The arguments to").addClass("darkred");
+s3.text(655,65,"apply").addClass("darkred bold");
+s3.text(748,65,"could have").addClass("darkred");
+s3.text(670,100,"been evaluated").addClass("darkred");
+s3.text(670,136,"during runtime").addClass("darkred");
+
+s3.path("M640,60 l-130,105").attr({"marker-end":marker}).addClass("line");
+
+s3.text(740,360,"The arities of the").addClass("darkred");
+s3.text(745,395,"M:func(Arg1, ...)").addClass("darkred bold");
+s3.text(740,430,"and").addClass("darkred");
+s3.text(802,431,"M:F(Arg1, ...)").addClass("darkred bold");
+s3.text(750,465,"forms are static").addClass("darkred");
+
+s3.path("M730,405 l-95,-35").attr({"marker-end":marker}).addClass("line");
+s3.path("M730,405 l-45,16").attr({"marker-end":marker}).addClass("line");
+
+</script>
+</svg>
+</pre></section>
+<section id="_libraries"><h2>Libraries</h2><div class="dlist"><dl><dt class="hdlist1"><strong>io.erl</strong></dt><dd><p>generalised input/output functionality</p></dd><dt class="hdlist1"><strong>file.erl</strong></dt><dd><p>generalised interface towards the file system</p></dd><dt class="hdlist1"><strong>lists.erl</strong></dt><dd><p>standard list processing functions</p></dd><dt class="hdlist1"><strong>code.erl</strong></dt><dd><p>functionality to load, test and manipulate code.</p></dd><dt class="hdlist1"><strong>math.erl</strong></dt><dd><p>mathematical functions</p></dd></dl></div></section>
+<section id="_libraries_2"><h2>Libraries</h2><div class="ulist"><ul><li><p>Erlang has a set of libraries where functionality useful to the software designer has been placed</p></li><li><p>The previous list of modules are all part of the standard Erlang/OTP distribution</p></li><li><p>Many more libraries and modules are available:</p><div class="ulist"><ul><li><p>They are referenced in the official documentation</p></li></ul></div></li></ul></div></section>
+<section id="_libraries_3"><h2>Libraries</h2><div class="literalblock"><div class="content"><pre>lists:append(List1, List2) -&gt; NewList.
+lists:delete(Element, List) -&gt; NewList.
+lists:last(List) -&gt; Element.
+lists:reverse(List) -&gt; ReversedList.
+lists:sort(List) -&gt; SortedList.
+lists:keysort(Pos, TupleList) -&gt; SortedList.
+lists:keydelete(Key, Pos, TupleList) -&gt; NewList.
+lists:keysearch(Key, Pos, TupleList) -&gt;
+    false | {value, Tuple}</pre></div></div>
+<div class="ulist"><ul><li><p>The lists module is the most used and one of the most useful ones</p></li></ul></div></section>
+<section id="_manual_pages"><h2>Manual Pages</h2><div class="dlist"><dl><dt class="hdlist1"><strong>In the UNIX shell</strong></dt><dd><p>$ erl -man Module</p></dd><dt class="hdlist1"><strong>In HTML</strong></dt><dd><p>By accessing file://$ERL_ROOT/doc/index.html</p></dd><dt class="hdlist1"><strong>In Emacs</strong></dt><dd><p>Picking one of the entries under the Erlang menu</p></dd><dt class="hdlist1"><strong>In General</strong></dt><dd><p>Manual pages for all the modules can be read online, from the shell, in emacs or in the OTP reference manual.</p></dd></dl></div>
+<div class="paragraph"><p>Take a look at the available modules to get an idea of the existing functionality</p></div></section>
+<section id="_the_debugger"><h2>The Debugger</h2><div class="ulist"><ul><li><p>The Erlang debugger is a graphical tool providing mechanisms to debug code and influence program execution</p><div class="ulist"><ul><li><p>Allows the user to insert break points</p></li><li><p>Step through the code</p></li><li><p>Inspect and manipulate variables</p></li><li><p>Inspecting the recursive stack</p></li></ul></div></li></ul></div></section>
+<section id="_the_debugger_2"><h2>The Debugger</h2><div class="imageblock" style=""><div class="content"><img src="images/debugger_1.png" alt="Debugger" width="660" height="auto"></div></div>
+<div style="margin-top:-150px; margin-left:800px;">
+<svg id="debugger_1" style="height:240px; width:240px;">
+<style type="text/css">.text {fill:#fff; font-size:20pt;}</style>
+<script>
+
+var s4 = Snap("#debugger_1");
+
+s4.polyline([75,10, 165,10, 230,75, 230,165, 165,230, 75,230, 10,165, 10,75, 75,10]).addClass("darkred shape");
+s4.text(35,90,"The Windows").addClass("text");
+s4.text(55,120,"version is").addClass("text");
+s4.text(38,150,"known to be").addClass("text");
+s4.text(62,180,"unstable").addClass("text");
+
+</script>
+</svg></div>
+<div class="ulist"><ul><li><p>debugger:start()</p></li></ul></div></section>
+<section id="_the_debugger_3"><h2>The Debugger</h2><div class="imageblock" style=""><div class="content"><img src="images/debugger_2.png" alt="Debugger" width="480" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Interpret the code</p><div class="ulist"><ul><li><p>Must be compiled with the <strong>debug_info</strong> flag</p></li><li><p>use <strong>c(Module, [debug_info])</strong></p></li></ul></div></li></ul></div></section>
+<section id="_the_debugger_4"><h2>The Debugger</h2><div class="imageblock left" style=""><div class="content"><img src="images/debugger_3.png" alt="Debugger" width="450" height="auto"></div></div>
+<div class="ulist right"><ul><li><p>Stepping through the code</p></li></ul></div></section>
+<section id="_summary_strong_sequential_erlang_ii_strong"><h2>Summary: <strong>sequential Erlang II</strong></h2><div class="ulist"><ul><li><p>Sequential Erlang I</p></li><li><p>Sequential Erlang II</p><div class="ulist"><ul><li><p>BIFs</p></li><li><p>Libraries</p></li><li><p>Manual Pages</p></li><li><p>The Debugger</p></li></ul></div></li><li><p>Sequential Erlang III</p></li></ul></div></section>
+<section id="_overview_strong_sequential_erlang_iii_strong"><h2>Overview: <strong>sequential Erlang III</strong></h2><div class="ulist"><ul><li><p>Sequential Erlang I</p></li><li><p>Sequential Erlang II</p></li><li><p>Sequential Erlang III</p><div class="ulist"><ul><li><p>Run Time Errors</p></li><li><p>Try &#8230;&#8203; catch</p></li><li><p>Throw</p></li><li><p>Catch</p></li></ul></div></li></ul></div></section>
+<section id="_run_time_errors_strong_match_strong"><h2>Run Time Errors: <strong>match</strong></h2><div class="literalblock left"><div class="content"><pre>factorial(N) when N &gt; 0 -&gt;
+    N * factorial(N - 1);
+factorial(0) -&gt; 1.
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p><strong>function_clause</strong> is returned when none of the existing function patterns matches</p></li></ul></div>
+<div class="pre" style="clear:both;"><span class="redcode">1> math:factorial(-1).</span>
+** exception error: no function clause matching
+  math:factorial(-1)
+
+
+
+
+</div></section>
+<section id="_run_time_errors_strong_match_strong_2"><h2>Run Time Errors: <strong>match</strong></h2><div class="literalblock left"><div class="content"><pre>test(N) -&gt;
+    case N of
+        -1 -&gt; false;
+         1 -&gt; true
+    end.
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p><strong>case_clause</strong> is returned when none of the existing patterns in the case statement matches</p></li></ul></div>
+<div class="pre" style="clear:both;"><span class="redcode">1> test:test(0).</span>
+** exception error: no case clause matching 0
+     in function  test:test/1
+
+
+
+
+</div></section>
+<section id="_run_time_errors"><h2>Run Time Errors</h2><div class="literalblock left"><div class="content"><pre>test(N) -&gt;
+    if
+       N &lt; 0 -&gt; false;
+       N &gt; 0 -&gt; true
+    end.
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p><strong>if_clause</strong> is returned when none of the existing expressions in the if statement evaluates to <strong>true</strong></p></li></ul></div>
+<div class="pre" style="clear:both;"><span class="redcode">1> test:test(0).</span>
+** exception error: no true branch found when evaluating an if expression
+     in function  test:test/1
+
+
+
+</div></section>
+<section id="_run_time_errors_strong_match_strong_3"><h2>Run Time Errors: <strong>match</strong></h2><div class="pre"><span class="redcode">1> Tuple = {1, two, 3}.</span>
+{1,two,3}
+<span class="redcode">2> {1, two, 3, Four} = Tuple.</span>
+** exception error: no match of right hand side value
+  {1,two,3}
+
+</div>
+<div class="ulist"><ul><li><p><strong>badmatch</strong> errors occur in situations when pattern matching fails and there are no other alternative clauses to choose from.</p></li></ul></div></section>
+<section id="_run_time_errors_strong_others_strong"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><span class="redcode">1> length(helloWorld).</span>
+** exception error: bad argument in function length/1
+        called as length(helloWorld)
+
+
+
+</div>
+<div class="ulist"><ul><li><p><strong>badarg</strong> is returned when a BIF with wrong arguments is called.</p></li></ul></div></section>
+<section id="_run_time_errors_strong_others_strong_2"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><span class="redcode">1> test:hello().</span>
+  ** exception error: undefined function test:hello/0
+
+
+
+
+</div>
+<div class="ulist"><ul><li><p><strong>undef</strong> will be returned if the global function being called is not defined or exported</p></li></ul></div></section>
+<section id="_run_time_errors_strong_others_strong_3"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><span class="redcode">1> 1 + a.</span>
+** exception error: bad argument in an arithmetic expression
+     in operator  +/2
+        called as 1 + a
+
+
+</div>
+<div class="ulist"><ul><li><p><strong>badarith</strong> is returned when arithmetical operations are executed with values that are neither integers or floats.</p></li></ul></div></section>
+<section id="_try_catch"><h2>Try &#8230;&#8203; catch</h2><div class="left" style="width:600px;">
+<div class="pre"><span class="redcode">try</span> Expressions <span class="redcode">of</span>
+  Pattern1 ->
+     ExpressionBody1;
+  Pattern2 ->
+     ExpressionBody2
+<span class="redcode">catch</span>
+  [Class1:]ExceptionPattern1 ->
+     ExceptionBody1;
+  [Class2:]ExceptionPattern2 ->
+     ExceptionBody2
+<span class="redcode">end</span>
+
+
+</div></div>
+<div class="ulist right"><ul><li><p><strong>try &#8230;&#8203; catch</strong> provides a mechanism for monitoring the evaluation of an expression</p></li><li><p>It will trap exits caused by expected run time errors</p></li><li><p>The patterns <strong>Class1:</strong> and <strong>Class2:</strong> can define the type of exception handled</p></li><li><p>The <strong>ExceptionPatterns</strong> can restrict the reason why an exception is raised.</p></li></ul></div>
+<aside class="notes">&lt;b&gt;of &#8230;&#8203;&lt;/b&gt; is optional if no pattern matching on success return value is required</aside></section>
+<section id="_try_catch_2"><h2>Try &#8230;&#8203; catch</h2><div class="left">
+<div class="pre">1> self().
+<0.53.0>
+2> X = 2, X = 3.
+** exception error: no match of right hand side value 3
+3> self().
+<0.57.0>
+4> <span class="redcode">try</span> (X = 3) <span class="redcode">of</span>
+4>   Val -> {normal, Val}
+4> <span class="redcode">catch</span>
+4>   _:_ -> 43
+4> <span class="redcode">end</span>.
+43
+5> self().
+<0.57.0>
+
+</div></div>
+<div class="ulist right"><ul><li><p>_:_ allows to match on all errors no matter what they are.</p></li><li><p>The error is caught and the process doesn&#8217;t crash</p></li></ul></div></section>
+<section id="_try_catch_3"><h2>Try &#8230;&#8203; catch</h2><div class="left">
+<div class="pre">1> X = 2.
+2
+2> <span class="redcode">try</span> (X = 3) <span class="redcode">of</span>
+2>   Val -> {normal, Val}
+2> <span class="redcode">catch</span>
+2>   error:Error -> {error, Error}
+2> <span class="redcode">end</span>.
+{error,{badmatch,3}}
+
+3> </span>try</span> (X = 3) <span class="redcode">of</span>
+3>   Val -> {normal, Val}
+3> <span class="redcode">catch</span>
+3>   error:{badmatch,_} -> 42
+3> <span class="redcode">end</span>.
+42
+
+</div></div>
+<div class="ulist right"><ul><li><p>The <strong>error:Error</strong> pattern allows to bind the error reason to a variable and match on it</p></li><li><p><strong>error:{badmatch,_}</strong> allows to match only errors caused by erroneous pattern matching</p></li></ul></div></section>
+<section id="_throw"><h2>Throw</h2><div class="left">
+<div class="pre">
+<svg id="throw_1" style="height:400px; width:435px; margin-left:20px; margin-top:10px;">
+<style type="text/css">.text {fill:#fff; font-size:17pt;}</style>
+<script>
+
+var s5 = Snap("#throw_1");
+
+s5.text(50,50,"throw(&lt;expression&gt;)").addClass("code darkred bold")
+
+s5.polyline([170,100, 265,100, 335,170, 335,265, 265,335, 170,335, 100,265, 100,170, 170,100]).addClass("shape").attr({"fill":"red"});
+s5.text(153,163,"WARNING!!").addClass("text").attr({"font-size":"19pt"});
+s5.text(128,192,"use with care as").addClass("text");
+s5.text(118,221,"it makes the code").addClass("text");
+s5.text(139,250,"hard to debug").addClass("text");
+s5.text(130,279,"and understand").addClass("text");
+
+</script>
+</svg>
+</div></div>
+<div class="ulist right"><ul><li><p><strong>throw</strong> is used for non-local returns in deep recursive function calls.</p></li><li><p>The execution flow jumps to the first <strong>catch</strong> in the execution stack</p></li><li><p>Useful for handling exceptions in deeply nested code when you do not want to handle possible errors.</p></li></ul></div></section>
+<section id="_throw_2"><h2>Throw</h2><div class="pre">add(X, Y) ->    test(Y),
+   test(X),
+   X + Y.
+test(X) when is_integer(X) -> ok;
+test(X) -> <span class="redcode">throw</span>({error, {non_integer, X}}<span class="redcode">)</span>.
+</div>
+
+<div class="pre">1> math:add(1, one).
+** exception throw: {error,{non_integer,one}}
+2> <span class="redcode">try</span> math:add(1, one) <span class="redcode">of</span>
+2>   _ -> ok
+2> </span>catch</span>
+2>   Class:Reason -> {Class, Reason}
+2> <span class="redcode">end</span>.
+{throw,{error,{non_integer,one}}}
+
+</div></section>
+<section id="_try_catch_strong_examples_strong"><h2>Try &#8230;&#8203; catch: <strong>examples</strong></h2><div class="pre">-module(exception).
+-export([try_wildcard/1]).
+
+try_wildcard(X) when is_integer(X) ->
+  <span class="redcode">try</span> return_error(X)
+  <span class="redcode">catch</span>
+    throw:Throw -> {throw, Throw};
+    error:_     -> error;
+    Type:Error  -> {Type, Error};
+    _           -> other;        %% Will never be returned
+    _:_         -> other         %% Will never be returned
+  <span class="redcode">end</span>.
+
+
+</div></section>
+<section id="_try_catch_strong_examples_strong_2"><h2>Try &#8230;&#8203; catch: <strong>examples</strong></h2><div class="pre">return_error(X) when X < 0 ->
+  <span class="redcode">throw</span>({'EXIT',{badarith,[{exception,return_error,1},
+                           {erl_eval,do_apply,5},
+                           {shell,exprs,6},
+                           {shell,eval_exprs,6},
+                           {shell,eval_loop,3}]}});
+return_error(X) when X == 0 -> 1/X;
+return_error(X) when X > 0 ->
+  {'EXIT',{badarith,[{exception,return_error,1},
+                     {erl_eval,do_apply,5},
+                     {shell,exprs,6},
+                     {shell,eval_exprs,6},
+                     {shell,eval_loop,3}]}}.
+
+</div></section>
+<section id="_try_catch_strong_examples_strong_3"><h2>Try &#8230;&#8203; catch: <strong>examples</strong></h2><div class="pre"><span class="redcode">1> exception:try_wildcard(-1).</span>
+{throw,{'EXIT',{badarith,[{exception,return_error,1},
+                          {erl_eval,do_apply,5},
+                          {shell,exprs,6},
+                          {shell,eval_exprs,6},
+                          {shell,eval_loop,3}]}}}
+<span class="redcode">2> exception:try_wildcard(0).</span>
+error
+<span class="redcode">3> exception:try_wildcard(1).</span>
+{'EXIT',{badarith,[{exception,return_error,1},
+                   {erl_eval,do_apply,5},
+                   ...
+                   {shell,eval_loop,3}]}}
+
+</div></section>
+<section id="_catch"><h2>Catch</h2><div class="literalblock centered redcode"><div class="content"><pre>catch &lt;expression&gt;</pre></div></div>
+<div class="ulist"><ul><li><p><strong>catch</strong> provides a mechanism for monitoring the evaluation of an expression</p></li><li><p>It will trap exits caused by runtime errors</p></li><li><p>A function call resulting in a run time error called in the scope or a catch will return the tuple <strong>{<em>EXIT</em>, Reason}</strong></p></li><li><p><strong>Reason</strong> is the runtime error which occurred</p></li></ul></div></section>
+<section id="_catch_2"><h2>Catch</h2><div class="pre"><span class="redcode">1> self().</span>
+<0.28.0>
+<span class="redcode">2> catch list_to_integer("one").</span>
+{'EXIT',{badarg,[{erlang,list_to_integer,["one"]},
+             ...,{shell,eval_loop,3}]}}
+<span class="redcode">3> self().</span>
+<0.28.0>
+<span class="redcode">4> list_to_integer("one").</span>
+** exception error: bad argument
+     in function  list_to_integer/1
+        called as list_to_integer("one")
+<span class="redcode">5> self().</span>
+<0.33.0>
+
+</div></section>
+<section id="_catch_3"><h2>Catch</h2><div class="pre"><span class="redcode">1> catch 1/0.</span>
+{'EXIT',{badarith,[{erlang,'/',[1,0]},
+                   {erl_eval,do_apply,5},
+                   {erl_eval,expr,5},
+                   ...,
+                   {shell,eval_loop,3}]}}
+<span class="redcode">2> X = catch 1/0.</span>
+* 1: syntax error before: 'catch'
+<span class="redcode">2> X = (catch 1/0).</span>
+{'EXIT',{badarith,[{erlang,'/',[1,0]},
+                   {erl_eval,do_apply,5},
+                   {erl_eval,expr,5},
+                   ...
+
+</div></section>
+<section id="_summary_strong_sequential_erlang_iii_strong"><h2>Summary: <strong>sequential Erlang III</strong></h2><div class="ulist"><ul><li><p>Sequential Erlang I</p></li><li><p>Sequential Erlang II</p></li><li><p>Sequential Erlang III</p><div class="ulist"><ul><li><p>Run Time Errors</p></li><li><p>Try &#8230;&#8203; catch</p></li><li><p>Throw</p></li><li><p>Catch</p></li></ul></div></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

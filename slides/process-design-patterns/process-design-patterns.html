@@ -1,0 +1,303 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Process Design Patterns</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Process Design Patterns</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_process_design_patterns"><h2>Process Design Patterns</h2><div class="ulist"><ul><li><p>Client Server Models</p></li><li><p>A Server Example</p></li><li><p>Finite State Machines</p></li><li><p>Event Handlers</p></li></ul></div></section>
+<section id="_client_server_models"><h2>Client Server Models</h2><svg id="client_server_models_1" style="width:620px; height:600px;" viewBox="0 0 620 600" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s1 = Snap("#client_server_models_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(410,60,"Clients").addClass("code darkred bold");
+s1.circle(100,50,40).addClass("shape grey");
+s1.circle(300,100,40).addClass("shape grey");
+s1.circle(460,200,40).addClass("shape grey");
+s1.circle(560,350,40).addClass("shape grey");
+
+s1.circle(70,500,40).addClass("shape darkred");
+s1.text(20,580,"Server").addClass("code darkred bold");
+
+s1.text(100,330,"request").addClass("code");
+s1.path("M410,215 l-307.5,240").attr({"marker-end":marker}).addClass("line");
+
+s1.text(270,420,"reply").addClass("code");
+s1.path("M120,490 l310,-245").attr({"marker-end":marker}).addClass("line");
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Processes can be used to implement client server solutions</p></li><li><p>A server is usually responsible for providing a service or handling a resource</p></li><li><p>Clients are the processes which use these resources</p></li></ul></div></section>
+<section id="_client_server_models_2"><h2>Client Server Models</h2><div style="text-align:center;">
+<svg id="client_server_models_2" style="width:840px; height:240px;" viewBox="0 0 840 240" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#client_server_models_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(50,40,"Client").addClass("code darkred bold");
+s2.circle(100,100,40).addClass("shape grey");
+
+s2_g1_1 = s2.text(250,60,"{request, Request}").addClass("code");
+s2_g1_2 = s2.path("M160,80 l500,0").attr({"marker-end":marker}).addClass("line");
+
+s2_g2_1 = s2.text(285,160,"{reply, Reply}").addClass("code");
+s2_g2_2 = s2.path("M665,120 l-500,0").attr({"marker-end":marker}).addClass("line");
+
+s2.text(672,40,"Server").addClass("code darkred bold");
+s2.circle(725,100,40).addClass("shape darkred");
+
+s2_g1 = s2.g(s2_g1_1, s2_g1_2).addClass("hide");
+s2_g2 = s2.g(s2_g2_1, s2_g2_2).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 500, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 500, mina.linear); }
+s2.click(function() { s2_anim1() });
+
+</script>
+</svg>
+</div>
+<div class="ulist"><ul><li><p>Clients make requests to the server through message passing</p></li><li><p>Message passing is often hidden in functional interfaces</p></li><li><p>If the client using the service needs a reply to the request, the call to the server has to be <strong>synchronous</strong></p></li><li><p>If the client does not need a reply, the call to the server can be <strong>asynchronous</strong></p></li></ul></div></section>
+<section id="_a_server_example"><h2>A Server Example</h2><div class="imageblock left w_600" style=""><div class="content"><img src="images/server_example.png" alt="Example" width="auto" height="auto"></div></div>
+<div class="ulist right"><ul><li><p>The following server is responsible for allocating and de-allocating frequencies on behalf of mobile phones</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Explain that when a call is connected, a phone calls allocate and gets given a frequency.
+This frequency is used for the duration of the call.
+When one of the users hangs up, the frequency is put back in the pool and used by someone else.</p></div></aside></section>
+<section id="_a_server_example_2"><h2>A Server Example</h2><svg id="server_example_2" style="width:1070px; height:570px;" viewBox="0 0 1070 570" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#server_example_2");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s3.text(20,80,"Client");
+s3.path("M60,100 l0,440").attr({"marker-end":marker}).addClass("line").attr({"stroke-width":"5px"});
+
+s3.text(955,80,"Server").addClass("darkred");
+s3.path("M1000,100 l0,440").attr({"marker-end":marker_red}).addClass("line_darkred").attr({"stroke-width":"5px"});
+
+s3_g1 = s3.text(150,150,"{request, Pid, allocate}").addClass("code hide");
+s3_g2 = s3.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line hide");
+
+s3_g3 = s3.text(110,230,"{reply,{error,no_frequencies} or {ok,Frequency}}").addClass("code hide");
+s3_g4 = s3.path("M965,250 l-870,0").attr({"marker-end":marker}).addClass("line hide");
+
+s3_g5 = s3.text(120,360,"{request, Pid, {deallocate, Frequency}}").addClass("code hide");
+s3_g6 = s3.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line hide");
+
+s3_g7 = s3.text(120,440,"{reply, ok}").addClass("code hide");
+s3_g8 = s3.path("M965,460 l-870,0").attr({"marker-end":marker}).addClass("line hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 400, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 800, mina.linear, s3_anim3); }
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 400, mina.linear, s3_anim4); }
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 800, mina.linear, s3_anim5); }
+s3_anim5 = function() { s3_g5.animate({"opacity":"1"}, 400, mina.linear, s3_anim6); }
+s3_anim6 = function() { s3_g6.animate({"opacity":"1"}, 800, mina.linear, s3_anim7); }
+s3_anim7 = function() { s3_g7.animate({"opacity":"1"}, 400, mina.linear, s3_anim8); }
+s3_anim8 = function() { s3_g8.animate({"opacity":"1"}, 800, mina.linear); }
+s3.click(function() { s3_anim1() });
+
+</script>
+</svg></section>
+<section id="_a_server_example_3"><h2>A Server Example</h2><div class="literalblock"><div class="content"><pre>-module(frequency).
+-export([start/0, stop/0,  allocate/0, deallocate/1]).
+-export([init/0]).
+
+start() -&gt;
+    register(frequency, spawn(frequency, init, [])).
+
+init() -&gt;
+    Frequencies = {get_frequencies(), []},
+    loop(Frequencies).
+
+get_frequencies() -&gt; [10,11,12,13,14,15].
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<aside class="notes"><div class="paragraph"><p>These are the start functions used to create and initialise the server.</p></div></aside></section>
+<section id="_a_server_example_4"><h2>A Server Example</h2><div class="literalblock"><div class="content"><pre>stop()           -&gt; call(stop).
+allocate()       -&gt; call(allocate).
+deallocate(Freq) -&gt; call({deallocate, Freq}).
+
+%% We hide all message passing and the message protocol in %% functional interfaces.
+call(Message) -&gt;
+    frequency ! {request, self(), Message},
+    receive
+	     {reply, Reply} -&gt; Reply
+    end.
+
+reply(Pid, Message) -&gt;
+    Pid ! {reply, Message}.
+ 
+ 
+ 
+ </pre></div></div>
+<aside class="notes"><div class="paragraph"><p>The Client functions</p></div></aside></section>
+<section id="_a_server_example_5"><h2>A Server Example</h2><div class="literalblock"><div class="content"><pre>loop(Frequencies) -&gt;
+  receive
+    {request, Pid, allocate} -&gt;
+       {NewFrequencies,Reply} = allocate(Frequencies,Pid),
+       reply(Pid, Reply),
+       loop(NewFrequencies);
+    {request, Pid , {deallocate, Freq}} -&gt;
+       NewFrequencies = deallocate(Frequencies, Freq),
+       reply(Pid, ok),
+       loop(NewFrequencies);
+    {request, Pid, stop} -&gt;
+       reply(Pid, ok)
+    end.
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<aside class="notes"><div class="paragraph"><p>The Main Loop</p></div></aside></section>
+<section id="_a_server_example_6"><h2>A Server Example</h2><div class="literalblock"><div class="content"><pre>%% The Internal Functions
+%% Help functions used to allocate and deallocate frequencies.
+
+allocate({[], Allocated}, Pid) -&gt;
+    {{[], Allocated}, {error, no_frequency}};
+allocate({[Freq|Free], Allocated}, Pid) -&gt;
+    {{Free, [{Freq, Pid}|Allocated]}, {ok, Freq}}.
+
+deallocate({Free, Allocated}, Freq) -&gt;
+    NewAllocated = lists:keydelete(Freq, 1, Allocated),
+    {[Freq|Free],  NewAllocated}.
+ 
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<aside class="notes"><div class="paragraph"><p>If Erlang Express, terminate here, and jump to the end.</p></div></aside></section>
+<section id="_finite_state_machines"><h2>Finite State Machines</h2><svg id="finite_state_machines_1" style="width:580px; height:400px; margin-right:50pt;" viewBox="0 0 580 400" preserveAspectRatio="xMinYMin meet" class="left">
+<style type="text/css">svg {font-size:20pt;}</style>
+<script>
+
+var s4 = Snap("#finite_state_machines_1");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s4.circle(110,200,40).addClass("shape grey");
+s4.text(60,290,"State 1").addClass("darkred bold");
+
+s4.circle(510,200,40).addClass("shape grey");
+s4.text(460,290,"State 2").addClass("darkred bold");
+
+s4_g1_1 = s4.path("M70,200 c-40,-20 -20,-70 25,-44").attr({"marker-end":marker}).addClass("line_darkred");
+s4_g1_2 = s4.text(15,135,"Event 1");
+
+s4_g2_1 = s4.path("M137,170 q160,-90 338,0").attr({"marker-end":marker}).addClass("line_darkred");
+s4_g2_2 = s4.text(260,165,"Event 2");
+
+s4_g3_1 = s4.path("M483,230 q-170,90 -338,0").attr({"marker-end":marker}).addClass("line_darkred");
+s4_g3_2 = s4.text(260,255,"Event 3");
+
+s4_g1 = s4.g(s4_g1_1, s4_g1_2).addClass("hide");
+s4_g2 = s4.g(s4_g2_1, s4_g2_2).addClass("hide");
+s4_g3 = s4.g(s4_g3_1, s4_g3_2).addClass("hide");
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_g1.animate({"opacity":"1"}, 600, mina.linear); s4_counter++; break};
+    case 2: {s4_g2.animate({"opacity":"1"}, 600, mina.linear); s4_counter++; break};
+    case 3: {s4_g3.animate({"opacity":"1"}, 600, mina.linear); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Processes can be used to implement finite state machines</p></li><li><p>Each state is represented as a tail recursive function</p></li><li><p>Each event is represented as an incoming message</p></li><li><p>Each state transition is achieved by calling the function denoting the new state</p></li></ul></div></section>
+<section id="_finite_state_machines_strong_example_strong"><h2>Finite State Machines: <strong>example</strong></h2><div class="literalblock left"><div class="content"><pre>idle() -&gt;
+  receive
+    {A, incoming} -&gt;
+      start_ringing(),
+      ringing(A);
+    {A, off_hook} -&gt;
+      start_tone(),
+      dial(A)
+  end.
+ 
+ 
+ </pre></div></div>
+<div class="imageblock right" style=""><div class="content"><img src="images/finite_state_machines_example.png" alt="Example" width="600" height="auto"></div></div>
+<aside class="notes"><div class="paragraph"><p>If Erlang Express, jump over this section.</p></div></aside></section>
+<section id="_event_handlers"><h2>Event Handlers</h2><div class="ulist"><ul><li><p>Processes can be used to implement event handlers</p></li><li><p>A handler will receive a specific type of event</p><div class="ulist"><ul><li><p>Alarms</p></li><li><p>Equipment state changes</p></li><li><p>Errors</p></li></ul></div></li><li><p>When an event is received, one or more functions are applied on the event</p></li><li><p>Some or all of these actions can be enabled and disabled during run time</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>If Erlang Express, jump over this section.</p></div></aside></section>
+<section id="_event_handlers_strong_example_strong"><h2>Event Handlers: <strong>example</strong></h2><div class="ulist"><ul><li><p>Alarm managers are implemented as event handlers</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>If Erlang Express, jump over this section.</p></div></aside></section>
+<section id="_process_design_patterns_2"><h2>Process Design Patterns</h2><div class="ulist"><ul><li><p>Client Server Models</p></li><li><p>A Server Example</p></li><li><p>Finite State Machines</p></li><li><p>Event Handlers</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

@@ -1,0 +1,80 @@
+svg {
+  font-family: 'Lucida Grande';
+  font-size: 22pt;
+}
+
+.grey {
+  fill: #888;
+}
+
+.darkred {
+  fill: #860404;
+  color: #860404; /* Not sure this is OK? */
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.shape {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.circle_darkred {
+  stroke: #860404;
+  stroke-width: 2px;
+  fill: none;
+}
+
+.font18pt {font-size: 18pt !important;}
+.font19pt {font-size: 19pt !important;}
+
+.line {
+  stroke-width: 3;
+  fill: none;
+  color: #fff;
+  stroke: #000;
+}
+
+.line_darkred {
+  stroke-width: 3;
+  fill: none;
+  color: #fff;
+  stroke: #860404;
+}
+
+.dashed {
+  stroke-width: 4;
+}
+
+.code {
+  font-family: Menlo;
+  font-size: 22pt;
+}
+
+.hide {
+  opacity: 0;
+}
+
+.show {
+  opacity: 1;
+}
+
+.next_circle_bg {
+	fill: #888;
+}
+
+.next_circle_fg {
+	fill: #aaa;
+}
+
+.next_arrow {
+	fill: #fff;
+}
+
+@media print {
+	.hide {
+		opacity: 1;
+    }
+}

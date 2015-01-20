@@ -1,0 +1,880 @@
+Applications
+============
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script>
+++++
+
+
+Applications
+------------
+* Applications
+* Starting Applications
+* Stopping Applications
+* Application Files
+* Distributed Applications
+* Application Monitor
+
+
+Applications
+------------
+* An Erlang system consists of loosely coupled applications
+** Some are part of the OTP release, others are implemented by the programmers
+* An application is a way of packaging resources
+** Modules, processes and registered names
+** Configuration files
+** Any other source or executable
+* All applications have the same properties
+** No distinction between OTP and user applications
+
+
+Applications
+------------
+++++
+<div style="width:100%; text-align:center;">
+<img src="images/applications_1.png" style="height:auto; width:auto;" />
+</div>
+++++
+//image:images/applications_1.png["Applications", align="center"]
+
+Applications
+------------
+++++
+<div style="width:100%; text-align:center;">
+<img src="images/applications_2.png" style="height:480px; width:auto;" />
+</div>
+++++
+* Applications usually consist of supervision trees
+* They also consist of library modules with no processes
+
+
+Applications
+------------
+++++
+<div style="width:100%; text-align:center;">
+<img src="images/applications_3.png" style="height:480px; width:auto;" />
+</div>
+++++
+* An application controller is started on every node
+* It starts a master (2 processes) for every application
+
+
+Applications
+------------
+* An application is treated as one unit. It can be:
+** *Loaded*: modules are loaded and resources checked
+** *Started*: the application master starts the supervision tree
+** *Stopped*: the application master terminates all processes
+** *Unloaded*: All modules are unloaded from the system
+* Applications can be included in other applications
+** Must be started by the application's main supervisor
+** Included applications can only be included once
+
+[NOTE.speaker]
+--
+The answer to included applications being there only once is that if they're there more than once, it might create conflicts when trying to start them or terminate them when they are globally registered
+--
+
+
+Applications
+------------
+++++
+<div style="width:100%; text-align:center;">
+<img src="images/applications_4.png" style="height:auto; width:1100px;" />
+</div>
+++++
+* Applications are implemented in the application module
+* The behaviour directive must be included in the callback module.
+
+
+Applications
+------------
+++++
+<div class="pre">-module(my_application).
+<span class="redcode">-behaviour(application).</span>
+
+-export([start/2, stop/1]).
+
+start(_StartType, _StartArgs) ->
+    'TopSupervisor':start_link().
+
+stop(_State) ->
+    ok.
+ 
+ 
+ 
+</div>
+++++
+
+
+Starting Applications
+---------------------
+
+++++
+<svg id="starting_applications_1" style="height:430px; width:1120px;" viewBox="0 0 1120 450">
+<style type="text/css">
+  .lightgrey {fill:#a9a9a9;}
+</style>
+<script>
+
+var s1 = Snap("#starting_applications_1");
+
+var arrow = s1.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+s1.text(74,30,"application:start(Application)").addClass("code");
+
+var s1_g1 = s1.path("M240,40 l0,50").attr({"marker-end":marker}).addClass("line");
+
+var s1_g2_1 = s1.text(20,110,"Application").addClass("darkred");
+var s1_g2_2 = s1.text(78,145,"master").addClass("darkred");
+var s1_g2_3 = s1.circle(230,140,40).addClass("shape darkred");
+var s1_g2_4 = s1.circle(230,140,35).addClass("shape lightgrey");
+var s1_g2_5 = s1.circle(250,140,40).addClass("shape darkred");
+var s1_g2_6 = s1.circle(250,140,35).addClass("shape lightgrey");
+var s1_g2_7 = s1.text(330,140,"Mod:start(StartType, Args)").addClass("code");
+
+var s1_g3_1 = s1.path("M240,180 l0,40").addClass("line");
+var s1_g3_2 = s1.circle(240,260,40).addClass("shape lightgrey");
+var s1_g3_3 = s1.circle(240,260,35).addClass("shape grey");
+var s1_g3_4 = s1.path("M465,165 l0,55").attr({"marker-end":marker}).addClass("line");
+
+var s1_g4 = s1.text(340,265,"supervisor:start_link(Name, Mod, Args)").addClass("code");
+
+var s1_g5_1 = s1.path("M240,300 l-60,42").addClass("line");
+var s1_g5_2 = s1.path("M240,300 l60,42").addClass("line");
+var s1_g5_3 = s1.circle(170,380,40).addClass("shape darkred");
+var s1_g5_4 = s1.circle(310,380,40).addClass("shape darkred");
+
+var s1_g6 = s1.path("M530,220 l0,-55").attr({"marker-end":marker}).addClass("line");
+
+var s1_g7_1 = s1.path("M790,130 l60,0").attr({"marker-end":marker}).addClass("line");
+var s1_g7_2 = s1.text(860,121,"{ok, Pid}").addClass("code");
+var s1_g7_3 = s1.text(860,161,"{ok, Pid, Data}").addClass("code");
+
+var s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3, s1_g2_4, s1_g2_5, s1_g2_6, s1_g2_7);
+var s1_g3 = s1.g(s1_g3_1, s1_g3_2, s1_g3_3, s1_g3_4);
+var s1_g5 = s1.g(s1_g5_1, s1_g5_2, s1_g5_3, s1_g5_4);
+var s1_g7 = s1.g(s1_g7_1, s1_g7_2, s1_g7_3);
+
+s1_g1.addClass("hide");
+s1_g2.addClass("hide");
+s1_g3.addClass("hide");
+s1_g4.addClass("hide");
+s1_g5.addClass("hide");
+s1_g6.addClass("hide");
+s1_g7.addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 250, mina.linear, s1_anim2); };
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 250, mina.linear); };
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear, s1_anim4); };
+s1_anim4 = function() { s1_g4.animate({"opacity":"1"}, 250, mina.linear, s1_anim5); };
+// Delay next one slightly
+s1_anim5 = function() { setTimeout( function() {s1_g5.animate({"opacity":"1"}, 500, mina.linear)}, 250) };
+s1_anim6 = function() { s1_g6.animate({"opacity":"1"}, 250, mina.linear, s1_anim7); };
+s1_anim7 = function() { s1_g7.animate({"opacity":"1"}, 250, mina.linear); };
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim3(); s1_counter++; break};
+    case 3: {s1_anim6(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Applications are started with *application:start(Name)*
+** The start function in the callback module starts the supervisor
+** If not loaded, *application:load(Name)* is called prior to the start
+** *StartType* is *normal*, *{takeover, Node}*, *{failover, Node}*
+
+
+Stopping Applications
+---------------------
+++++
+<svg id="stopping_applications_1" style="height:430px; width:1120px;" viewBox="0 0 1120 450">
+<style type="text/css">
+  .lightgrey {fill:#a9a9a9;}
+</style>
+<script>
+
+var s2 = Snap("#stopping_applications_1");
+
+var arrow = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+var arrow_darkred = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker_darkred = arrow_darkred.marker(0,0, 5,5, 4,2.75).addClass("hide");
+
+s2.text(20,110,"Application").addClass("darkred");
+s2.text(78,145,"master").addClass("darkred");
+s2.circle(230,140,40).addClass("shape darkred");
+s2.circle(230,140,35).addClass("shape lightgrey");
+s2.circle(250,140,40).addClass("shape darkred");
+s2.circle(250,140,35).addClass("shape lightgrey");
+
+s2.text(630,120,"Mod:start(StartType, Args)").addClass("code");
+s2.path("M815,138 l0,60").attr({"marker-end":marker}).addClass("line");
+s2.text(715,240,"{ok, Pid, Data}").addClass("code");
+
+var s2_g1 = s2.text(74,30,"application:stop(Application)").addClass("code");
+var s2_g2 = s2.path("M240,40 l0,50").attr({"marker-end":marker}).addClass("line");
+
+var s2_g3 = s2.path("M305,130 l55,105").attr({"marker-end":marker}).addClass("line");
+var s2_g4 = s2.path("M930,260 C800,450 570,100 540,235").attr({"marker-end":marker_darkred, "strokeDasharray":500, "strokeDashoffset":500}).addClass("line_darkred");
+var s2_g5 = s2.text(340,275,"Mod:stop(Data)").addClass("code");
+
+var s2_g6_1 = s2.path("M240,180 l0,40").addClass("line");
+var s2_g6_2 = s2.circle(240,260,40).addClass("shape lightgrey");
+var s2_g6_3 = s2.circle(240,260,35).addClass("shape grey");
+
+var s2_g6_4 = s2.path("M240,300 l-60,42").addClass("line");
+var s2_g6_5 = s2.path("M240,300 l60,42").addClass("line");
+var s2_g6_6 = s2.circle(170,380,40).addClass("shape darkred");
+var s2_g6_7 = s2.circle(310,380,40).addClass("shape darkred");
+
+var s2_g6 = s2.g(s2_g6_1, s2_g6_2, s2_g6_3, s2_g6_4, s2_g6_5, s2_g6_6, s2_g6_7);
+
+s2_g1.addClass("hide");
+s2_g2.addClass("hide");
+s2_g3.addClass("hide");
+s2_g5.addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 300, mina.linear, s2_anim2); };
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 300, mina.linear, s2_anim3); };
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 300, mina.linear, s2_anim4); };
+s2_anim4 = function() { s2_g4.animate({"strokeDashoffset":"0"}, 300, mina.linear, s2_anim5); s2_g5.animate({"opacity":"1"}, 600); };
+s2_anim5 = function() { marker_darkred.animate({"opacity":"1"}, 0); };
+s2_anim6 = function() { s2_g6.animate({"opacity":"0"}, 600); };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim6(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Applications are stopped with *application:stop(Name)*
+** *Mod:stop/1* is called after the processes have been terminated
+* *Mod:prep_stop/1* is an optional callback called before the processes are terminated.
+
+
+Application Files: *structure*
+------------------------------
+++++
+<svg id="application_files_structure_1" style="height:300px; width:930;">
+<style type="text/css">
+  .lightgrey {fill:#e7e7e7;}
+</style>
+<script>
+
+var s3 = Snap("#application_files_structure_1");
+
+var arrow = s3.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+s3.rect(50, 50, 820, 65, 15).addClass("shape lightgrey");
+
+s3.rect(50, 190, 160, 50, 15).addClass("shape lightgrey");
+s3.rect(270, 190, 160, 50, 15).addClass("shape lightgrey");
+s3.rect(490, 190, 160, 50, 15).addClass("shape lightgrey");
+s3.rect(710, 190, 160, 50, 15).addClass("shape lightgrey");
+
+s3.path("M130,120 l0,63").attr({"marker-end":marker}).addClass("line");
+s3.path("M350,120 l0,63").attr({"marker-end":marker}).addClass("line");
+s3.path("M570,120 l0,63").attr({"marker-end":marker}).addClass("line");
+s3.path("M790,120 l0,63").attr({"marker-end":marker}).addClass("line");
+
+s3.text(250,95,"ApplicationName-Version").addClass("darkred").attr({"font-size":"24pt", "letter-spacing":"1px"});
+s3.text(95,225,"ebin/").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(325,225,"src/").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(540,225,"priv/").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(735,225,"include/").addClass("darkred").attr({"font-size":"20pt"});
+
+</script>
+</svg>
+++++
+
+* Applications must follow a special directory structure
+** Tools are dependent on this structure
+** release handling mechanisms are dependent on this structure
+
+
+Application Files: *structure*
+------------------------------
+* Only *ebin* and *priv* directories form part of a release
+** ebin contains the Erlang executables
+** priv contains application-specific files such as C executables, config & data file, graphics and more
+* Files in *include* are reached from other applications using
++  
+*&#160;-include_lib("ApplicationName/include/File.hrl").*
+
+
+Application Files: *resource file*
+----------------------------------
+...................
+{application, sasl,
+   [{description, "SASL  CXC 138 11"},
+    {vsn, "2.1.5.4"},
+    {modules,  [sasl, alarm_handler, ...]},
+    {registered, [sasl_sup, alarm_handler, ...]},
+    {applications, [kernel, stdlib]},
+    {env, [{sasl_error_logger, tty}, ...]},
+    {mod, {sasl, []}}]}.
+ 
+...................
+++++
+<div style="position:absolute; left:742px; margin-top:-65px;">
+<svg id="application_files_resource_file_1" style="height:120px; width:200px;">
+<script>
+  
+var s4 = Snap("#application_files_resource_file_1");
+
+var arrow = s4.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s4.text(100,31,"Why?").attr({"font-size":"20pt"}).addClass("darkred");
+s4.path("M90,22 q-40,-0 -40,50").attr({"marker-end":marker}).addClass("line_darkred");
+
+</script>
+</svg>
+</div><div style="height:10pt;"></div>
+++++
+
+* All applications have a resource file stored in the *ebin* directory
+* Has the name of the application with the *.app* extension
+* Specifies the resources needed by the application
+* Specifies how (and if) the application is started
+
+[NOTE.speaker]
+--
+Answer: because the ebin directory is what's included in the release and also on the search path of the system when using it?
+--
+
+
+Application Files: *resource file*
+----------------------------------
+++++
+<svg id="application_files_resource_file_2" style="height:600px; width:1200px;">
+<script>
+  
+var s5 = Snap("#application_files_resource_file_2");
+
+var arrow = s5.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s5.text(20,50,"{application, sasl,").addClass("code");
+var s5_g1_1 = s5.path("M470,40 l-100,0").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g1_2 = s5.text(480,49,"Application name").addClass("darkred");
+s5.text(20,88,"   [{description, \"SASL  CXC 138 11\"},").addClass("code");
+var s5_g2_1 = s5.path("M760,78 l-80,0").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g2_2 = s5.text(770,87,"Description string").addClass("darkred");
+s5.text(20,126,"    {vsn, \"2.1.5.4\"},").addClass("code");
+var s5_g3_1 = s5.path("M550,116 l-150,0").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g3_2 = s5.text(560,125,"Version string").addClass("darkred");
+s5.text(20,164,"    {modules, [sasl, alarm_handler, format_lib_supp, ...,").addClass("code");
+var s5_g4_1 = s5.path("M150,250 l100,-30").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g4_2 = s5.text(11,240,"Included").addClass("darkred");
+var s5_g4_3 = s5.text(10,274,"modules").addClass("darkred");
+s5.text(20,202,"               release_handler, erlsrv, sasl_report, ...,").addClass("code");
+s5.text(20,240,"               systools, systools_make, systools_rc,").addClass("code");
+s5.text(20,278,"               systools_relup, systools_lib]},").addClass("code");
+s5.text(20,316,"    {registered, [sasl_sup, alarm_handler, overload,").addClass("code");
+var s5_g5_1 = s5.path("M780,351 l-80,-20").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g5_2 = s5.text(790,360,"Registered names").addClass("darkred");
+s5.text(20,354,"                  release_handler] },").addClass("code");
+s5.text(20,392,"    {applications, [kernel, stdlib]},").addClass("code");
+var s5_g6_1 = s5.path("M770,392 l-80,-5").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g6_2 = s5.text(780,401,"Depends on").addClass("darkred");
+s5.text(20,430,"    {env, [{sasl_error_logger, tty},").addClass("code");
+var s5_g7_1 = s5.path("M750,446 l-80,0").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g7_2 = s5.text(760,455,"Environment variables").addClass("darkred");
+s5.text(20,468,"           {errlog_type, all}]},").addClass("code");
+s5.text(20,506,"    {mod, {sasl, []}}]}.").addClass("code");
+var s5_g8_1 = s5.path("M700,496 l-240,0").attr({"marker-end":marker}).addClass("line_darkred");
+var s5_g8_2 = s5.text(710,505,"Callback module").addClass("darkred");
+
+var s5_g1 = s5.g(s5_g1_1, s5_g1_2).addClass("hide");
+var s5_g2 = s5.g(s5_g2_1, s5_g2_2).addClass("hide");
+var s5_g3 = s5.g(s5_g3_1, s5_g3_2).addClass("hide");
+var s5_g4 = s5.g(s5_g4_1, s5_g4_2, s5_g4_3).addClass("hide");
+var s5_g5 = s5.g(s5_g5_1, s5_g5_2).addClass("hide");
+var s5_g6 = s5.g(s5_g6_1, s5_g6_2).addClass("hide");
+var s5_g7 = s5.g(s5_g7_1, s5_g7_2).addClass("hide");
+var s5_g8 = s5.g(s5_g8_1, s5_g8_2).addClass("hide");
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_g1.animate({"opacity":"1"}, 250); s5_counter++; break};
+    case 2: {s5_g2.animate({"opacity":"1"}, 250); s5_g1.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 3: {s5_g3.animate({"opacity":"1"}, 250); s5_g2.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 4: {s5_g4.animate({"opacity":"1"}, 250); s5_g3.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 5: {s5_g5.animate({"opacity":"1"}, 250); s5_g4.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 6: {s5_g6.animate({"opacity":"1"}, 250); s5_g5.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 7: {s5_g7.animate({"opacity":"1"}, 250); s5_g6.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 8: {s5_g8.animate({"opacity":"1"}, 250); s5_g7.animate({"opacity":"0"}, 250); s5_counter++; break};
+    case 9: {s5_g8.animate({"opacity":"0"}, 250); break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Application Files: *resource file*
+----------------------------------
+[role="centered bold darkred"]
+....
+{description, String}
+{vsn, String}
+{id, String}
+....
+
+* *description* briefly describes or names the application
+* *vsn* refers to the application version
+** Should not contain backslashes
+** Appended to the application directory name
+* *Id* is the product identifier of the application
+** Optional field
+
+
+Application Files: *resource file*
+----------------------------------
+[role="centered bold darkred"]
+....
+{modules, [{Mod1,Vsn1}, Mod2, ..., {ModN,VsnN}]}
+{registered, [Name1, Name2, ...]}
+....
+
+* *modules* lists all the modules and version numbers
+** Version numbers are optional
+** Checks for module name clashes with other applications
+* *registered* lists all the registered names of the application
+** Used to detect name clashes with other applications
+
+
+Application Files: *resource file*
+----------------------------------
+[role="centered bold darkred"]
+....
+{applications, [App1, App2, ..., AppN]}
+{included_applications, [App1, App2, ... AppN]}
+....
+
+* *application* lists all the application dependencies
+** Used by tools creating the start scripts
+** Must be started before the current application is started
+* *included_applications* lists the sub-applications
+** Must be started from within the parent application
+** May only be included once due to name clashes
+** Applications included in more than one application should be standalone
+
+
+Application Files: *resource file*
+----------------------------------
+[role="centered bold darkred"]
+....
+{env, [{Key1, Val1}, {Key2, Val2}, ..., {KeyN, ValN}]}
+{mod, {Mod, StartArgs}}
+....
+
+* *env* lists environment variables
+** Keys should be atoms, while values can be any term
+** Retrieved with *application:get_env(Key)*
+* *mod* states the callback module and start arguments
+** Optional for applications consisting of library modules
+* Other optional fields include:
+** *start_phases*, allowing to start the application in phases
+** *maxP*, limiting the maximum number of allowed processes
+** *maxT*, denoting the max time the application can run (default is *infinity*)
+
+
+Distributed Applications
+------------------------
+++++
+<div class="centered">
+<pre>{kernel, [<span class="redcode">{distributed, [{Application, Time, NodeList</span>}]}]}
+<span class="redcode">NodeList = [Node1, {Node2, Node3}, Node4, ...]</span></pre>
+</div>
+++++
+
+* Used to distribute applications across Erlang nodes
+** For load balancing and fault tolerance reasons
+* Change the distributed parameter in the kernel app file
+* Specify the time you want to wait for the node to come up
+** A failover will occur after this time in milliseconds
+* List the nodes in the priority of execution
+** Tuples denote equality
+
+[NOTE.speaker]
+--
+This does NOT go in the .app file but in system configuration file
+--
+
+
+Distributed Applications
+------------------------
+++++
+<svg id="distributed_applications_1" style="height:500px; width:1200px;"><script>
+  
+var s6 = Snap("#distributed_applications_1");
+
+var arrow = s6.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s6.text(110,50,"{myApp, 2000, {n1@host, {n2@host, n3@host}]}").addClass("code darkred");
+
+var s6_g3_1 = s6.rect(100,100,200,200).addClass("shape").attr({"fill":"none"});
+s6.rect(400,100,200,200).addClass("shape").attr({"fill":"none"});
+s6.rect(700,100,200,200).addClass("shape").attr({"fill":"none"});
+
+var s6_g3_2 = s6.text(105,132,"N1").attr({"font-size":"24pt"});
+s6.text(405,132,"N2").attr({"font-size":"24pt"});
+s6.text(705,132,"N3").attr({"font-size":"24pt"});
+
+var s6_c1_1 = s6.circle(190,160,30).addClass("shape darkred");
+var s6_c1_2 = s6.circle(190,160,26).addClass("shape grey");
+var s6_c1 = s6.g(s6_c1_1, s6_c1_2);
+var s6_c2 = s6_c1.clone().transform( "t20" );
+var s6_c4 = s6_c1.clone().transform( "t320" );
+var s6_c3 = s6_c1.clone().transform( "t300" );
+var s6_c4 = s6_c1.clone().transform( "t620" );
+var s6_c3 = s6_c1.clone().transform( "t600" );
+
+var s6_g3_3 = s6_c1;
+var s6_g3_4 = s6_c2;
+
+var s6_g3_5 = s6.path("M200 185 l0,35").addClass("line");
+var s6_g3_6 = s6.circle(164,248,28).addClass("shape darkred");
+var s6_g3_7 = s6.circle(182,248,28).addClass("shape darkred");
+var s6_g3_8 = s6.circle(200,248,28).addClass("shape darkred");
+var s6_g3_9 = s6.circle(218,248,28).addClass("shape darkred");
+var s6_g3_10 = s6.circle(234,248,28).addClass("shape darkred");
+
+var s6_g1_1 = s6.text(10,350,"Application").addClass("darkred");
+var s6_g1_2 = s6.text(40,385,"Master").addClass("darkred");
+var s6_g1_3 = s6.path("M60,320 Q60,180 145,155").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s6_g1_4 = s6.text(110,460,"Application").addClass("darkred");
+var s6_g1_5 = s6.path("M190,430 l25,-133").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s6_g1_6 = s6.text(515,415,"Application Masters").addClass("darkred");
+var s6_g1_7 = s6.text(535,450,"on failover nodes").addClass("darkred");
+var s6_g1_8 = s6.path("M650,385 l-140,-180").attr({"marker-end":marker}).addClass("line_darkred");
+var s6_g1_9 = s6.path("M650,385 l140,-180").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s6_g2_1 = s6.text(240,410,"n1@host dies").addClass("darkred");
+var s6_g2_2 = s6.path("M290,375 l-20,-71").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s6_next_1 = s6.circle(1118,430,31).addClass("next_circle_bg");
+var s6_next_2 = s6.circle(1118,430,30).addClass("next_circle_fg");
+var s6_next_3 = s6.path("M1100,420 l20,0 0,-10 20,20 -20,20 0,-10 -20,0 Z").addClass("next_arrow");
+
+var s6_g1 = s6.g(s6_g1_1, s6_g1_2, s6_g1_3, s6_g1_4, s6_g1_5, s6_g1_6, s6_g1_7, s6_g1_8, s6_g1_9);
+var s6_g2 = s6.g(s6_g2_1, s6_g2_2).addClass("hide");
+var s6_g3 = s6.g(s6_g3_1, s6_g3_2, s6_g3_3, s6_g3_4, s6_g3_5, s6_g3_6, s6_g3_7, s6_g3_8, s6_g3_9, s6_g3_10);
+var s6_next = s6.g(s6_next_1, s6_next_2, s6_next_3).addClass("hide");
+
+s6_anim1 = function() { s6_g1.animate({"opacity":"0"}, 400, mina.linear, s6_anim2); }
+s6_anim2 = function() { s6_g2.animate({"opacity":"1"}, 400); }
+s6_anim3 = function() { s6_g3.animate({"opacity":"0"}, 400, mina.linear, s6_anim4); }
+s6_anim4 = function() { s6_g2.animate({"opacity":"0"}, 400, mina.linear, s6_anim5); }
+s6_anim5 = function() { s6_next.animate({"opacity":"1"}, 1000, mina.linear, s6_anim6); }
+s6_anim6 = function() { s6_next_2.animate({"opacity":"0"}, 1000, mina.linear, s6_anim7); }
+s6_anim7 = function() { s6_next_2.animate({"opacity":"1"}, 1000, mina.linear, s6_anim6); }
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_anim1(); s6_counter++; break};
+    case 2: {s6_anim3(); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Distributed Applications
+------------------------
+++++
+<svg id="distributed_applications_2" style="height:500px; width:1200px;">
+<script>
+  
+var s7 = Snap("#distributed_applications_2");
+
+var arrow = s7.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s7.text(110,50,"{myApp, 2000, {n1@host, {n2@host, n3@host}]}").addClass("code darkred");
+
+var s7_g4_1 = s7.rect(400,100,200,200).addClass("shape").attr({"fill":"none"});
+s7.rect(700,100,200,200).addClass("shape").attr({"fill":"none"});
+
+s7.text(405,132,"N2").attr({"font-size":"24pt"});
+s7.text(705,132,"N3").attr({"font-size":"24pt"});
+
+var s7_c1_1 = s7.circle(490,160,30).addClass("shape darkred");
+var s7_c1_2 = s7.circle(490,160,26).addClass("shape grey");
+var s7_c1 = s7.g(s7_c1_1, s7_c1_2);
+var s7_c2 = s7_c1.clone().transform( "t20" );
+s7_c1.clone().transform( "t320" );
+s7_c1.clone().transform( "t300" );
+
+var s7_g4_2 = s7_c1;
+var s7_g4_3 = s7_c2;
+
+var s7_g1_1 = s7.path("M500 185 l0,35").addClass("line");
+var s7_g1_2 = s7.circle(464,248,28).addClass("shape darkred");
+var s7_g1_3 = s7.circle(482,248,28).addClass("shape darkred");
+var s7_g1_4 = s7.circle(500,248,28).addClass("shape darkred");
+var s7_g1_5 = s7.circle(518,248,28).addClass("shape darkred");
+var s7_g1_6 = s7.circle(534,248,28).addClass("shape darkred");
+
+var s7_g2_1 = s7.text(275,410,"Application is").addClass("darkred");
+var s7_g2_2 = s7.text(220,445," restarted on n2@host").addClass("darkred");
+var s7_g2_3 = s7.path("M370,380 l65,-105").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s7_g3_1 = s7.text(540,390,"n2@host dies").addClass("darkred");
+var s7_g3_2 = s7.path("M585,360 l-30,-57").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s7_next_1 = s7.circle(1118,430,31).addClass("next_circle_bg");
+var s7_next_2 = s7.circle(1118,430,30).addClass("next_circle_fg");
+var s7_next_3 = s7.path("M1100,420 l20,0 0,-10 20,20 -20,20 0,-10 -20,0 Z").addClass("arrow");
+
+var s7_g1 = s7.g(s7_g1_1, s7_g1_2, s7_g1_3, s7_g1_4, s7_g1_5, s7_g1_6).addClass("hide");
+var s7_g2 = s7.g(s7_g2_1, s7_g2_2, s7_g2_3).addClass("hide");
+var s7_g3 = s7.g(s7_g3_1, s7_g3_2).addClass("hide");
+var s7_g4 = s7.g(s7_g4_1, s7_g4_2, s7_g4_3, s7_g1); // include an existing group!
+var s7_next = s7.g(s7_next_1, s7_next_2, s7_next_3).addClass("hide");
+
+s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 400); s7_g2.animate({"opacity":"1"}, 500); }
+s7_anim2 = function() { s7_g2.animate({"opacity":"0"}, 400, mina.linear, s7_anim3); }
+s7_anim3 = function() { s7_g3.animate({"opacity":"1"}, 400); }
+s7_anim4 = function() { s7_g4.animate({"opacity":"0"}, 400, mina.linear, s7_anim5); }
+s7_anim5 = function() { s7_g3.animate({"opacity":"0"}, 400, mina.linear, s7_anim6); }
+s7_anim6 = function() { s7_g2.animate({"opacity":"0"}, 400, mina.linear, s7_anim7); }
+s7_anim7 = function() { s7_next.animate({"opacity":"1"}, 1000, mina.linear, s7_anim8); }
+s7_anim8 = function() { s7_next_2.animate({"opacity":"0"}, 1000, mina.linear, s7_anim9); }
+s7_anim9 = function() { s7_next_2.animate({"opacity":"1"}, 1000, mina.linear, s7_anim8); }
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_anim1(); s7_counter++; break};
+    case 2: {s7_anim2(); s7_counter++; break};
+    case 3: {s7_anim4(); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Distributed Applications
+------------------------
+++++
+<svg id="distributed_applications_3" style="height:500px; width:1200px;">
+<script>
+  
+var s8 = Snap("#distributed_applications_3");
+
+var arrow = s8.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s8.text(110,50,"{myApp, 2000, {n1@host, {n2@host, n3@host}]}").addClass("code darkred");
+
+var s8_g3_1 = s8.rect(100,100,200,200).addClass("shape").attr({"fill":"none"});
+s8.rect(700,100,200,200).addClass("shape").attr({"fill":"none"});
+
+var s8_g3_2 = s8.text(105,132,"N1").attr({"font-size":"24pt"});
+s8.text(705,132,"N3").attr({"font-size":"24pt"});
+
+var s8_c1_1 = s8.circle(190,160,30).addClass("shape darkred");
+var s8_c1_2 = s8.circle(190,160,26).addClass("shape grey");
+var s8_c1 = s8.g(s8_c1_1, s8_c1_2);
+var s8_c2 = s8_c1.clone().transform( "t20" );
+s8_c1.clone().transform( "t620" );
+s8_c1.clone().transform( "t600" );
+
+var s8_g3_3 = s8_c1;
+var s8_g3_4 = s8_c2;
+
+var s8_g1_1 = s8.path("M800 185 l0,35").addClass("line");
+var s8_g1_2 = s8.circle(764,248,28).addClass("shape darkred");
+var s8_g1_3 = s8.circle(782,248,28).addClass("shape darkred");
+var s8_g1_4 = s8.circle(800,248,28).addClass("shape darkred");
+var s8_g1_5 = s8.circle(818,248,28).addClass("shape darkred");
+var s8_g1_6 = s8.circle(834,248,28).addClass("shape darkred");
+
+var s8_g4_1 = s8.text(130,410,"n1@host comes").addClass("darkred");
+var s8_g4_2 = s8.text(185,445,"back up").addClass("darkred");
+var s8_g4_3 = s8.path("M185,380 l15,-77").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s8_g2_1 = s8.text(550,390,"Application is").addClass("darkred");
+var s8_g2_2 = s8.text(498,425,"restarted on n3@host").addClass("darkred");
+var s8_g2_3 = s8.path("M650,360 l75,-90").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s8_next_1 = s8.circle(1118,430,31).addClass("next_circle_bg");
+var s8_next_2 = s8.circle(1118,430,30).addClass("next_circle_fg");
+var s8_next_3 = s8.path("M1100,420 l20,0 0,-10 20,20 -20,20 0,-10 -20,0 Z").addClass("next_arrow");
+
+var s8_g1 = s8.g(s8_g1_1, s8_g1_2, s8_g1_3, s8_g1_4, s8_g1_5, s8_g1_6).addClass("hide");
+var s8_g2 = s8.g(s8_g2_1, s8_g2_2, s8_g2_3).addClass("hide");
+var s8_g3 = s8.g(s8_g3_1, s8_g3_2, s8_g3_3, s8_g3_4).addClass("hide");
+var s8_g4 = s8.g(s8_g4_1, s8_g4_2, s8_g4_3).addClass("hide");
+var s8_next = s8.g(s8_next_1, s8_next_2, s8_next_3).addClass("hide");
+
+s8_anim1 = function() { s8_g1.animate({"opacity":"1"}, 400); s8_g2.animate({"opacity":"1"}, 400); }
+s8_anim2 = function() { s8_g2.animate({"opacity":"0"}, 400, mina.linear, s8_anim3); }
+s8_anim3 = function() { s8_g3.animate({"opacity":"1"}, 400); s8_g4.animate({"opacity":"1"}, 400, mina.linear, s8_anim4); }
+// Delay next one slightly
+s8_anim4 = function() { setTimeout( function() {s8_g4.animate({"opacity":"0"}, 600, mina.linear, s8_anim5)}, 1000) };
+s8_anim5 = function() { s8_g2.animate({"opacity":"0"}, 400, mina.linear, s8_anim6); }
+s8_anim6 = function() { s8_next.animate({"opacity":"1"}, 1000, mina.linear, s8_anim7); }
+s8_anim7 = function() { s8_next_2.animate({"opacity":"0"}, 1000, mina.linear, s8_anim8); }
+s8_anim8 = function() { s8_next_2.animate({"opacity":"1"}, 1000, mina.linear, s8_anim7); }
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_anim1(); s8_counter++; break};
+    case 2: {s8_anim2(); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Distributed Applications
+------------------------
+++++
+<svg id="distributed_applications_4" style="height:500px; width:1200px;">
+<script>
+  
+var s9 = Snap("#distributed_applications_4");
+
+var arrow = s9.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s9.text(110,50,"{myApp, 2000, {n1@host, {n2@host, n3@host}]}").addClass("code darkred");
+
+s9.rect(100,100,200,200).addClass("shape").attr({"fill":"none"});
+s9.rect(700,100,200,200).addClass("shape").attr({"fill":"none"});
+
+s9.text(105,132,"N1").attr({"font-size":"24pt"});
+s9.text(705,132,"N3").attr({"font-size":"24pt"});
+
+var s9_c1_1 = s9.circle(190,160,30).addClass("shape darkred");
+var s9_c1_2 = s9.circle(190,160,26).addClass("shape grey");
+var s9_c1 = s9.g(s9_c1_1, s9_c1_2);
+var s9_c2 = s9_c1.clone().transform( "t20" );
+s9_c1.clone().transform( "t620" );
+s9_c1.clone().transform( "t600" );
+
+var s9_g3_1 = s9.path("M200 185 l0,35").addClass("line");
+var s9_g3_2 = s9.circle(164,248,28).addClass("shape darkred");
+var s9_g3_3 = s9.circle(182,248,28).addClass("shape darkred");
+var s9_g3_4 = s9.circle(200,248,28).addClass("shape darkred");
+var s9_g3_5 = s9.circle(218,248,28).addClass("shape darkred");
+var s9_g3_6 = s9.circle(234,248,28).addClass("shape darkred");
+
+var s9_g2_1 = s9.path("M800 185 l0,35").addClass("line");
+var s9_g2_2 = s9.circle(764,248,28).addClass("shape darkred");
+var s9_g2_3 = s9.circle(782,248,28).addClass("shape darkred");
+var s9_g2_4 = s9.circle(800,248,28).addClass("shape darkred");
+var s9_g2_5 = s9.circle(818,248,28).addClass("shape darkred");
+var s9_g2_6 = s9.circle(834,248,28).addClass("shape darkred");
+
+var s9_g1_1 = s9.text(375,285,"N1 takes over N3").addClass("darkred");
+var s9_g1_2 = s9.path("M715,250 l-435,0").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s9_g1 = s9.g(s9_g1_1, s9_g1_2).addClass("hide");
+var s9_g2 = s9.g(s9_g2_1, s9_g2_2, s9_g2_3, s9_g2_4, s9_g2_5, s9_g2_6);
+var s9_g3 = s9.g(s9_g3_1, s9_g3_2, s9_g3_3, s9_g3_4, s9_g3_5, s9_g3_6).addClass("hide");
+
+s9_anim1 = function() { s9_g1.animate({"opacity":"1"}, 400); }
+s9_anim2 = function() { s9_g2.animate({"opacity":"0"}, 400, mina.linear, s9_anim3); }
+s9_anim3 = function() { s9_g3.animate({"opacity":"1"}, 400, mina.linear, s9_anim4); }
+// Delay next one slightly
+s9_anim4 = function() { setTimeout( function() {s9_g1.animate({"opacity":"0"}, 600, mina.linear)}, 1000) };
+
+var s9_counter=1
+s9.click( function() {
+  switch(s9_counter) {
+    case 1: {s9_anim1(); s9_counter++; break};
+    case 2: {s9_anim2(); s9_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Application Monitor
+-------------------
+* The Application Monitor is a tool supervising applications
+** Shows an overview of the applications
+* Works in distributed environments
+* Allows the inspection of the application process structure
+* Allows simple interaction with the processes:
+** Tracing & Viewing process information
+** Sending messages
+** Terminating processes
+
+
+Application Monitor
+-------------------
+++++
+<div style="width:100%; text-align:center;">
+<img src="images/appmon_1.png" style="height:220px; width:auto; float:left;" />
+<img src="images/appmon_2.png" style="height:220px; width:auto; float:left; margin:100px 0 50px -200px;" />
+</div>
+++++
+
+* *appmon:start()* starts the application monitor
+
+
+Application Monitor
+-------------------
+++++
+<div style="width:100%; text-align:center;">
+<img src="images/appmon_3.png" style="height:auto; width:420px; margin-left:-300px;" />
+</div>
+++++
+
+* Click on any application to open the process tree view
+
+
+Applications
+------------
+* Applications
+* Starting Applications
+* Stopping Applications
+* Application Files
+* Distributed Applications
+* Application Monitor

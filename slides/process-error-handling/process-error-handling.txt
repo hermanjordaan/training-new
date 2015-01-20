@@ -1,0 +1,752 @@
+Process Error Handling
+======================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+Overview: *process error handling*
+----------------------------------
+* Process Error Handling I
+** Links
+** Exit Signals
+** Definitions
+** Propagation Semantics
+* Process Error Handling II
+
+
+Links
+-----
+++++
+<svg id="links_1" style="width:500px; height:300px;" viewBox="0 0 500 300" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s1 = Snap("#links_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s1.text(65,90,"PidA").addClass("code");
+s1.circle(100,150,40).addClass("shape grey");
+s1.text(18,235,"link(PidB)").addClass("code");
+s1.circle(400,150,40).addClass("shape darkred");
+s1.text(365,90,"PidB").addClass("code");
+
+s1_g1_1 = s1.path("M150,150 l195,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s1_g1_2 = s1.path("M155,150 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2).addClass("hide");
+
+s1.click(function() { s1_g1.animate({"opacity":"1"}, 500, mina.linear); });
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* *link/1* will create a bi-directional link between the process calling the BIF and the process PidB
+* *spawn_link/3* will yield the same result as calling *spawn/3* followed by *link/1*, only that it will do it *atomically*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Make sure you explain the difference between link and spawn link, namely that if you do not spawn and link atomically, the process might crash between the spawn and the link.
+--
+
+Links
+-----
+++++
+<svg id="links_2" style="width:500px; height:400px;" viewBox="0 0 500 400" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s2 = Snap("#links_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2_g1 = s2.text(50,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s2_g2 = s2.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t-10,0" );
+
+s2_g3_1 = s2.text(65,100,"PidA").addClass("code");
+s2_g3_2 = s2.circle(100,200,40).addClass("shape grey");
+
+s2_g4_1 = s2.path("M150,200 l195,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s2_g4_2 = s2.path("M155,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s2_g5 = s2.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t290,0" );
+
+s2_g6_1 = s2.circle(400,200,40).addClass("shape grey");
+s2_g6_2 = s2.text(365,100,"PidB").addClass("code");
+
+s2_g3 = s2.g(s2_g3_1, s2_g3_2).addClass("");
+s2_g4 = s2.g(s2_g4_1, s2_g4_2).addClass("");
+s2_g6 = s2.g(s2_g6_1, s2_g6_2).addClass("");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 250, mina.linear, s2_anim2); };
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 250, mina.linear, s2_anim3); };
+s2_anim3 = function() { s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_g3.animate({"opacity":"0"}, 250, mina.linear); };
+
+s2_anim4 = function() { s2_g4.animate({"opacity":"0"}, 250, mina.linear, s2_anim5); };
+s2_anim5 = function() { s2_g5.animate({"opacity":"1"}, 250, mina.linear, s2_anim6); };
+s2_anim6 = function() { s2_g5.animate({"opacity":"0"}, 250, mina.linear); s2_g6.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim4(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* *Exit Signals* are sent when processes terminate abnormally
+* They are sent to all processes to which the failing process is currently linked to
+* The process receiving the signal will exit, then propagate a new signal to the processes it is linked to
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Make sure you explain the difference between link and spawn link, namely that if you do not spawn and link atomically, the process might crash between the spawn and the link.
+--
+
+
+Links
+-----
+++++
+<svg id="links_3" style="width:620px; height:620px;" viewBox="0 0 620 620" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s3 = Snap("#links_3");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s3_g1 = s3.text(10,40,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s3_g2 = s3.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s3_g3_1 = s3.text(115,100,"PidA").addClass("code");
+s3_g3_2 = s3.circle(150,200,40).addClass("shape grey");
+
+s3_g4 = s3.text(200,350,"{'EXIT', PidB, Reason})").addClass("code hide");
+
+s3_g5_1 = s3.path("M200,200 l195,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s3_g5_2 = s3.path("M205,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s3_g6 = s3_g2.clone().transform( "t340,0" );
+
+s3_g7_1 = s3.circle(450,200,40).addClass("shape grey");
+s3_g7_2 = s3.text(415,100,"PidB").addClass("code");
+
+s3_g8_1 = s3.path("M450,250 l0,175").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s3_g8_2 = s3.path("M450,255 l0,-1").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s3_g9 = s3_g2.clone().transform( "t340,280" );
+
+s3_g10_1 = s3.circle(450,480,40).addClass("shape grey");
+s3_g10_2 = s3.text(415,600,"PidC").addClass("code");
+
+s3_g3 = s3.g(s3_g3_1, s3_g3_2).addClass("");
+s3_g5 = s3.g(s3_g5_1, s3_g5_2).addClass("");
+s3_g7 = s3.g(s3_g7_1, s3_g7_2).addClass("");
+s3_g8 = s3.g(s3_g8_1, s3_g8_2).addClass("");
+s3_g10 = s3.g(s3_g10_1, s3_g10_2).addClass("");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 250, mina.linear, s3_anim2); };
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 250, mina.linear, s3_anim3); };
+s3_anim3 = function() { s3_g2.animate({"opacity":"0"}, 250, mina.linear); s3_g3.animate({"opacity":"0"}, 250, mina.linear); };
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 250, mina.linear); s3_g5.animate({"opacity":"0"}, 250, mina.linear, s3_anim5); };
+s3_anim5 = function() { s3_g6.animate({"opacity":"1"}, 250, mina.linear, s3_anim6); };
+s3_anim6 = function() { s3_g6.animate({"opacity":"0"}, 250, mina.linear); s3_g7.animate({"opacity":"0"}, 250, mina.linear, s3_anim7); };
+s3_anim7 = function() { s3_g8.animate({"opacity":"0"}, 250, mina.linear, s3_anim8); };
+s3_anim8 = function() { s3_g9.animate({"opacity":"1"}, 250, mina.linear, s3_anim9); };
+s3_anim9 = function() { s3_g9.animate({"opacity":"0"}, 250, mina.linear); s3_g10.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim4(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* When process *PidA* fails, the exit signals propagate to *PidB*
+* From *PidB*, it propagates to *PidC*.
+
+
+Exit Signals
+------------
+++++
+<svg id="exit_signals_1" style="width:620px; height:420px;" viewBox="0 0 620 420" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s4 = Snap("#exit_signals_1");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s4_g1 = s4.text(90,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s4_g2 = s4.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s4_g3_1 = s4.text(115,120,"PidA").addClass("code");
+s4_g3_2 = s4.circle(150,200,40).addClass("shape grey");
+
+s4_g4_1 = s4.path("M200,200 l190,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s4_g4_2 = s4.path("M205,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s4.circle(450,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s4.circle(450,200,40).addClass("shape grey");
+s4.text(415,140,"PidB").addClass("code");
+
+s4_g3 = s4.g(s4_g3_1, s4_g3_2);
+s4_g4 = s4.g(s4_g4_1, s4_g4_2);
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 250, mina.linear, s4_anim2); };
+s4_anim2 = function() { s4_g2.animate({"opacity":"1"}, 250, mina.linear, s4_anim3); };
+s4_anim3 = function() { s4_g2.animate({"opacity":"0"}, 250, mina.linear); s4_g3.animate({"opacity":"0"}, 250, mina.linear); };
+s4_anim4 = function() { s4_g4.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_anim1(); s4_counter++; break};
+    case 2: {s4_anim4(); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* Processes can trap exit signals by calling the BIF *process_flag(trap_exit, true)*
+* Exit signals will be converted to messages of the format  *{\'EXIT', Pid, Reason}*
+* They are saved in the process mailbox
+* If an exit signal is trapped, it does not propagate further
+
+
+Exit Signals
+------------
+++++
+<svg id="exit_signals_2" style="width:620px; height:620px;" viewBox="0 0 620 60" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s5 = Snap("#exit_signals_2");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s5_g1 = s5.text(20,350,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s5_g2 = s5.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t90,0" );
+
+s5_g3_1 = s5.text(165,120,"PidA").addClass("code");
+s5_g3_2 = s5.circle(200,200,40).addClass("shape grey");
+
+s5_g4_1 = s5.path("M250,200 l190,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s5_g4_2 = s5.path("M255,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s5.circle(500,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s5.circle(500,200,40).addClass("shape grey");
+s5.text(465,140,"PidB").addClass("code");
+
+s5.path("M500,255 l0,170").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s5.path("M500,260 l0,-1").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s5.circle(500,480,40).addClass("shape grey");
+s5.text(465,560,"PidC").addClass("code");
+
+s5_g3 = s5.g(s5_g3_1, s5_g3_2);
+s5_g4 = s5.g(s5_g4_1, s5_g4_2);
+
+s5_anim1 = function() { s5_g1.animate({"opacity":"1"}, 250, mina.linear, s5_anim2); };
+s5_anim2 = function() { s5_g2.animate({"opacity":"1"}, 250, mina.linear, s5_anim3); };
+s5_anim3 = function() { s5_g2.animate({"opacity":"0"}, 250, mina.linear); s5_g3.animate({"opacity":"0"}, 250, mina.linear, s5_anim4); };
+s5_anim4 = function() { s5_g4.animate({"opacity":"0"}, 250, mina.linear); };
+
+s5.click( function() {s5_anim1() } );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* Process B marked with a double ring is trapping EXITs
+* If an error occurs in A or C, then they will terminate.
+* Process B will receive the *{\'EXIT', Pid, Reason}* message
+* The process that did not terminate will not be affected.
+
+
+Definitions: *terminology*
+--------------------------
+*Link*::
+A bi-directional propagation path for exit signals set up between processes
+
+*Exit Signal*::
+An asynchronous signal transmitted by a process upon exiting. It contains termination information
+
+*Error Trapping*::
+The ability of a process to handle exit signals as if they were messages
+
+[NOTE.speaker]
+[role="speaker"]
+--
+As the signal is asynchronous it can easily distributed
+--
+
+
+Definitions: *built-in functions*
+---------------------------------
+*link(Pid)*::
+Set a link between the calling process and Pid
+
+*unlink(Pid)*::
+Removes a link to Pid
+
+*spawn_link(M, F, Args)*::
+Atomically spawns and sets a link between the calling and the spawned processes.
+
+*process_flag(trap_exit, Bool)*::
+Sets the current process to convert exit signals into exit messages
+
+
+Definitions: *built-in functions*
+---------------------------------
+++++
+<svg id="definitions_built_in_functions_1" style="width:620px; height:420px;"" viewBox="0 0 620 420" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s6 = Snap("#definitions_built_in_functions_1");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s6_g1 = s6.text(90,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s6_g2 = s6.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s6_g3_1 = s6.text(115,115,"PidA").addClass("code");
+s6_g3_2 = s6.circle(150,200,40).addClass("shape grey");
+
+s6_g4_1 = s6.path("M200,200 l190,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s6_g4_2 = s6.path("M205,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s6.circle(450,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s6.circle(450,200,40).addClass("shape grey");
+s6.text(415,140,"PidB").addClass("code");
+
+s6_g3 = s6.g(s6_g3_1, s6_g3_2);
+s6_g4 = s6.g(s6_g4_1, s6_g4_2);
+
+s6_anim1 = function() { s6_g1.animate({"opacity":"1"}, 250, mina.linear, s6_anim2); };
+s6_anim2 = function() { s6_g2.animate({"opacity":"1"}, 250, mina.linear, s6_anim3); };
+s6_anim3 = function() { s6_g2.animate({"opacity":"0"}, 250, mina.linear); s6_g3.animate({"opacity":"0"}, 250, mina.linear); s6_g4.animate({"opacity":"0"}, 250, mina.linear); };
+
+s6.click( function() {s6_anim1() } );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* The BIF *exit(Reason)* terminates the process which calls it
+* It generates an exit signal sent to linked processes
+* The BIF *exit/1* can be caught in a *try ... catch*.
+
+
+Definitions: *built-in functions*
+---------------------------------
+++++
+<svg id="definitions_built_in_functions_2" style="width:620px; height:420px;" viewBox="0 0 620 420" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s7 = Snap("#definitions_built_in_functions_2");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s7_g1 = s7.text(90,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s7_g2 = s7.path("M400,200 l-195,0").attr({"strokeDasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s7_g3 = s7.path("M195,200 l205,0").attr({"strokeDasharray":"205", "stroke-width":20, "stroke":"#fff"});
+
+s7_g4 = s7.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s7_g5_1 = s7.text(115,115,"PidA").addClass("code");
+s7_g5_2 = s7.circle(150,200,40).addClass("shape grey");
+
+s7.circle(450,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s7.circle(450,200,40).addClass("shape grey");
+s7.text(415,140,"PidB").addClass("code");
+
+s7_g5 = s7.g(s7_g5_1, s7_g5_2, s7_g1);
+
+s7_anim1 = function() { s7_g1.animate({"opacity":1}, 375, mina.linear); s7_g3.animate({"strokeDashoffset":205}, 375, mina.linear)};
+
+s7_anim2 = function() { s7_g4.animate({"opacity":1}, 250, mina.linear, s7_anim3)};
+s7_anim3 = function() { s7_g4.animate({"opacity":0}, 250, mina.linear); s7_g5.animate({"opacity":0}, 250, mina.linear); s7_g2.animate({"opacity":0}, 250, mina.linear)};
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_anim1(); s7_counter++; break};
+    case 2: {s7_anim2(); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* *exit(Pid, Reason)* sends an exit signal containing *Reason* to the process *Pid*
+* If trapping exits, the signal is converted to an exit message
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Tell students to try this in the shell:
+ process_flag(trap_exit, true).
+ exit(self(), foo).
+flush().
+--
+
+
+Propagation Semantics: *no trapping*
+------------------------------------
+
+[role="left"]
+image::images/no_trapping.png["No trapping", 500, auto]
+
+[role="right"]
+{empty} +
+{empty} +
+{empty} +
+
+* Nothing happens to PidB + 
+  {empty} +
+  {empty} +
+  {empty} +
+
+* PidB terminates with reason *\'killed'* + 
+  {empty} +
+  {empty} +
+  {empty} +
+
+* PidB terminates with reason *Other*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Explain that PidA sends the 'killed' signal when it itself died with the 'kill' signal, and that it is untrappable (in the next slide)
+--
+
+Propagation Semantics: *trapping exits*
+---------------------------------------
+
+[role="left"]
+image::images/no_trapping.png["Trapping exits", 500, auto]
+
+[role="right"]
+{empty} +
+{empty} +
+{empty} +
+
+* PidB receives +
+  *{'EXIT', PidA, 'normal'}* + 
+  {empty} +
+  {empty} +
+
+* PidB terminates with reason *\'killed'* + 
+  {empty} +
+  {empty} +
+  {empty} +
+
+* PidB receives + 
+  *{'EXIT', PidA, Other}*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Explain that A doesn't die, but sends 'kill' to B, which is untrappable.
+--
+
+
+Propagation Semantics
+---------------------
+* When a process terminates, it sends an exit signal to the processes in its link set
+* Exit signals can be *\'normal'* or *non-normal*
+* A process not trapping exits dies if it receives a non-normal one. Normal signals are ignored.
+* A process which is trapping exit signals converts all incoming exit signals to conventional messages handled in a receive statement
+* If the reason is *\'kill'*, the process is terminated unconditionally with reason *\'killed'*
+
+
+Summary: *process error handling I*
+-----------------------------------
+* Process Error Handling I
+** Links
+** Exit Signals
+** Definitions
+** Propagation Semantics
+* Process Error Handling II
+
+
+Overview: *process error handling II*
+-------------------------------------
+* Process Error Handling I
+* Process Error Handling II
+** Robust Systems
+** A Robust Server
+
+[NOTE.speaker]
+[role="speaker"]
+--
+2 things are necessary for building robust systems are ensuring that some services are always available and to clean up after processes crash.
+--
+
+
+Robust Systems
+--------------
+* Building a system in layers can make it robust
+** Level N-1 traps and fixes errors occurring in level N
+** The leaves of the tree are workers
+* In well designed systems, application programmers will not have to worry about error handling code
+** Error handling will be isolated by higher levels of the system, managed uniformly across processes
+* Processes whose only task is to supervise children are called supervisors
+
+
+Robust Systems
+--------------
+[role="left w_700"]
+image::images/robust_systems.png["Robust systems", 700, auto]
+
+[role="right w_400"]
+* Robust systems can be designed by layering
+
+
+A Robust Server
+---------------
+* Remember the server example from the process design patterns section?
+* The Server is unreliable!
+** What happens if the client crashes before it sends the release message?
+* Let's rewrite the server making it reliable by monitoring the clients
+** If a client terminates before deallocating a frequency, the server will deallocate it automatically
+
+
+A Robust Server
+---------------
+++++
+<div class="pre">-module(frequency).
+-export([start/0, stop/0,  allocate/0, deallocate/1]).
+-export([init/0]).
+
+start() ->
+    register(frequency, spawn(frequency, init, [])).
+
+init() ->
+    <span class="redcode">process_flag(trap_exit, true),</span>
+    Frequencies = {get_frequencies(), []},
+    loop(Frequencies).
+
+get_frequencies() -> [10,11,12,13,14, 15].
+
+
+</div>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+These are the start functions used to create and initialise the server.
+--
+
+
+A Robust Server
+---------------
+++++
+<div class="pre">allocate({[], Allocated}, Pid) ->
+    {{[], Allocated}, {error, no_frequencies}};
+allocate({[Freq|Frequencies], Allocated}, Pid) ->
+    <span class="redcode">link(Pid),</span>
+    {{Frequencies, [{Freq, Pid}|Allocated]}, {ok, Freq}}.
+
+deallocate({Free, Allocated}, Freq) ->
+    <span class="redcode">{value, {Freq, Pid}} = 
+      lists:keysearch(Freq, 1, Allocated),
+    unlink(Pid),</span>
+    NewAllocated = lists:keydelete(Freq, 1, Allocated),
+    {[Freq|Free],  NewAllocated}.
+
+
+
+</div>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Internal functions: they help to allocate and deallocate frequencies
+--
+
+
+A Robust Server
+---------------
+++++
+<div class="pre">loop(Frequencies) ->
+  receive
+    {request, Pid, allocate} ->
+      {NewFreqs, Reply} = allocate(Freqs, Pid),
+      reply(Pid, Reply),
+      loop(NewFrequencies);
+    ...
+    <span class="redcode">{'EXIT', Pid, Reason} ->
+      NewFrequencies = exited(Frequencies, Pid),
+      loop(NewFrequencies);</span>
+    {request, Pid, stop} ->
+      reply(Pid, ok)
+  end.
+
+
+</div>
+++++
+
+
+A Robust Server
+---------------
+//svg
+++++
+<div class="pre">%% Help functions used when a client crashes.
+
+exited({Free, Allocated}, Pid) ->
+  case  lists:keysearch(Pid, 2, Allocated) of
+    {value, {Freq, Pid}} ->
+      NewAllocated = lists:keydelete(Freq, 1, Allocated),
+      {[Freq|Free],  NewAllocated};
+    false ->  
+      {Free, Allocated}
+  end.
+
+
+
+
+
+</div>
+
+<svg id="robust_server_1" style="width:500px; height:155px; position:relative; left:390px;top:-260px;" viewBox="0 0 500 155" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s8 = Snap("#robust_server_1");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s8.path("M165,43 l-150,-30").addClass("line_darkred").attr({"marker-end":marker})
+
+s8.text(170,35,"The EXIT message was").addClass("darkred");
+s8.text(175,70,"sent before the server").addClass("darkred");
+s8.text(185,105,"unlinked, but after it").addClass("darkred");
+s8.text(170,140,"released the frequency").addClass("darkred");
+
+</script>
+</svg>
+
+++++
+
+
+A Server Example
+----------------
+
+++++
+<svg id="server_example_2" style="width:1100px; height:600px;" viewBox="0 0 1100 570" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">.draw {stroke:#fff; stroke-width:15;}</style>
+<script>
+
+var s9 = Snap("#server_example_2");
+
+var arrow = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s9.text(60,40,"Client");
+s9.path("M100,60 l0,500").attr({"marker-end":marker}).addClass("line").attr({"stroke-width":"5px"});
+
+s9.text(995,40,"Server").addClass("darkred");
+s9.path("M1040,60 l0,500").attr({"marker-end":marker_red}).addClass("line_darkred").attr({"stroke-width":"5px"});
+
+s9_g1 = s9.text(190,115,"{request, Pid, allocate}").addClass("code hide");
+s9.path("M130,130 l880,0").attr({"marker-end":marker}).addClass("line");
+s9_g2 = s9.path("M1020,130 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s9_g3 = s9.text(150,195,"{reply,{error,no_frequencies} or {ok,Frequency}}").addClass("code hide");
+s9.path("M1005,210 l-870,0").attr({"marker-end":marker}).addClass("line");
+s9_g4 = s9.path("M120,210 l900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s9_g5 = s9.text(160,325,"{request, Pid, {deallocate, Frequency}}").addClass("code hide");
+s9.path("M130,340 l880,0").attr({"marker-end":marker}).addClass("line");
+s9_g6 = s9.path("M1020,340 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s9_g8 = s9.text(230,395,"{'EXIT', Pid, Reason}").addClass("code hide");
+s9.path("M130,410 l880,0").attr({"marker-end":marker}).addClass("line");
+s9_g9 = s9.path("M1020,410 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s9_g7 = s9.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform("t-10 200");
+
+s9_g10 = s9.text(790,475,"{reply, ok}").addClass("code hide");
+s9.path("M1005,490 l-870,0").attr({"marker-end":marker}).addClass("line");
+s9_g11 = s9.path("M120,490 l900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s9_anim1 = function() { s9_g1.animate({"opacity":"1"}, 500, mina.linear, s9_anim2); }
+s9_anim2 = function() { s9_g2.animate({"strokeDashoffset":"900"}, 500, mina.linear, s9_anim3); }
+s9_anim3 = function() { s9_g3.animate({"opacity":"1"}, 500, mina.linear, s9_anim4); }
+s9_anim4 = function() { s9_g4.animate({"strokeDashoffset":"900"}, 500, mina.linear, s9_anim5); }
+s9_anim5 = function() { s9_g5.animate({"opacity":"1"}, 500, mina.linear, s9_anim6); }
+s9_anim6 = function() { s9_g6.animate({"strokeDashoffset":"900"}, 500, mina.linear, s9_anim7); }
+s9_anim7 = function() { s9_g7.animate({"opacity":"1"}, 500, mina.linear, s9_anim8); }
+s9_anim8 = function() { s9_g8.animate({"opacity":"1"}, 500, mina.linear, s9_anim9); }
+s9_anim9 = function() { s9_g9.animate({"strokeDashoffset":"900"}, 500, mina.linear, s9_anim10); }
+s9_anim10 = function() { s9_g10.animate({"opacity":"1"}, 500, mina.linear, s9_anim11); }
+s9_anim11 = function() { s9_g11.animate({"strokeDashoffset":"900"}, 500, mina.linear); }
+s9.click(function() { s9_anim1() });
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+When concluding, say that these simple, but powerful constructs are the tools used to build the layers which power systems that never fail.
+--
+
+
+Summary: *process error handling*
+---------------------------------
+* Process Error Handling I
+** Links
+** Exit Signals
+** Definitions
+** Propagation Semantics
+* Process Error Handling II
+** Robust Systems
+** A Robust Server

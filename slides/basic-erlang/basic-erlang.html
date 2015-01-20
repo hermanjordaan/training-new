@@ -1,0 +1,448 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Basic Erlang</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Basic Erlang</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script></div></div>
+<section id="_overview_strong_basic_erlang_i_strong"><h2>Overview: <strong>basic Erlang I</strong></h2><div class="ulist"><ul><li><p>Basic Erlang I</p><div class="ulist incremental"><ul><li><p>Data Types</p></li><li><p>Variables</p></li><li><p>Complex Data Structures</p></li><li><p>Pattern Matching</p></li></ul></div></li><li><p>Basic Erlang II</p></li></ul></div></section>
+<section id="_data_types_strong_integers_strong"><h2>Data Types: <strong>integers</strong></h2><div class="literalblock left"><div class="content"><pre>0
+10
+100000000
+-234
+16#AB10F
+2#1010
+$a
+$A
+$\n
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p><strong><code>B#Val</code></strong> is used to store numbers in base <strong><code>B</code></strong></p></li><li><p><strong><code>$Char</code></strong> is used for ascii values</p><div class="ulist"><ul><li><p><strong><code>$A</code></strong> is equivalent to 65</p></li></ul></div></li><li><p>Large integers are converted to bignums</p></li><li><p>Max size depends on physical constraints:</p><div class="ulist"><ul><li><p>RAM</p></li><li><p>Paging memory</p></li></ul></div></li></ul></div></section>
+<section id="_data_types_strong_floats_strong"><h2>Data Types: <strong>floats</strong></h2><div class="literalblock left"><div class="content"><pre>17.368
+-56.654
+12.34E-10
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Not efficiently implemented</p></li><li><p>Stored as a double</p><div class="ulist"><ul><li><p>64-bit representation</p></li></ul></div></li><li><p>Follows the IEEE 754 standard</p></li></ul></div></section>
+<section id="_data_types_strong_atoms_strong"><h2>Data Types: <strong>atoms</strong></h2><div class="literalblock left"><div class="content"><pre>january
+fooBar
+alfa21
+start_with_lower_case
+node@ramone
+true
+false
+
+'January'
+'a space'
+'Anything inside quotes{}#@ \n\012'
+'node@ramone.erlang.org'
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Atoms are constant literals</p></li><li><p>Start with a lower case letter or are encapsulated by ' '</p></li><li><p>Any character code is allowed within an atom if using ' '</p></li><li><p>Letters, integers and _ are allowed if the atom starts with a lower case letter</p></li></ul></div></section>
+<section id="_data_types_strong_booleans_strong"><h2>Data Types: <strong>booleans</strong></h2><div class="literalblock left"><div class="content"><pre>true
+false
+1 == 2
+1 /= 2
+1 == 1.0
+1 =:= 1
+1 =/= 1.0
+1 &lt; 2
+a &gt; z
+less &lt; more
+is_boolean(9+6)
+is_boolean(true)
+not((1 &lt; 3) and (2 == 2))
+not((1 &lt; 3) or (2 == 2))
+not((1 &lt; 3) xor (2 == 2))
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>No separate type for booleans: atoms <strong>true</strong> and <strong>false</strong> are used instead.</p></li><li><p>Operators (and, andalso, or, orelse, xor, not) accept <strong>true</strong> and <strong>false</strong> as if they actually were boolean types.</p></li></ul></div></section>
+<section id="_data_types_strong_tuples_strong"><h2>Data Types: <strong>tuples</strong></h2><div class="literalblock left"><div class="content"><pre>{123, bcd}
+{123, def, abc}
+{abc, {def, 123}, ghi}
+{}
+{person, 'Joe', 'Armstrong'}
+{person, 'Mike', 'Williams'}
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Tuples are used to denote data-types with a fixed number of items</p></li><li><p>Tuples of any size are allowed</p></li><li><p>Contain valid Erlang expressions</p></li></ul></div></section>
+<section id="_data_types_strong_lists_strong"><h2>Data Types: <strong>lists</strong></h2><div class="literalblock"><div class="content"><pre> 
+[1, 2, 3, 4, 5, 6, 7, eight, nine]
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Lists are written beginning with a <strong>[</strong> and ending with a <strong>]</strong></p></li><li><p>Elements are separated by commas</p></li><li><p>Used to store a variable number of items</p></li><li><p>Lists are dynamically sized</p></li><li><p>Strings in Erlang are lists of ASCII values</p></li></ul></div></section>
+<section id="_data_types_strong_lists_strong_2"><h2>Data Types: <strong>lists</strong></h2><div class="literalblock"><div class="content"><pre>[january, february, march]
+[123, def, abc]
+[a,[b,[c,d,e],f],g]
+[]
+[{person, 'Joe', 'Armstrong'},
+ {person, 'Robert', 'Virding'},
+ {person, 'Mike', 'Williams'}]
+[72,101,108,108,111,32,87,111,114,108,100]
+[$H,$e,$l,$l,$o,$ ,$W,$o,$r,$l,$d]
+"Hello World"
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_data_types_strong_lists_strong_3"><h2>Data Types: <strong>lists</strong></h2><div class="left">
+<div class="pre" style="text-align:center;">
+<svg id="data_types_lists_1" style="width:460px; height:210px;" viewBox="0 0 460 210" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#data_types_lists_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(10,130,"List              List").addClass("code darkred bold");
+s1.text(10,130,"     = [Element |      or").addClass("code");
+s1.text(10,170,"       []").addClass("code");
+s1.path("M355,90 S220,-70 50,90").attr({"marker-end":marker, "stroke-width":"3.5"}).addClass("line_darkred");
+
+</script>
+</svg>
+</div></div>
+<div class="ulist right"><ul><li><p>A recursive list definition consists of a head and a tail</p></li><li><p>Lists whose last tail term is <strong>[]</strong> are called:</p><div class="ulist"><ul><li><p><strong>proper</strong> lists or</p></li><li><p><strong>well-formed</strong> lists</p></li></ul></div></li><li><p>The tail can be any valid Erlang data type</p></li><li><p>Most Erlang programs manipulate proper lists</p></li></ul></div></section>
+<section id="_data_types_strong_lists_strong_4"><h2>Data Types: <strong>lists</strong></h2><div class="literalblock"><div class="content"><pre>[one, two, three, four]
+[one, two, three, four | []]
+[one, two|[three, four]]
+[one, two|[three|[four|[]]]]
+[one|[two|[three|[four|[]]]]]
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_variables"><h2>Variables</h2><div class="literalblock left"><div class="content"><pre>A_long_variable_name
+Flag
+Name2
+DbgFlag
+
+
+_a_do_not_care_variable
+_
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Variables can start with an uppercase letter or _</p></li><li><p>They may not contain any &#8216;funny characters&#8217;</p></li><li><p>_ alone is a don&#8217;t care variable</p><div class="ulist"><ul><li><p>Its values are ignored and never bound</p></li></ul></div></li></ul></div></section>
+<section id="_variables_2"><h2>Variables</h2><div class="paragraph left"><p><span class="image"><img src="images/variables-warning.png" alt="Variables can only be bound once" height="400"></span></p></div>
+<div class="ulist right"><ul><li><p>Variables are used to store values of data structures</p></li><li><p>The value of a variable can not be changed once it has been bound</p></li><li><p>There is no need to declare them. Just use them!</p></li><li><p>Erlang does not have a static type system</p></li><li><p>Types are determined at run time</p></li></ul></div></section>
+<section id="_complex_data_structures"><h2>Complex Data Structures</h2><div class="literalblock"><div class="content"><pre>[{{person, "Joe", "Armstrong"},
+  [{telephone_number, [3,5,9,7]},
+   {shoe_size, 42},
+   {pets, [{cat, tubby}, {cat, tiger}]},
+   {children, [{thomas, 5}, {claire, 1}]}]
+ },
+ {{person, "Mike", "Williams"},
+  [{shoe_size, 41},
+   {likes, [boats, beer]}]
+ }
+].
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_complex_data_structures_2"><h2>Complex Data Structures</h2><div class="ulist"><ul><li><p>Arbitrary complex data structures can be created by nesting other data structures</p></li><li><p>Data structures may contain bound variables</p></li><li><p>Data structures are created by writing them down</p></li><li><p>No explicit memory allocation or deallocation is needed</p><div class="ulist"><ul><li><p>Allocated automatically</p></li><li><p>Deallocated by the <strong>garbage collector</strong> when no longer referenced.</p></li></ul></div></li></ul></div></section>
+<section id="_pattern_matching"><h2>Pattern Matching</h2><div class="literalblock centered redcode"><div class="content"><pre>Pattern = Expression</pre></div></div>
+<div class="ulist"><ul><li><p>Pattern matching is used for:</p><div class="ulist"><ul><li><p>Assigning values to variables</p></li><li><p>Controlling the execution flow of programs (if, case, function heads)</p></li><li><p>Extracting values from compound data types</p></li><li><p>The pattern can contain variables which are bound when the matching succeeds</p></li></ul></div></li><li><p>The expression may not contain unbound variables</p></li></ul></div></section>
+<section id="_pattern_matching_strong_assigning_strong"><h2>Pattern Matching: <strong>assigning</strong></h2><div class="paragraph"><p><strong>A = 10</strong><br>
+&#160;&#160; Succeeds, binds <strong>A</strong> to <strong>10</strong></p></div>
+<div class="paragraph"><p><strong>{B, C, D} = {10, foo, bar}</strong><br>
+&#160;&#160; Succeeds, binds <strong>B</strong> to <strong>10</strong>, <strong>C</strong> to <strong>foo</strong> and <strong>D</strong> to <strong>bar</strong>.</p></div>
+<div class="paragraph"><p><strong>{E, E, foo} = {abc, abc, foo}</strong><br>
+&#160;&#160; Succeeds, binds <strong>E</strong> to <strong>abc</strong>.</p></div>
+<div class="paragraph"><p><strong>[H|T] = [1,2,3]</strong><br>
+&#160;&#160; Succeeds, binds <strong>H</strong> to <strong>1</strong>, <strong>T</strong> to <strong>[2,3]</strong>.</p></div></section>
+<section id="_pattern_matching_strong_controlling_strong"><h2>Pattern Matching: <strong>controlling</strong></h2><div class="paragraph"><p><strong>A match must either succeed or fail</strong><br>
+<strong><code>{A, A, B} = {abc, def, 123}</code></strong><br>
+&#160;&#160;- fails</p></div>
+<div class="paragraph"><p><strong><code>[A,B,C,D] = [1,2,3]</code></strong><br>
+&#160;&#160;- fails</p></div>
+<div class="paragraph"><p><strong><code>[A,B|C] = [1,2,3,4,5,6,7]</code></strong><br>
+&#160;&#160;- succeeds, <code>A=1</code>, <code>B=2</code>, <code>C=[3,4,5,6,7]</code></p></div>
+<div class="paragraph"><p><strong><code>[H|T] = []</code></strong><br>
+&#160;&#160;- fails</p></div></section>
+<section id="_pattern_matching_strong_extracting_strong"><h2>Pattern Matching: <strong>extracting</strong></h2><div class="paragraph"><p><strong><code>\{A, _, [B|_], {B}\} = \{abc, 23, [22, x], {22}\}</code></strong><br>
+&#160;&#160;- Succeeds, <code>A=abc</code>, <code>B=22</code></p></div>
+<div class="paragraph"><p><strong><code>C = 10, {C, C, 13, D, _} = {10, 10, 13, 12, 15}</code></strong><br>
+&#160;&#160;- Succeeds, <code>D=12</code>, <code>C=10</code></p></div>
+<div class="paragraph"><p><strong><code>Var = {person, 'Francesco', 'Cesarini'}, <br>
+{person, Name, Surname} = Var</code></strong><br>
+&#160;&#160;- Succeeds, <code>Name='Francesco'</code>, <code>Surname='Cesarini'</code></p></div>
+<div class="paragraph"><p><strong><code>[Element|Tail] = [1,2,3,4]</code></strong><br>
+&#160;&#160;- Succeeds, <code>Element=1</code>, <code>Tail=[2,3,4]</code></p></div></section>
+<section id="_summary_strong_basic_erlang_i_strong"><h2>Summary: <strong>basic Erlang I</strong></h2><div class="ulist"><ul><li><p>Basic Erlang I</p><div class="ulist"><ul><li><p>Data Types</p></li><li><p>Variables</p></li><li><p>Complex Data Structures</p></li><li><p>Pattern Matching</p></li></ul></div></li><li><p>Basic Erlang II</p></li></ul></div></section>
+<section id="_overview_strong_basic_erlang_ii_strong"><h2>Overview: <strong>basic Erlang II</strong></h2><div class="ulist"><ul><li><p>Basic Erlang I</p></li><li><p>Basic Erlang II</p><div class="ulist"><ul><li><p>Function Calls</p></li><li><p>Modules</p></li></ul></div></li></ul></div></section>
+<section id="_functions_strong_calls_strong"><h2>Functions: <strong>calls</strong></h2><div class="literalblock centered"><div class="content"><pre> 
+module:function(Arg1, Arg2, ..., ArgN)
+function(Arg1, Arg2, ..., ArgN)
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Erlang programs consist of functions that call each other</p></li><li><p>Functions are defined within modules</p></li><li><p>Function names and module names must be atoms</p></li><li><p>The <strong>arity</strong> of a function is its number of arguments.</p></li></ul></div></section>
+<section id="_functions_strong_syntax_strong"><h2>Functions: <strong>syntax</strong></h2><div class="literalblock"><div class="content"><pre>circumference(R) -&gt;
+    2 * math:pi() * R.
+
+
+product(X, Y) -&gt; X * Y.
+
+product(X, Y, Z) -&gt; X * Y * Z.
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   </pre></div></div></section>
+<section id="_functions_strong_syntax_strong_2"><h2>Functions: <strong>syntax</strong></h2><svg id="functions_syntax_1" style="width:1000px; height:550px;" viewBox="0 0 1000 550" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#functions_syntax_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(250,140,"area({square, Side}) ->").addClass("code");
+s2.text(250,185,"    Side * Side;").addClass("code");
+s2.text(250,230,"area({circle, Radius}) ->").addClass("code");
+s2.text(250,275,"    3.1416 * Radius * Radius;").addClass("code");
+s2.text(250,320,"area({triangle, A, B, C}) ->").addClass("code");
+s2.text(250,365,"    S = (A + B + C) / 2,").addClass("code");
+s2.text(250,410,"    math:sqrt(S*(S-A)*(S-B)*(S-C)).").addClass("code");
+
+var s2_g1_1 = s2.text(10,290,"function").addClass("darkred");
+var s2_g1_2 = s2.text(15,325,"clauses").addClass("darkred");
+var s2_g1_3 = s2.path("M130 300 l110 -115").attr({"marker-end":marker}).addClass("line_darkred");
+var s2_g1_4 = s2.path("M130 300 l110 -30").attr({"marker-end":marker}).addClass("line_darkred");
+var s2_g1_5 = s2.path("M130 300 l110 60").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s2_g2_1 = s2.text(650,100,"clause separator").addClass("darkred");
+var s2_g2_2 = s2.circle(520,178,15).addClass("line_darkred");;
+var s2_g2_3 = s2.circle(747,268,15).addClass("line_darkred");;
+var s2_g2_4 = s2.path("M760 110 l-214 60").attr({"marker-end":marker}).addClass("line_darkred");
+var s2_g2_5 = s2.path("M760 110 l-10 132").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s2_g3_1 = s2.text(390,480,"function").addClass("darkred");
+var s2_g3_2 = s2.text(378,515,"terminator").addClass("darkred");
+var s2_g3_3 = s2.path("M520 485 l310 -68").attr({"marker-end":marker}).addClass("line_darkred");
+var s2_g3_4 = s2.circle(853,407,15).addClass("line_darkred");
+
+var s2_g4_1 = s2.text(60,50,"clause head").addClass("darkred");
+var s2_g4_2 = s2.path("M155 60 l85 55").attr({"marker-end":marker}).addClass("line_darkred");
+
+var s2_g5_1 = s2.text(830,265,"clause body").addClass("darkred");
+var s2_g5_2 = s2.path("M835 273 l-12 48").attr({"marker-end":marker}).addClass("line_darkred");
+var s2_g5_3 = s2.rect(307,332,557,93,18).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});;
+
+var s2_g6_1 = s2.text(830,480,"expression").addClass("darkred");
+var s2_g6_2 = s2.text(840,515,"separator").addClass("darkred");
+var s2_g6_3 = s2.path("M865 455 l-182 -82").attr({"marker-end":marker}).addClass("line_darkred");
+var s2_g6_4 = s2.circle(660,364,15).addClass("line_darkred");
+
+var s2_g1 = s2.g(s2_g1_1, s2_g1_2, s2_g1_3, s2_g1_4, s2_g1_5).addClass("hide");
+var s2_g2 = s2.g(s2_g2_1, s2_g2_2, s2_g2_3, s2_g2_4, s2_g2_5).addClass("hide");
+var s2_g3 = s2.g(s2_g3_1, s2_g3_2, s2_g3_3, s2_g3_4).addClass("hide");
+var s2_g4 = s2.g(s2_g4_1, s2_g4_2).addClass("hide");
+var s2_g5 = s2.g(s2_g5_1, s2_g5_2, s2_g5_3).addClass("hide");
+var s2_g6 = s2.g(s2_g6_1, s2_g6_2, s2_g6_3, s2_g6_4).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 250, mina.linear); s2_g1.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 250, mina.linear); s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 4: {s2_g4.animate({"opacity":"1"}, 250, mina.linear); s2_g3.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 5: {s2_g5.animate({"opacity":"1"}, 250, mina.linear); s2_g4.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 6: {s2_g6.animate({"opacity":"1"}, 250, mina.linear); s2_g5.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 7: {s2_g6.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_functions_strong_syntax_strong_3"><h2>Functions: <strong>syntax</strong></h2><div class="left" style="width:560px;">
+  <div class="pre"><span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+   &lt;expression 1&gt;,
+   &lt;expression 2&gt;,
+   ...
+   &lt;expression n&gt;;
+<span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+   &lt;expression 1&gt;,
+   &lt;expression 2&gt;,
+   ...
+   &lt;expression n&gt;;
+...
+<span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+   &lt;expression 1&gt;,
+   &lt;expression 2&gt;,
+   ...
+   &lt;expression n&gt;.
+</div></div>
+<div class="ulist right"><ul><li><p>A function is defined as a collection of clauses</p></li><li><p>Variables are pattern matched in the function clause head</p></li><li><p>If pattern matching fails on a clause, the next one is tested</p></li><li><p>The first clause matched is used</p></li><li><p>The last expression executed in the clause body is returned</p></li></ul></div></section>
+<section id="_functions_strong_examples_strong"><h2>Functions: <strong>examples</strong></h2><div class="literalblock left w_600"><div class="content"><pre>factorial(0) -&gt; 1;
+factorial(N) -&gt;
+    N * factorial(N-1).
+
+
+&gt; factorial(3).
+   (matches N = 3 in clause 2)
+   == 3 * factorial(3-1)
+   (matches clause 2)
+   == 3 * 2 * factorial(2-1)
+   (matches clause 2)
+   == 3 * 2 * 1 * factorial(1-1)
+   (matches clause 1)
+   == 3 * 2 * 1 * 1
+   == 6
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Pattern matching occurs in the function head</p><div class="ulist"><ul><li><p>Unbound variables get bound after a successful pattern match</p></li></ul></div></li><li><p>Variables are local to each clause</p></li><li><p>Variables are allocated and deallocated automatically</p></li></ul></div></section>
+<section id="_modules"><h2>Modules</h2><svg id="modules_1" style="width:1000px; height:600px; margin-top:-30px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#modules_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(250,130,"-module(demo).").addClass("code");
+s3.text(250,174,"-export([double/1]).").addClass("code");
+s3.text(250,218," ").addClass("code");
+s3.text(250,262,"% This is a comment.").addClass("code");
+s3.text(250,306,"% Everything after '%' is ignored.").addClass("code");
+s3.text(250,350," ").addClass("code");
+s3.text(250,394,"double(X) ->").addClass("code");
+s3.text(250,438,"    times(X, 2).").addClass("code");
+s3.text(250,482," ").addClass("code");
+s3.text(250,526,"times(X, N) ->").addClass("code");
+s3.text(250,570,"    X * N.").addClass("code");
+
+// module_directives
+var s3_g1_1 = s3.text(20,110,"module").addClass("darkred");
+var s3_g1_2 = s3.text(10,145,"directives").addClass("darkred");
+var s3_g1_3 = s3.path("M150 116 l80 3").attr({"marker-end":marker}).addClass("line_darkred");
+var s3_g1_4 = s3.path("M150 116 l80 45").attr({"marker-end":marker}).addClass("line_darkred");
+
+// module_name
+var s3_g2_1 = s3.text(550,30,"module").addClass("darkred");
+var s3_g2_2 = s3.text(562,65,"name").addClass("darkred");
+var s3_g2_3 = s3.path("M550 45 l-92 53").attr({"marker-end":marker}).addClass("line_darkred");
+var s3_g2_4 = s3.ellipse(424,120,40,21).addClass("line_darkred");
+
+// exported_functions
+var s3_g3_1 = s3.text(12,310,"exported").addClass("darkred");
+var s3_g3_2 = s3.text(10,345,"functions").addClass("darkred");
+var s3_g3_3 = s3.path("M115 280 l285 -93").attr({"marker-end":marker}).addClass("line_darkred");
+var s3_g3_4 = s3.ellipse(474,164,87,26).addClass("line_darkred");
+
+// arity
+var s3_g4_1 = s3.text(720,230,"arity").addClass("darkred");
+var s3_g4_2 = s3.path("M710 223 l-140 -40").attr({"marker-end":marker}).addClass("line_darkred");
+var s3_g4_3 = s3.ellipse(540,165,26,24).addClass("line_darkred");
+
+// functions
+var s3_g5_1 = s3.text(692,490,"functions").addClass("darkred");
+var s3_g5_2 = s3.path("M680 480 l-140 -60").attr({"marker-end":marker}).addClass("line_darkred");
+var s3_g5_3 = s3.path("M680 480 l-150 30").attr({"marker-end":marker}).addClass("line_darkred");
+
+// groups
+var s3_g1 = s3.g(s3_g1_1, s3_g1_2, s3_g1_3, s3_g1_4).addClass("hide");
+var s3_g2 = s3.g(s3_g2_1, s3_g2_2, s3_g2_3, s3_g2_4).addClass("hide");
+var s3_g3 = s3.g(s3_g3_1, s3_g3_2, s3_g3_3, s3_g3_4).addClass("hide");
+var s3_g4 = s3.g(s3_g4_1, s3_g4_2, s3_g4_3).addClass("hide");
+var s3_g5 = s3.g(s3_g5_1, s3_g5_2, s3_g5_3).addClass("hide");
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_g1.animate({"opacity":"1"}, 250, mina.linear); s3_counter++; break};
+    case 2: {s3_g2.animate({"opacity":"1"}, 250, mina.linear); s3_g1.animate({"opacity":"0"}, 250, mina.linear); s3_counter++; break};
+    case 3: {s3_g3.animate({"opacity":"1"}, 250, mina.linear); s3_g2.animate({"opacity":"0"}, 250, mina.linear); s3_counter++; break};
+    case 4: {s3_g4.animate({"opacity":"1"}, 250, mina.linear); s3_g3.animate({"opacity":"0"}, 250, mina.linear); s3_counter++; break};
+    case 5: {s3_g5.animate({"opacity":"1"}, 250, mina.linear); s3_g4.animate({"opacity":"0"}, 250, mina.linear); s3_counter++; break};
+    case 6: {s3_g5.animate({"opacity":"0"}, 250, mina.linear); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_modules_2"><h2>Modules</h2><div class="ulist"><ul><li><p>Modules are stored in files with the <strong>.erl</strong> suffix</p></li><li><p>The module and file names must be the same</p><div class="ulist"><ul><li><p>You store the module <strong>demo</strong> in <strong>demo.erl</strong></p></li></ul></div></li><li><p>Modules are named with the <strong>-module(Name).</strong> directive</p></li><li><p>Exported functions can be called from outside the module</p></li></ul></div></section>
+<section id="_modules_3"><h2>Modules</h2><div class="ulist"><ul><li><p>Use <code>-export([Function/Arity, Function/Arity, &#8230;&#8203;])</code></p></li><li><p>Local functions may only be called within the module</p></li><li><p>Prefix function calls with the module name when making a call from outside the module</p><div class="ulist"><ul><li><p><code>Module:Fun(Arg1, &#8230;&#8203;)</code></p></li><li><p>This is a fully <strong>qualified call</strong></p></li></ul></div></li></ul></div></section>
+<section id="_summary_strong_basic_erlang_ii_strong"><h2>Summary: <strong>basic Erlang II</strong></h2><div class="ulist"><ul><li><p>Basic Erlang I</p></li><li><p>Basic Erlang II</p><div class="ulist"><ul><li><p>Function Calls</p></li><li><p>Modules</p></li></ul></div></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

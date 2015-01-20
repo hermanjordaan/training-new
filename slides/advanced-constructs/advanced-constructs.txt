@@ -1,0 +1,624 @@
+Advanced Constructs
+===================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script>
+++++
+
+
+Advanced Constructs
+-------------------
+* List Comprehensions
+* Binaries
+* References
+* Operators
+* Macros
+* Include Files
+
+
+List Comprehensions
+-------------------
+[role="centered"]
+....
+[Expression || Generator1 , ..., GeneratorN,
+ Filter1, ..., FilterN]
+....
+
+* A feature common in functional programming languages
+* Analogous to set comprehensions in the Zermelo-Frankel set theory
+* A syntactical and semantical notation to generate lists
+
+
+List Comprehensions
+-------------------
+[role="centered"]
+....
+[X || X <-[1,2,3,4], X < 3]
+....
+
+* The above example should be read as the list of X where X comes from the list [1,2,3,4] and X is less than 3
+* *Pattern \<- List* is the *generator*
+* *Filter* is either a boolean expression or a function which returns true or false
+
+
+List Comprehensions: *examples*
+-------------------------------
+++++
+<div class="pre"><span class="redcode">1> [Int || Int <- [zero, 1, two, three, 4, 5],</span>
+ <span class="redcode">1>         is_integer(Int)].</span>
+[1,4,5]
+<span class="redcode">2> [{X,Y} || X <- [1,2,3], Y <- [a,b,c]].</span>
+[{1,a},{1,b},{1,c},{2,a},{2,b},{2,c},{3,a},{3,b},{3,c}]
+<span class="redcode">3> [X || X <- [1,2,3,4], Y <- [3,4,5,6], X == Y].</span>
+[3,4]
+<span class="redcode">4> [X+1 || X <- [1,2,3,4], X rem 2 == 0].</span>
+[3,5]
+</div>
+++++
+
+* Filtering, cartesian products, intersections, and selective mapping using list comprehensions
+
+
+List Comprehensions: *examples*
+-------------------------------
+
+....
+map(Fun, List) -> 
+    [Fun(X) || X <- List].
+filter(Predicate, List) ->
+    [X || X <- List, Predicate(X)].
+append(ListOfLists) ->
+    [X || List <- ListOfLists, X <- List].
+ 
+ 
+ 
+....
+
+* Rewriting lists library functions using list comprehensions
+
+
+List Comprehensions: *examples*
+-------------------------------
+
+....
+perm([])  -> 
+    [[]];
+perm(List) ->
+    [[H|T] || H <- List, T <- perm(List -- [H])].
+ 
+ 
+ 
+ 
+....
+
+* perm([c,a,t]) \-> \[[c,a,t],[c,t,a],[a,c,t],[a,t,c],[t,c,a],[t,a,c]]
+* We take *H* from *List* in all possible ways, and append all permutations of *List* with *H* removed to it
+
+
+List Comprehensions: *variables*
+--------------------------------
+
+* All variables in the generator pattern are considered fresh
+* Bound variables in the generator and before the LC expression which are used in the filter retain their value 
+* No variable can be exported from a LC expression
+* The compiler gives a warning when you shadow variables
+
+
+List Comprehensions: *variables*
+--------------------------------
+++++
+<div class="pre">
+<span class="redcode">1></span> X <span class="redcode">= 1,</span> Y <span class="redcode">= 2.</span>
+2
+<span class="redcode">2> [{X,</span> Y<span class="redcode">} || X <- lists:seq(1,3)].</span>
+[{1,2},{2,2},{3,2}]
+<span class="redcode">3> List = [{1,one}, {2,two}, {3,three}].</span>
+[{1,one},{2,two},{3,three}]
+<span class="redcode">4> [Z || {X1, Z} <- List, X1 == </span>X<span class="redcode">].</span>
+[one]
+
+
+
+
+
+</div>
+++++
+
+[NOTE.speaker]
+--
+Ask the class how many have written pivot sort in C or any other programming language:
+
+qsort([]) ->  +  
+  [];  +  
+qsort([X|Xs]) ->  +  
+  qsort([Y || Y<-Xs, Y =< X]) ++ [X] ++ qsort([Y || Y<-Xs, Y > X]).
+--
+
+
+Binaries
+--------
+
+* A binary is a reference to a chunk of untyped memory
+* Originally used by the ERTS for code loading over the network
+* Effective when moving large amounts of data among processes
+* BIFs                  
+** *binary_to_term/1*, *term_to_binary/1*, +  
+   *binary_to_list/1*, *split_binary/2*, *concat_binary/1*  
+** *is_binary/1* as a guard
+
+
+Binaries
+--------
+
+....
+Bin = <<E1, E2, …, En>>
+<<E1, E2, …, En>> = Bin
+
+Bin = <<1, 2, 3>>
+binary_to_list(Bin) == [1,2,3]
+ 
+ 
+....
+
+* A *Bin* is a low level sequence of bytes
+* They  can be used to construct and pattern match Binaries
+* Each element specifies a segment of the binary
+* A segment is a set of bits, not necessarily a byte
+
+
+Binaries
+--------
+
+....
+Bin = <<E1:[Size/Type], E2:[Size/Type], ..., En>>
+
+Bin = <<1,2,3:16>> == list_to_binary([1,2,0,3])
+ 
+ 
+ 
+....
+
+* *Size* and *Types* can be specified or omitted
+* *Size* is in bits. Total size must be a multiple of 8 (a byte)
+* *Type* is a list of type specifiers separated by hyphens
+* Valid types are *integer*, *float* or *binary*
+
+
+Binaries
+--------
+
+* Valid signs are *signed* and *unsigned* (Default)
+** If the first bit is 0, the integer is positive
+** If it is 1, it is negative
+* Valid endian values are *big* (Default) and *little*
+** Little endian, the first byte is the most significant
+** Big endian, the first byte is the least significant
+* Default size of 
+** *integers* is 8 
+** *floats* is 64 
+** *binaries* is the size of the binary
+
+
+Binaries
+--------
+++++
+<div class="pre" style="text-align:center;">
+<< 5:4/little-signed-integer-unit:8>> == <<5,0,0,0>>
+
+<< 5:4/big-signed-integer-unit:8>> == <<0,0,0,5>>
+
+
+</div>
+++++
+
+* *unit:Val* is the default size of the type times the unit
+** Val is an integer between 1 - 255
+** Default unit is type dependent. It is 1 for float / integer, 8 for binary
+* The element created has a size of (4*8) 32 bits
+
+
+Binaries
+--------
+
+....
+A = 1, Bin = <<A, 17, 42:16>>
+<<D:16, E, F/binary>> = Bin
+
+D = 273, E = 0, binary_to_list(F) = [42]
+ 
+ 
+....
+
+* A Bin can be used to pattern match binaries
+* Length and types can be specified or omitted
+* Default types are unsigned integers
+* Binary segments types must have a size divisible by 8
+
+
+Binaries
+--------
+
+* +*B=\<<1>>*+ will not compile. It is interpreted as +*B =< <1>>*+. Write +*B = \<<1>>*+
+* +*\<<X+1:8>>*+ will not compile. Write +*<<(X+1):8>>*+ 
+* +*\<<"hello">>*+ is the same as writing +*<<$h,$e,$l,$l,$o>>*+
+* +*foo(N, \<<X:N, T/binary>>) \-> \...*+ will not compile. The two instances of N are unrelated
+* +*\<<X:7/binary-unit:1, Y/binary>>*+ will never match. The size and unit, when multiplied, must be divisible by 8.
+
+
+Binaries
+--------
+
+* +*\<<X:7/binary, Y:1/binary>> = Z*+ will match because binaries have a default unit of 8. It is equivalent to +*\<<X:7/binary-unit:8, Y:1/binary-unit:8>> = Z*+. 7*8 = 56 bits binary.
+* +*\<<X:7/integer, Y/binary>> = Z*+ will fail because integers have a default unit of 1. When multiplied by 7, it isn't divisible by 8.
+* +*\<<X:7/bitstring-unit:1, Y/bitstring>> = Z*+ will work, because the +*bitstring*+ type doesn't require 8-bit alignment.
+
+
+Binaries: *examples*
+--------------------
+++++
+<div class="pre"><span class="redcode">1> <<5:4, 5:4>>.</span>
+<<"U">>
+<span class="redcode">2> <<Int1:2, Int2:6>> = <<128>>.</span>
+<<128>>
+<span class="redcode">3> {Int1, Int2}.</span>
+{2,0}
+<span class="redcode">4> <<5:4/little-signed-integer-unit:4>>.</span>
+<<5,0>>
+<span class="redcode">5> <<5:4/big-signed-integer-unit:4>>.</span>
+<<0,5>>
+<span class="redcode">6> <<5:2,5:8>>.</span>
+<<65,1:2>>
+
+</div>
+++++
+
+
+Binaries: *examples*
+--------------------
+++++
+<div class="pre"><span class="redcode">1> A = 1.</span>
+1
+<span class="redcode">2> Bin = <<A, 17, 42:16>>.</span>
+<<1,17,0,42>>
+<span class="redcode">3> <<D:16, E, F/binary>> = Bin.</span>
+<<1,17,0,42>>
+<span class="redcode">4> [D,E,F].</span>
+[273,0,<<"*">>]
+<span class="redcode">5> <<X:7/bitstring,Y:1/bitstring>> = <<42:8>>.</span>
+<<"*">>
+<span class="redcode">6> {X, Y}.</span>
+{<<21:7>>,<<0:1>>}
+
+
+</div>
+++++
+
+
+Binaries: *examples*
+--------------------
+
+....
+<<?IP_VERSION:4, HLen:4, SrvcType:8, TotLen:16, 
+  ID:16, Flgs:3, FragOff:13,
+  TTL:8, Proto:8, HdrChkSum:16,
+  SrcIP:32, DestIP:32,
+  RestDgram/binary>>
+   
+   
+....
+
+* IP datagram of IP protocol version 4
+
+
+Binaries
+--------
+
+* Concatenating binaries will copy the chunks and create a completely new binary
+* Concatenate your binary once you have all the chunks
+* There is no need to append binary chunks sent to a port
+* There is no need to flatten lists of binary chunks
+
+
+Binaries: *binary comprehensions*
+---------------------------------
+++++
+<div class="pre" style="text-align:center; line-height:1.5em;"> 
+ 
+<span class="redcode">[</span> ... <span class="redcode">||</span> X <span class="redcode"><-</span> List, Test, ... <span class="redcode">]</span>
+<span class="redcode"><<</span> <<...>> <span class="redcode">||</span> <<X>> <span class="redcode"><=</span> Bin, Test, ... <span class="redcode">>></span>
+
+
+</div>
+++++
+
+* Structure similar to list comprehensions
+* *Bin* must be a binary rather than a list
+* A list generator can be used in a binary comprehension and a binary generator can be used in a list comprehension
+
+
+Binaries: binary comprehensions
+-------------------------------
+++++
+<div class="pre">
+<span class="redcode">1> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</span>
+<<0,1,2,3>>
+<span class="redcode">2> << <<(X+1)/integer>> || &lt;&lt;X&gt;&gt; <= <<3,7,5,4,7>> >>.</span>
+<<4,8,6,5,8>>
+<span class="redcode">3> << <<(bnot X)>> || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</span>
+<<"ÿþýü">>
+<span class="redcode">4> << &lt;&lt;X&gt;&gt; || X <- [0,1,2,3] >>.</span>
+<<0,1,2,3>>
+<span class="redcode">5> [ X || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>>].</span>
+[0,1,2,3]
+<span class="redcode">6> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<1,2,3,4>>, X rem 2 =:= 0 >>.</span>
+<<2,4>>
+
+</div>
+++++
+
+[NOTE.speaker]
+--
+Point out that a list generator can be used in a binary comprehension and that a binary generator can be used in a list comprehension
+--
+
+
+References
+----------
+
+* References can be created using the BIF *make_ref/0* 
+* They can be compared for equality
+* Erlang references are unique[ish] 
+** No two references created by different calls will match for the life of a node*
+* References can be used to guarantee unique replies to messages, and not just any message complying to the specified protocol
+
+[NOTE.speaker]
+--
+A reference is related to a node's name and is an incrementing value. It is important to note that reference are unique for the time a VM runs. If an Erlang VM is restarted with the same name, references might repeat themselves.
+--
+
+
+References
+----------
+++++
+<div class="pre">call(Message) ->
+  <span class="redcode">Ref = make_ref(),</span>
+  frequency ! {request, 
+          {<span class="redcode">Ref</span>,self()},Message},
+  receive 
+     {reply, <span class="redcode">Ref</span>, Reply} ->
+        Reply
+  end.
+
+reply({<span class="redcode">Ref</span>, Pid}, Message) ->
+   Pid ! {reply, <span class="redcode">Ref</span>, Message}.
+
+
+
+</div>
+++++
+
+
+* Recall the robust server call? How do we differentiate between messages following the same protocol?
+
+
+Operators: logical
+------------------
+++++
+<div class="pre"><span class="redcode">not</span> ((1 < 3) <span class="redcode">or 
+</span> lists:member(Key,List))
+
+and        andalso
+or         orelse
+xor        not
+
+</div>
+++++
+
+* Booleans are represented by the atoms *true* and *false*.
+
+
+Operators: *bitwise*
+--------------------
+
+* Bit level operations can be applied on integers
+* The operands have the same precedence as + or –
+* Logical comparisons on a bit level include:
+** *band*, *bor*, *bxor* and *bnot*
+* Shifting bits left or right can also be done:
+** *bsl*, *bsr*
+
+
+Operators: *bitwise*
+--------------------
+
+....
+1> 9 band 17.
+1
+2> 9 bor 17.
+25
+3> 9 bxor 17.
+24
+4> bnot 9.
+-10
+5> bnot (bnot 9).
+9
+6> 6 bsr 1.
+3
+7> 6 bsl 1.
+12
+....
+
+
+Macros
+------
+
+[role="left"]
+....
+-define(Name, Replacement).
+-define(Name(Var1, ..., VarN), 
+        Replacement).
+
+
+-define(TIMEOUT, 1000).
+...
+
+  receive
+       after ?TIMEOUT -> ok
+  end
+....
+
+[role="right"]
+* Macros are defined using the define construct
+* They are used whenever the *?Name* syntax is encountered
+
+
+Macros
+------
+++++
+<div class="left" style="width: 600px;">
+<div class="pre">
+-define(<span class="redcode">DOUBLE(Y)</span>, Y*2).
+
+
+foo(X) -> span class="redcode">?DOUBLE(X)</span>.
+ <span style="color:#4B5056">%% Becomes </span>
+foo(X)  -> X*2.
+</div>
+</div>
+++++
+
+[role="right"]
+* All occurrences of the  *?DOUBLE* macro will be expanded upon compilation by the pre-processor to *X*2*
+
+++++
+<div class="pre" style="clear:both;">1> macro:foo(10).
+20
+
+
+
+
+
+</div>
+++++
+
+
+Macros
+------
+++++
+<div class="pre">-define(CALLSTRING(Call), print(<span class="redcode">??Call</span>)).
+
+<span class="redcode">?CALLSTRING</span>(foo(X)<span class="redcode">)</span>
+%% Becomes  
+print(<span class="redcode">"foo(X)"</span>)
+
+
+</div>
+++++
+
+* All occurrences of the *??Name* will expand to a string containing the tokens of the macro
+
+
+Macros: *predefined macros*
+---------------------------
+
+*?MODULE*::
+Expands to the name of the module it is used in
+
+*?MODULE_STRING*::
+Expands to the module string
+
+*?FILE*::
+Expands to the file name it is placed in
+
+*?LINE*::
+Expands to the line of code it is defined in
+
+*?MACHINE*::
+Expands to the current machine name
+
+
+Macros: *example of flow control*
+---------------------------------
+++++
+<div class="pre"><span class="redcode">-ifdef(debug).</span>
+  -define(SYS_DEBUG(Str, Args), io:format(Str, Args)).
+<span class="redcode">-else.</span>
+  -define(SYS_DEBUG(Str, Args), ok).
+<span class="redcode">-endif.</span>
+
+
+</div>
+++++
+
+* In the code use it as follows:
+** ?SYS_DEBUG("\~p:call(~p) called~n",[?MODULE, Request])
+* To turn on the debug print outs, compile using c/2
+** c(Module, [{debug, true}]) or compile:file/2
+* To view a file with expanded macros use the 'P' directive
+** c(Module, [\'P']) or compile:file/2
+
+
+Macros: *flow of control*
+-------------------------
+
+*-undef(Macro)*::
+*Macro* behaves as if it had never been defined
+
+*-ifdef(Macro)*::
+if Macro is defined, execute the statements which follow
+
+*-ifndef(Macro*::
+If Macro is not defined, execute the statements which follow
+
+*-else*::
+If not *ifdef* or not *ifndef*, then execute the statements
+
+*-endif*::
+terminates the *ifdef* and *ifndef* constructs
+
+
+Macros: *flow control*
+----------------------
+++++
+<div class="pre"><span class="redcode">-ifdef(Macro).</span>
+  -define(Name1, Replacement1).
+<span class="redcode">-else.</span>
+  -define(Name2, Replacement2).
+<span class="redcode">-endif.</span>
+
+
+</div>
+++++
+
+* Macro directives have to be properly nested
+* They may not be placed in functions
+
+
+Include Files
+-------------
+
+* All shared record and macro definitions should be placed in include files.
+* The suffix *.hrl* is recommended but not enforced
+* Include files are added in a file using the *-include("File.hrl").* directive "quotes" included
+* The compiler will look for the include file in the compiler include path list
+*  By default, the include path lists includes the current working directory 
+
+
+Advanced Constructs
+-------------------
+
+* List Comprehensions
+* Binaries
+* References
+* Operators
+* Macros
+* Include Files
+

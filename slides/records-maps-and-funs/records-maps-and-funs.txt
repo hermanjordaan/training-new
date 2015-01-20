@@ -1,0 +1,733 @@
+Records, Maps and Funs
+======================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+Records, Maps and Funs
+----------------------
+* Records
+* Records and the Shell
+* Maps
+* Funs
+* Higher Order Functions
+
+
+Records
+-------
+* Records are used to store a fixed number of items
+** Similar to a C struct or a Pascal record
+* These items are accessed by name
+** Unlike tuples where they are accessed by position
+* Items can easily be added or removed without affecting the code not using these items
+** Unlike tuples, where updates are needed everywhere
+
+
+Records: *defining*
+-------------------
+....
+-record(Name, {Field1, [= DefaultValue1],
+               ...,
+               FieldN, [= DefaultValueN]}).
+
+
+-record(person, {name, age = 0, phone}).
+ 
+....
+
+* Fields may be assigned a value when declared
+* The default value for a field is the atom *undefined*
+* Record definitions should be placed in a header file
+
+
+Records: *defining*
+-------------------
+* All *shared* record definitions should be placed in include files. Local ones stay in their modules.
+* The suffix *.hrl* is recommended but not enforced
+* Include files are added to a module using the  *-include("File.hrl").* directive, "quotes" included.
+* The compiler will look for the include file in the compiler include path list
+* By default the include path list includes the current working directory
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Tell the students that a header file is a file with the .hrl extension. 
+If you update the record definition in the header file, you have to recompile all of the modules which use it.
+This is usually handled with make files.
+--
+
+
+Records: *creating instances*
+-----------------------------
+++++
+<div class="pre"><span class="redcode">Var = #Name{Field1 = Expression1,
+            ...,
+            FieldN = ExpressionN}</span>
+
+Person = #person{name = "Joe",
+                 phone = [1,2,3,4]}
+
+</div>
+++++
+
+* If any of the fields are omitted, the default values in the record definition are assigned to them (including *undefined*)
+* The default value expression is evaluated when the record instance is created
+
+
+Records: *field selectors*
+--------------------------
+++++
+<div class="pre"><span class="redcode">FieldVar = RecordVar#Name.FieldName</span>
+
+P = #person{name = "Mike"}
+
+Name = P#person.name                    <span class="dimcode">% Name =:= "Mike"</span>
+Age  = P#person.age                     <span class="dimcode">% Age =:= 0</span>
+
+</div>
+++++
+
+* Field and record names may not be variables
+
+
+Records: *updating*
+-------------------
+++++
+<div class="pre"><span class="redcode">NewVar = OldVar#Name{Field1 = Expression1,
+                     ...,
+                     FieldN = ExpressionN}</span>
+
+P = #person{name = "Mike"}              <span class="dimcode">% age = 0</span>
+NewP = P#person{age = 35}               <span class="dimcode">% age = 35</span>
+NewP2 = P#person{name = "Joe"}          <span class="dimcode">% age = 0</span>
+
+</div>
+++++
+
+* Only fields to be changed have to be referred
+* Others will return their old values
+* Remember that Erlang variables are single assignment!
+
+
+Records: *pattern matching*
+---------------------------
+....
+P = #person{name = "Joe", age = 35, phone = [1,2,3,4]}
+
+#person{name = Name, age = 35, phone = Phone} = P
+
+foo(#person{name = "Joe", age = Age}) -> ...
+ 
+ 
+....
+
+* Records may be used in pattern matching to extract variables or pick the flow of computation
+
+
+Records: *guards*
+-----------------
+++++
+<div class="pre">foobar(P) when is_record(P, person),
+               P#person.name =:= "Joe" -> ...
+
+<span class="dimcode">is the same as, but less efficient than:</span>
+
+foobar(P = #person{name = "Joe"}) -> ...
+
+</div>
+++++
+
+* Record guards may be used to pick the flow of execution in different clauses
+* When using guards to inspect a field of a record, use the record guard as well if *P* will not always be a record of type *person*.
+
+
+Records: *nesting*
+------------------
+....
+-record(name, {first, last}).
+
+P = #person{name = #name{first = "Robert",
+                         last = "Virding"}},
+
+First = (P#person.name)#name.first.
+ 
+....
+
+* Record fields may contain other nested records
+* Fields in nested records are accessed with one operation
+
+
+Records: *internal representation*
+----------------------------------
+++++
+<div class="pre">#person{} =:= {person, undefined, 0, undefined}
+<div class="darkred" style="text-align:center; font-family:'Lucida Grande'; font-size:40pt; line-height:1em; margin-bottom:30pt;">
+  Warning! Never use the tuple representation of records!
+</div>
+
+</div>
+++++
+
+* Records are represented as tuples by the run time system
+* The preprocessor translates the creating, updating and selecting operations on records to operations on tuples
+* N fields in the record will result in a tuple with N+1 elements
+* The first element is the name of the record
+
+[NOTE.speaker]
+[role="speaker"]
+--
+When warning the students, do something memorable. Stand on a table, sing the national anthem of Togo or anything else which will stick while warning them to never ever use this representation.
+--
+
+
+Records: *information*
+----------------------
+* *record_info(fields, RecType)*
+** returns a list of field names
+* *record_info(size, RecType)*
+** returns the size of the tuple (Fields + 1)
+* *#RecType.Name* returns the position of Name in the tuple
+* *RecType* and *Name* must be atoms, and they may not be variables bound to atoms
+* Record information constructs are handled by the precompiler
+
+
+Records and the Shell
+---------------------
+++++
+<div class="left">
+<div class="pre"><span class="redcode">1> rr(person).</span>
+[person].
+<span class="redcode">2> rl().</span>
+-record(person, {name,
+                 age = 0,
+                 phone}
+ok
+<span class="redcode">3> #person{name='Henry', 
+3>         phone=[0,1,2]}.</span>
+#person{name='Henry',
+        age=0,
+        phone=[0,1,2]}
+
+
+
+</div></div>
+++++
+
+[role="right"]
+* All record definitions in a module can be loaded using the function *rr/1*
+* The records known to the shell can be listed with *rl/0*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+rr reads a .erl file, in this case person.erl
+--
+
+
+Records and the Shell
+---------------------
+++++
+<div class="left">
+<div class="pre"><span class="redcode">4> rd(request, {id, action,
+4>    data, stamp=now()}).</span>
+request
+<span class="redcode">5> #request{}.</span>
+#request{id = undefined,
+         action = undefined,
+         data = undefined,
+         stamp = {1151, 913849,                    108529}}
+<span class="redcode">6> rf(request).</span>
+ok
+
+
+
+</div></div>
+++++
+
+[role="right"]
+* Records can be defined using *rd/2*
+* Useful for testing and debugging
+* A record can also be forgotten like variables by using *rf/0* and *rf/1*
+* *now/1* is evaluated when the record instance is created
+
+
+Maps
+----
+* Maps are used to store a variable number of items
+** Similar to a hash table
+* These items are accessed by a key
+** Keys and items can be arbitrary Erlang terms
+* Items can be added or removed without affecting the code not using these items
+* Maps are under development
+** Currently keys MUST be literal terms
+
+
+Maps: *creating instances*
+--------------------------
+++++
+<div class="pre"><span class="redcode">Map = #{Key1 => Expression1,
+        ...,
+        KeyN => ExpressionN}</span>
+
+Person = #{name => “Joe", phone => [1,2,3,4]}
+
+
+</div>
+++++
+
+* Only the given fields will be included in the map
+
+
+Maps: *field selectors*
+-----------------------
+++++
+<div class="pre"><span class="redcode">FieldVar = maps:get(Key, Map)</span>
+
+P = #{name => “Mike”, age => 0}
+Name  = maps:get(name, P)                <span class="dimcode">% Name =:= "Mike"</span>
+Age   = maps:get(age, P)                 <span class="dimcode">% Age =:= 0</span>
+Phone = maps:get(phone, P)               <span class="redcode">exception</span>
+
+</div>
+++++
+
+* Only works with keys in the map
+* Generates an exception otherwise
+
+
+Maps: *updating*
+----------------
+++++
+<div class="pre"><span class="redcode">NewVar = Map#{Field1 => Expression1,
+              ...,
+              FieldN := ExpressionN}</span>
+
+P = #{name => “Mike”, age => 0}
+NewP = P#{age => 35}                    <span class="dimcode">% age = 35</span>
+NewP2 = P#{phone := [1,2,3,4]}          <span class="redcode">exception</span>
+
+</div>
+++++
+
+* *=>* updates existing fields or adds new fields
+* *:=* ONLY updates existing fields
+* Only fields to be changed have to be referred
+* Others will return their old values
+* Remember that Erlang variables are single assignment!
+
+
+Maps: *pattern matching*
+------------------------
+....
+P = #{name => "Joe", age => 35, phone => [1,2,3,4]}
+#{name := Name, age := 35, phone := Phone} = P
+
+foo(#{name := "Joe", age := Age}) -> ...
+
+foo(P = #{name := "Joe", age := Age}) -> ...
+ 
+ 
+....
+
+* Maps may be used in pattern matching to extract variables or pick the flow of computation
+
+
+Maps: *nesting*
+---------------
+....
+P = #{name = #name{first = "Robert",last = "Virding"}},
+
+First = maps:get(first, maps:get(name, P))
+ 
+ 
+ 
+ 
+ 
+....
+
+* Map fields may contain other nested maps
+
+[NOTE.speaker]
+[role="speaker"]
+--
+The parentheses around a nested record are no longer necessary in newer versions of the language.
+--
+
+
+Maps: *information*
+-------------------
+* *maps:keys(Map,)*
+** returns a list of keys
+* *maps:size(Map)*
+** returns the size of the map
+* *maps:is_key(Key, Map)*
+** returns whether the map contains Key
+* *maps:from_list(KeyValueList)*
+* *maps:from_list(Map)*
+** convert between maps and list of {Key,Value}
+
+
+Records vs Maps
+---------------
+* Records
+** Static and compile time checking
+** Faster
+** More difficult to modify
+* Maps
+** Dynamic
+** Easier to modify
+** Easier with large number of keys
+
+
+Funs
+----
+++++
+<div class="pre"><span class="redcode">1> Add = fun(X, Y) -> X+Y end.</span>
+#Fun<erl_eval>
+<span class="redcode">2> Add(2,3).</span>
+5
+ 
+ 
+ 
+ 
+</div>
+++++
+
+* Funs are data types encapsulating functional objects
+* They can be passed as arguments
+* They can be the return value of function calls
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Start by making the students type variants of the above example in the shell and test it. They all get it.
+--
+
+
+Functions: *syntax*
+-------------------
+
+++++
+<svg id="functions_syntax" style="width:960px; height:500px;" viewBox="0 0 960 500" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#functions_syntax");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(350,160,"fun").addClass("code bold");
+s1.text(350,160,"   (X, X) ->").addClass("code");
+s1.text(350,205,"    X * 2;").addClass("code");
+s1.text(350,250,"   (X, Y) ->").addClass("code");
+s1.text(350,295,"    X + Y").addClass("code");
+s1.text(350,340,"end").addClass("code bold");
+
+s1_g1_1 = s1.path("M210,410 l120,-60").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g1_2 = s1.path("M210,410 l130,-240").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g1_3 = s1.text(30,440,"reserved words").addClass("darkred");
+
+s1_g2_1 = s1.path("M175,230 l170,-40").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g2_2 = s1.path("M175,230 l170,40").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g2_3 = s1.text(100,230,"fun").addClass("darkred");
+s1_g2_4 = s1.text(74,260,"classes").addClass("darkred");
+
+s1_g3_1 = s1.path("M680,175 l-135,20").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g3_2 = s1.circle(518,198,15).addClass("line_darkred");
+s1_g3_3 = s1.text(690,180,"clause separator").addClass("darkred");
+
+s1_g4_1 = s1.path("M700,350 l-155,-55").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g4_2 = s1.circle(518,288,15).addClass("line_darkred");
+s1_g4_3 = s1.text(650,380,"no separator").addClass("darkred");
+s1_g4_4 = s1.text(648,415,"in last clause").addClass("darkred");
+
+s1_g5_1 = s1.path("M323,50 l92,68").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g5_2 = s1.text(270,40,"fun head").addClass("darkred");
+
+s1_g6_1 = s1.rect(405,262,116,45,12).addClass("line_darkred").attr({"stroke-dasharray":"8,6"});
+s1_g6_2 = s1.path("M462,450 l0,-125").attr({"marker-end":marker}).addClass("line_darkred");
+s1_g6_3 = s1.text(390,480,"fun body").addClass("darkred");
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2, s1_g1_3).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3, s1_g2_4).addClass("hide");
+s1_g3 = s1.g(s1_g3_1, s1_g3_2, s1_g3_3).addClass("hide");
+s1_g4 = s1.g(s1_g4_1, s1_g4_2, s1_g4_3, s1_g4_4).addClass("hide");
+s1_g5 = s1.g(s1_g5_1, s1_g5_2).addClass("hide");
+s1_g6 = s1.g(s1_g6_1, s1_g6_2, s1_g6_3).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 2: {s1_g1.animate({"opacity":"0"}, 250, mina.linear); s1_g2.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 3: {s1_g2.animate({"opacity":"0"}, 250, mina.linear); s1_g3.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 4: {s1_g3.animate({"opacity":"0"}, 250, mina.linear); s1_g4.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 5: {s1_g4.animate({"opacity":"0"}, 250, mina.linear); s1_g5.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 6: {s1_g5.animate({"opacity":"0"}, 250, mina.linear); s1_g6.animate({"opacity":"1"}, 250, mina.linear); s1_counter++; break};
+    case 7: {s1_g6.animate({"opacity":"0"}, 250, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Funs: *syntax*
+--------------
+++++
+<div class="left">
+<div class="pre"><span class="redcode">fun(</span>Var1, ..., VarN<span class="redcode">) -></span>
+  &lt;Expr1&gt;,
+  &lt;Expr2&gt;,
+  ...
+  &lt;ExprN&gt;;
+   <span class="redcode">(</span>Var1, ..., VarN<span class="redcode">) -></span>
+  &lt;Expr1&gt;,
+  &lt;Expr2&gt;,
+   ...
+  &lt;ExprN&gt;
+<span class="redcode">end</span>
+
+
+
+
+
+</div></div>
+++++
+
+[role="right"]
+* The syntax is similar to that of functions, only that it starts with the keyword *fun* and ends with the keyword *end*.
+
+
+Funs: *syntax*
+--------------
+*F = fun Function/Arity*::
+Will bind the local function in the current module to *F*
+
+*F = fun Module:Function/Arity*::
+Will bind the function exported in *Module* to *F*.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that {Module, Function} (a.k.a tuple fun) can be found in legacy code.
+--
+
+
+Funs: *higher order functions*
+------------------------------
+* Functions taking funs as arguments are called higher order functions
+* They encourage the encapsulation of common design patterns, facilitate the re-usage of these functions
+* Improves the clarity of the program
+* Hides recursive calls
+* The process of abstracting out common patterns in programs is called *procedural abstraction*.
+
+
+Funs: *procedural abstraction*
+------------------------------
+++++
+<div class="left"><div style="text-align:center; font-size:1.3em;"><strong>Before</strong></div>
+
+<div class="pre"><span class="redcode">double</span>([H|T]) ->
+   [H*2 | <span class="redcode">double</span>(T)];
+<span class="redcode">double</span>([]) ->
+   [].
+
+<span class="redcode">bump</span>([H|T]) ->
+   [H+1 | <span class="redcode">bump</span>(T)];
+<span class="redcode">bump</span>([]) ->
+   [].
+
+
+
+
+
+
+</div></div>
+
+
+
+<div class="right"><div style="text-align:center; font-size:1.3em;"><strong>After</strong></div>
+
+<div class="pre"><span class="redcode">map</span>(Fun, [H|T]) ->
+   [Fun(H) | <span class="redcode">map</span>(Fun, T)];
+<span class="redcode">map</span>(_Fun, []) ->
+   [].
+
+<span class="redcode">double</span>(L) ->
+   <span class="redcode">map</span>(fun(X)-> X*2 end, L).
+
+<span class="redcode">bump</span>(L) ->
+   <span class="redcode">map</span>(fun(X)-> X+1 end, L).
+
+
+
+
+
+</div></div>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Remind them of the recursive patterns they looked at on the first day.
+--
+
+
+Funs: *higher order functions*
+------------------------------
+*lists:all(Predicate, List) -> true | false*::
+Returns *true* if the *Predicate* fun returns *true* for all elements in *List*
+
+*lists:filter(Predicate, List) -> NewList*::
+Returns a list with elements for which *Predicate* is true
+
+*lists:foreach(Fun, List) -> ok*::
+Applies *Fun* on every element in the list. Used for side effects
+
+*lists:map(Fun, List) -> NewList*::
+Returns a list with the return value of Fun applied to all elements in *List*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Predicate = fun(H) -> true | false
+
+Remind students to read the higher order function section of the lists manual page, as there are funs not listed above they might (Will!!) need
+Give an example of a predicate on the whiteboard and suggest they use it in the shell. 
+
+fun(Atom) when is_atom(Atom) -> true;
+     (_      )  0> false
+end.
+--
+
+
+Funs: *examples*
+----------------
+++++
+<div class="pre"><span class="redcode">1> Bump = fun(X) -> X+1 end.</span>
+#Fun<erl_eval.19.120858100>
+<span class="redcode">2> lists:map(Bump, [1,2,3,4,5]).</span>
+[2,3,4,5,6]
+<span class="redcode">3> Positive = fun(X) -> if X < 0 -> false; 
+                           X >= 0 -> true 
+                        end end.</span>
+#Fun<erl_eval.19.120858100>
+<span class="redcode">4> lists:filter(Positive, [-2,-1,0,1,2]).</span>
+[0,1,2]
+<span class="redcode">5> lists:all(Positive, [0,1,2,3,4]).</span>
+true
+<span class="redcode">6> lists:all(Positive, [-1,0,1]).</span>
+false
+</div>
+++++
+
+
+Funs: *scope of variables*
+--------------------------
+* All variables in the head of the Fun are considered fresh, and bound when the fun is first called
+* Variables bound before the Fun can be used in the Fun and in guard tests
+* No variables may be exported from the Fun
+* Variables in the function head shadow already bound variables in the function the Fun is defined in
+
+
+Funs: *scope of variables*
+--------------------------
+++++
+<div class="pre">foo() ->
+  *X* = 2,
+  Bump = fun(*X*) -> *X* + 1 end,
+  Bump(10).
+
+
+</div>
+++++
+
+*X* is shadowed in the fun
+
+++++
+<div class="pre" style="margin-top:15pt;">1> funs:foo().
+11
+
+
+
+</div>
+++++
+
+
+Funs: *scope of variables*
+--------------------------
+++++
+<div class="pre">bar() ->
+  <span class="redcode">X</span> = 10,
+  Bump = fun(Y) -> <span class="redcode">X</span> + Y end,
+  Bump(10).
+
+
+</div>
+++++
+
+*X* is not shadowed in the fun  + 
+
+++++
+<div class="pre" style="margin-top:15pt;">1> funs:bar().
+20
+
+
+
+</div>
+++++
+
+
+Funs: *scope of variables*
+--------------------------
+++++
+<div class="left">
+<div class="pre"><span class="redcode">1> GreaterThan = fun(X) -> 
+1>   fun(Y) -> Y > X end 
+1> end.</span>
+#Fun<erl_eval.6.13229925>
+<span class="redcode">2> Gt4 = GreaterThan(4).</span>
+#Fun<erl_eval.6.13229925>
+<span class="redcode">3> Gt4(3).</span>
+false
+<span class="redcode">4> (GreaterThan(4))(5).</span>
+true
+<span class="redcode">5> lists:filter(Gt4,
+ 5>         [1,6,8,3,5,0,4,11]).</span>
+[6,8,5,11]
+
+
+
+</div></div>
+++++
+
+[role="right"]
+* It is possible for a Fun to return another Fun. 
+* This can be used to introduce a new variable in the Fun's scope to \'wrap' the arguments it would usually need.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Show how the function GreaterThan is equivalent to fun(X,Y) -> X > Y end but that the latter couldn't be used in the filter
+--
+
+
+
+Records, Maps and Funs
+----------------------
+* Records
+* Records and the shell
+* Maps
+* Funs
+* Higher Order Functions

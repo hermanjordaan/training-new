@@ -1,0 +1,144 @@
+Erlang Shell
+============
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script>
+++++
+
+
+Starting the System
+-------------------
+* Start the Erlang system by typing *erl* in the unix shell, or double-clicking the Erlang icon in Windows. An Erlang shell will be started.
+* 1>, 2>, ... are the shell prompts
+* The *shell* is an Erlang process that sits in a read-eval-print loop
+* It reads valid Erlang expressions typed in by the user followed by a *full stop* and evaluates them
+
+[NOTE.speaker]
+--
+Mention a NODE is an instance of the Erlang VM
+--
+
+
+Shell Commands
+--------------
+*help().*::
+Prints out  list of shell commands available.
+
+*h().*::
+History. Prints the last 20 commands.
+
+*b().*::
+Shows all variable bindings.
+
+*f(). - f(X).*::
+Forgets all variable bindings. *f(X)* only forgets the variable *X*. These can *only* be used in the shell.
+
+
+Shell Commands
+--------------
+*pwd().*::
+Shows the path of the current directory.
+
+*cd(Dir).*::
+Change directory. The directory name is a quoted string. 
+
+*ls(). - ls(Dir).*::
+Lists the files in the current directory or in directory Dir.
+
+*q().*::
+Quit from the shell. Short hand for *init:stop().*
+
+
+Shell Commands
+--------------
+*c(Module).*::
+Compiles the file *Module.erl* and loads it into the shell.
+
+*e(N).*::
+Evaluates the *N*​th command in history.
+
+*e(-1).*::
+Evaluates the previous command.
+
+*CTRL + (n, p, f, b, y, a, e, ...)*::
+Use the keys *CTRL + (n, p, f, b, y, a, e, ...)* to move around in the shell and edit content as you would in Emacs.
+
+
+Erlang Shell Example
+--------------------
+++++
+<div class="pre">$ erl
+Erlang R16B03 (erts-5.10.3) [source] [smp:4:4] [rq:4]
+ [async-threads:0] [hipe] [kernel-poll:false]
+
+Eshell V5.10.3  (abort with ^G)
+1> <span class="redcode">pwd().</span>
+/Users/rv/erlang
+ok
+2> <span class="redcode">ls().</span>
+exercises
+ok 
+3> <span class="redcode">cd(“exercises/ex01”).</span>
+/Users/rv/erlang/exercises/ex01
+ok
+
+</div>
+++++
+
+Erlang Shell Example
+--------------------
+++++
+<div class="pre">4> <span class="redcode">c(demo).</span>
+{ok,demo}
+5> <span class="redcode">demo:double(25).</span>
+50
+6> <span class="redcode">demo:times(4,3).</span>
+** exception error: undefined function demo:times/2
+7> <span class="redcode">4 * 3.</span>
+12
+8> <span class="redcode">h().</span>
+1: pwd()
+....
+9> <span class="redcode">demo:double(v(7)).</span>
+24
+
+
+</div>
+++++
+
+
+Erlang Shell Example
+--------------------
+++++
+<div class="pre">10> <span class="redcode">A = “hello”.</span>
+“hello”
+11> <span class="redcode">[$h,$e,$l,$l,$o] = A.</span>
+“hello”
+12> <span class="redcode"><<"hello">> = erlang:list_to_binary(A).</span>
+<<hello>>
+13> <span class="redcode">4.2 / 3.</span>
+1.4000000000000001
+14> <span class="redcode">{greeting, A, world} = {greeting, "hello", world}.</span>
+{greeting, “hello”, world}
+
+
+
+
+
+</pre>
+++++
+
+
+Editors
+-------
+
+image::images/editors.png[Editors, auto, auto]
+

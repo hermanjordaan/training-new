@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Background</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Background</h1><p>Erlang Solutions Ltd.</p></section><section id="_background"><h2>Background</h2><div class="ulist"><ul><li><p>The Problem</p></li><li><p>Problem Domain</p></li><li><p>Erlang Properties</p></li><li><p>Important Dates</p></li><li><p>Who is using Erlang?</p></li><li><p>Erlang References</p></li><li><p>What&#8217;s in a name?</p></li></ul></div>
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+<script type="text/javascript" src="snap.svg-min.js"></script></section>
+<section id="_the_problem"><h2>The problem</h2><div class="ulist"><ul><li><p>Ericsson has a “best seller” product (the AXE telephone exchanges)</p></li><li><p>The product is very successful, but costly and difficult to maintain</p></li></ul></div>
+<div style="margin:50px auto;"">
+  <img src="images/ericsson.png" style="height:100px; width:auto; float:left; margin-top:120px;" />
+  <img src="images/axe.jpg" style="height:auto; width:400px; float:left;" />
+</div></section>
+<section id="_the_problem_2"><h2>The problem</h2><div class="ulist darkred"><ul><li><p>How to simplify the developing and maintenance processes?</p></li></ul></div>
+<div class="imageblock" style=""><div class="content"><img src="images/maintain.jpg" alt="Maintenance" width="800" height="auto"></div></div></section>
+<section id="_problem_domain"><h2>Problem domain</h2><div style="position:absolute; top:0; left:0; z-index:1;">
+<svg id="problem_domain" style="height:800px; width:1200px;">
+<script>
+
+var s1 = Snap("#problem_domain");
+
+var s1_g1 = s1.text(300,100,"Not Just Telecom").transform("r31.5").attr({"fill":"red", "font-size":"72pt"}).addClass("hide");
+
+s1.click( function() { s1_g1.animate({"opacity":"0.7"}, 750) } );
+
+</script>
+</svg>
+</div>
+<div class="ulist closer"><ul><li><p>Actions must be performed at a certain point in time or within a certain time.</p></li><li><p>System may be distributed over several computers.</p></li><li><p>The system is used to control hardware.</p></li><li><p>The software system is very large.</p></li><li><p>The system exhibits complex functionality such as feature interaction.</p></li><li><p>The systems should be in continuous operation over many years.</p></li><li><p>Software maintenance (reconfiguration etc.) should be performed without stopping the system.</p></li><li><p>There are stringent quality, and reliability requirements.</p></li><li><p>Fault tolerance both to hardware failures, and software errors, must be provided.</p></li><li><p>The system must be able to handle very large numbers of concurrent activities.</p></li></ul></div>
+<div class="paragraph ref"><p>Bjarne Däcker, November 2000 - Licentiate Thesis</p></div></section>
+<section id="_erlang_strong_properties_strong"><h2>Erlang <strong>Properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Declarative</strong></dt><dd><p>Functional programming language; high abstraction level; pattern matching and concise readable programs.</p></dd><dt class="hdlist1"><strong>Concurrency</strong></dt><dd><p>Either transparent or explicit concurrency; lightweight processes and highly scalable.</p></dd><dt class="hdlist1"><strong>Soft Real-Time</strong></dt><dd><p>Response times in the order of milliseconds; per-process garbage collection.</p></dd></dl></div></section>
+<section id="_erlang_strong_properties_strong_2"><h2>Erlang <strong>Properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Robustness</strong></dt><dd><p>Simple and consistent error recovery; supervision hierarchies and "Programming for the correct case".</p></dd><dt class="hdlist1"><strong>Distribution</strong></dt><dd><p>Explicit or transparent distribution; network-aware runtime system.</p></dd><dt class="hdlist1"><strong>Hot code loading</strong></dt><dd><p>Easily change code in a running system; enables non-stop operations; simplifies testing.</p></dd></dl></div></section>
+<section id="_erlang_strong_properties_strong_3"><h2>Erlang <strong>Properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>External interfaces</strong></dt><dd><p>"Ports" to the outside world behave as Erlang processes.</p></dd><dt class="hdlist1"><strong>Portability</strong></dt><dd><p>Erlang runs on any UNIX, UNIX-like, Windows and OSX operating system; it also runs on Android, VX Works; it supports heterogenous networks.</p></dd><dt class="hdlist1"><strong>SMP Support</strong></dt><dd><p>Symmetric multiprocessing support; takes full advantages of multicore architectures.</p></dd></dl></div></section>
+<section id="_important_dates"><h2>Important Dates</h2><div class="imageblock" style=""><div class="content"><img src="images/dates.png" alt="Timeline" width="auto" height="auto"></div></div>
+<aside class="notes"><div class="paragraph"><p>Computer Science Lab founded under the direction of Bjarne Dacker, employing Mike Williams, Robert Virding and Joe Armstrong, to mention but a few. <br>
+1987: Experiments were with ML, Prolog, Ada, Modula, Chill, Smalltalk, Eri Pascal and Plex <br>
+1991: First virtual Machine was migrated from Prolog to C by Mike Williams <br>
+First Product: Mobility Server, roaming over DECT networks, small, private digital networks. It was a small team. <br>
+1994: After First Product, feedback went straight back to the language inventors. <br>
+1995: Major projects included the ANX - Ericsson’s Broadband Solution, GPRS – Packet Switching over GSM, AXD301 Switch – An Asynchronous Transfer Mode (ATM) Switch. <br>
+In parallel, the OTP project was started, handling design patterns and middleware.</p></div></aside></section>
+<section id="_who_is_using_erlang"><h2>Who is using Erlang?</h2><div class="imageblock" style=""><div class="content"><img src="images/logos.png" alt="Users" width="auto" height="auto"></div></div></section>
+<section id="_erlang_books"><h2>Erlang books</h2><div class="imageblock" style=""><div class="content"><img src="images/books.png" alt="Books" width="auto" height="auto"></div></div></section>
+<section id="_erlang_references"><h2>Erlang References</h2><div class="dlist"><dl><dt class="hdlist1"><strong>Official Home Page</strong></dt><dd><p><a href="http://www.erlang.org" class="bare">http://www.erlang.org</a></p></dd><dt class="hdlist1"><strong>Source Code</strong></dt><dd><p><a href="https://github.com/erlang/otp" class="bare">https://github.com/erlang/otp</a></p></dd><dt class="hdlist1"><strong>Binary Packages, News, Events</strong></dt><dd><p><a href="https://www.erlang-solutions.com" class="bare">https://www.erlang-solutions.com</a></p></dd><dt class="hdlist1"><strong>Community</strong></dt><dd><p><a href="https://erlangcentral.org" class="bare">https://erlangcentral.org</a></p></dd><dt class="hdlist1"><strong>Conferences</strong></dt><dd><p><a href="http://www.erlang-factory.com" class="bare">http://www.erlang-factory.com</a></p></dd><dt class="hdlist1"><strong>Resources</strong></dt><dd><p><a href="https://github.com/0xAX/erlang-bookmarksErlang-bookmarks" class="bare">https://github.com/0xAX/erlang-bookmarksErlang-bookmarks</a></p></dd></dl></div></section>
+<section id="_what_s_in_a_name"><h2>What&#8217;s in a name?</h2><div class="imageblock left" style=""><div class="content"><img src="images/Erlang.png" alt="Erlang" width="auto" height="350"></div></div>
+<div class="ulist right"><ul><li><p><strong>Erlang, Agner Krarup, 1878-1929</strong></p><div class="ulist"><ul><li><p>Danish mathematician. One of the founders of the theory of tele-traffic and queue theory used for dimensioning telephone exchanges and networks</p></li></ul></div></li><li><p><strong><u>                Aⁿ/n!                </u></strong><br>
+<strong>1+ A + A²/2! + &#8230;&#8203; + Aⁿ/n!</strong></p><div class="ulist"><ul><li><p>Erlang&#8217;s formula. This formula computes the probability that all lines are busy in a system with <strong>n</strong> lines and a total traffic intensity <strong>A</strong> (measured in erlang)</p></li></ul></div></li><li><p><strong>erlang</strong></p><div class="ulist"><ul><li><p>Unit of measurement for traffic intensity, e.g. the average number of simultaneous calls through a telephone exchange.</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Named after the Danish Mathematician. <br>
+Erlang, unlike belief in higher Ericsson Management, does not mean ERicsson LANGuage.</p></div></aside></section>
+<section id="_background_2"><h2>Background</h2><div class="ulist"><ul><li><p>The Problem</p></li><li><p>Problem Domain</p></li><li><p>Erlang Properties</p></li><li><p>Important Dates</p></li><li><p>Who is using Erlang?</p></li><li><p>Erlang References</p></li><li><p>What&#8217;s in a name?</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'none',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>
