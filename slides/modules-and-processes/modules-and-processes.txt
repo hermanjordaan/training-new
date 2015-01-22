@@ -245,8 +245,8 @@ System Information: *Processes*
  <0.11.0>,<0.12.0>,<0.13.0>,<0.14.0>,<0.15.0>, ...,
  <0.23.0>,<0.24.0>,<0.25.0>,<0.26.0>,<0.27.0>,<0.31.0>]
 2> i().
-<span class="redcode">Pid           Initial Call           Heap     Reds Msgs
-Registered    Current Function       Stack              </span>
+<b>Pid           Initial Call           Heap     Reds Msgs
+Registered    Current Function       Stack              </b>
 <0.0.0>       otp_ring0:start/2      1597     2814    0
 init          init:loop/1            2              
 <0.3.0>       erlang:apply/2         2584   196279    0
@@ -274,7 +274,7 @@ System Information: *Processes*
 System Information: *Processes*
 -------------------------------
 ++++
-<div class="pre"><span class="redcode">1> process_info(whereis(error_logger)).</span>
+<div class="pre"><b>1> process_info(whereis(error_logger)).</b>
 [{registered_name,error_logger},
  {current_function,{gen_event,fetch_msg,5}},
  {initial_call,{proc_lib,init_p,5}},
@@ -294,9 +294,9 @@ System Information: *Processes*
 System Information: *Registered Names*
 --------------------------------------
 ++++
-<div class="pre"><span class="redcode">2> regs().</span>
+<div class="pre"><b>2> regs().</b>
 ** Registered procs on node nonode@nohost **
-<span class="redcode">Name             Pid      Initial Call         Reds Msgs</span>
+<b>Name             Pid      Initial Call         Reds Msgs</b>
 application_cont <0.6.0>  erlang:apply/2        436    0
 code_server      <0.18.0> erlang:apply/2     156896    0
 erl_prim_loader  <0.3.0>  erlang:apply/2     197318    0
@@ -307,7 +307,7 @@ global_name_serv <0.12.0> global:init/1          50    0
 inet_db          <0.15.0> inet_db:init/1        256    0
 ...
 ** Registered ports on node nonode@nohost **
-<span class="redcode">Name                  Id              Command</span>
+<b>Name                  Id              Command</b>
 </div>
 ++++
 
@@ -358,7 +358,7 @@ System Information: *Saving Calls*
 System Information: *Saving Calls*
 ----------------------------------
 ++++
-<div class="pre"><span class="redcode">4> erlang:process_display(self(), backtrace).</span>
+<div class="pre"><b>4> erlang:process_display(self(), backtrace).</b>
 Program counter: 0x0000000010668028 (unknown function)
 CP: 0x0000000011480448 (erl_eval:do_apply/5 + 2328)
 

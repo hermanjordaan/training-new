@@ -14,31 +14,31 @@
 <aside class="notes"><div class="paragraph"><p>Tell the students that a header file is a file with the .hrl extension.
 If you update the record definition in the header file, you have to recompile all of the modules which use it.
 This is usually handled with make files.</p></div></aside></section>
-<section id="_records_strong_creating_instances_strong"><h2>Records: <strong>creating instances</strong></h2><div class="pre"><span class="redcode">Var = #Name{Field1 = Expression1,
+<section id="_records_strong_creating_instances_strong"><h2>Records: <strong>creating instances</strong></h2><div class="pre"><b>Var = #Name{Field1 = Expression1,
             ...,
-            FieldN = ExpressionN}</span>
+            FieldN = ExpressionN}</b>
 
 Person = #person{name = "Joe",
                  phone = [1,2,3,4]}
 
 </div>
 <div class="ulist"><ul><li><p>If any of the fields are omitted, the default values in the record definition are assigned to them (including <strong>undefined</strong>)</p></li><li><p>The default value expression is evaluated when the record instance is created</p></li></ul></div></section>
-<section id="_records_strong_field_selectors_strong"><h2>Records: <strong>field selectors</strong></h2><div class="pre"><span class="redcode">FieldVar = RecordVar#Name.FieldName</span>
+<section id="_records_strong_field_selectors_strong"><h2>Records: <strong>field selectors</strong></h2><div class="pre"><b>FieldVar = RecordVar#Name.FieldName</b>
 
 P = #person{name = "Mike"}
 
-Name = P#person.name                    <span class="dimcode">% Name =:= "Mike"</span>
-Age  = P#person.age                     <span class="dimcode">% Age =:= 0</span>
+Name = P#person.name                    <span class="comment">% Name =:= "Mike"</span>
+Age  = P#person.age                     <span class="comment">% Age =:= 0</span>
 
 </div>
 <div class="ulist"><ul><li><p>Field and record names may not be variables</p></li></ul></div></section>
-<section id="_records_strong_updating_strong"><h2>Records: <strong>updating</strong></h2><div class="pre"><span class="redcode">NewVar = OldVar#Name{Field1 = Expression1,
+<section id="_records_strong_updating_strong"><h2>Records: <strong>updating</strong></h2><div class="pre"><b>NewVar = OldVar#Name{Field1 = Expression1,
                      ...,
-                     FieldN = ExpressionN}</span>
+                     FieldN = ExpressionN}</b>
 
-P = #person{name = "Mike"}              <span class="dimcode">% age = 0</span>
-NewP = P#person{age = 35}               <span class="dimcode">% age = 35</span>
-NewP2 = P#person{name = "Joe"}          <span class="dimcode">% age = 0</span>
+P = #person{name = "Mike"}              <span class="comment">% age = 0</span>
+NewP = P#person{age = 35}               <span class="comment">% age = 35</span>
+NewP2 = P#person{name = "Joe"}          <span class="comment">% age = 0</span>
 
 </div>
 <div class="ulist"><ul><li><p>Only fields to be changed have to be referred</p></li><li><p>Others will return their old values</p></li><li><p>Remember that Erlang variables are single assignment!</p></li></ul></div></section>
@@ -53,7 +53,7 @@ foo(#person{name = "Joe", age = Age}) -&gt; ...
 <section id="_records_strong_guards_strong"><h2>Records: <strong>guards</strong></h2><div class="pre">foobar(P) when is_record(P, person),
                P#person.name =:= "Joe" -> ...
 
-<span class="dimcode">is the same as, but less efficient than:</span>
+<span class="comment">is the same as, but less efficient than:</span>
 
 foobar(P = #person{name = "Joe"}) -> ...
 
@@ -68,7 +68,7 @@ First = (P#person.name)#name.first.
  </pre></div></div>
 <div class="ulist"><ul><li><p>Record fields may contain other nested records</p></li><li><p>Fields in nested records are accessed with one operation</p></li></ul></div></section>
 <section id="_records_strong_internal_representation_strong"><h2>Records: <strong>internal representation</strong></h2><div class="pre">#person{} =:= {person, undefined, 0, undefined}
-<div class="darkred" style="text-align:center; font-family:'Lucida Grande'; font-size:40pt; line-height:1em; margin-bottom:30pt;">
+<div class="darkred" style="text-align:center; font-family:'Lucida Grande'; font-size:40pt; line-height:1.1em; margin-bottom:30pt;">
   Warning! Never use the tuple representation of records!
 </div>
 
@@ -77,15 +77,15 @@ First = (P#person.name)#name.first.
 <aside class="notes"><div class="paragraph"><p>When warning the students, do something memorable. Stand on a table, sing the national anthem of Togo or anything else which will stick while warning them to never ever use this representation.</p></div></aside></section>
 <section id="_records_strong_information_strong"><h2>Records: <strong>information</strong></h2><div class="ulist"><ul><li><p><strong>record_info(fields, RecType)</strong></p><div class="ulist"><ul><li><p>returns a list of field names</p></li></ul></div></li><li><p><strong>record_info(size, RecType)</strong></p><div class="ulist"><ul><li><p>returns the size of the tuple (Fields + 1)</p></li></ul></div></li><li><p><strong>#RecType.Name</strong> returns the position of Name in the tuple</p></li><li><p><strong>RecType</strong> and <strong>Name</strong> must be atoms, and they may not be variables bound to atoms</p></li><li><p>Record information constructs are handled by the precompiler</p></li></ul></div></section>
 <section id="_records_and_the_shell"><h2>Records and the Shell</h2><div class="left">
-<div class="pre"><span class="redcode">1> rr(person).</span>
+<div class="pre"><b>1> rr(person).</b>
 [person].
-<span class="redcode">2> rl().</span>
+<b>2> rl().</b>
 -record(person, {name,
                  age = 0,
                  phone}
 ok
-<span class="redcode">3> #person{name='Henry', 
-3>         phone=[0,1,2]}.</span>
+<b>3> #person{name='Henry', 
+3>         phone=[0,1,2]}.</b>
 #person{name='Henry',
         age=0,
         phone=[0,1,2]}
@@ -96,15 +96,15 @@ ok
 <div class="ulist right"><ul><li><p>All record definitions in a module can be loaded using the function <strong>rr/1</strong></p></li><li><p>The records known to the shell can be listed with <strong>rl/0</strong></p></li></ul></div>
 <aside class="notes"><div class="paragraph"><p>rr reads a .erl file, in this case person.erl</p></div></aside></section>
 <section id="_records_and_the_shell_2"><h2>Records and the Shell</h2><div class="left">
-<div class="pre"><span class="redcode">4> rd(request, {id, action,
-4>    data, stamp=now()}).</span>
+<div class="pre"><b>4> rd(request, {id, action,
+4>    data, stamp=now()}).</b>
 request
-<span class="redcode">5> #request{}.</span>
+<b>5> #request{}.</b>
 #request{id = undefined,
          action = undefined,
          data = undefined,
          stamp = {1151, 913849,                    108529}}
-<span class="redcode">6> rf(request).</span>
+<b>6> rf(request).</b>
 ok
 
 
@@ -112,31 +112,31 @@ ok
 </div></div>
 <div class="ulist right"><ul><li><p>Records can be defined using <strong>rd/2</strong></p></li><li><p>Useful for testing and debugging</p></li><li><p>A record can also be forgotten like variables by using <strong>rf/0</strong> and <strong>rf/1</strong></p></li><li><p><strong>now/1</strong> is evaluated when the record instance is created</p></li></ul></div></section>
 <section id="_maps"><h2>Maps</h2><div class="ulist"><ul><li><p>Maps are used to store a variable number of items</p><div class="ulist"><ul><li><p>Similar to a hash table</p></li></ul></div></li><li><p>These items are accessed by a key</p><div class="ulist"><ul><li><p>Keys and items can be arbitrary Erlang terms</p></li></ul></div></li><li><p>Items can be added or removed without affecting the code not using these items</p></li><li><p>Maps are under development</p><div class="ulist"><ul><li><p>Currently keys MUST be literal terms</p></li></ul></div></li></ul></div></section>
-<section id="_maps_strong_creating_instances_strong"><h2>Maps: <strong>creating instances</strong></h2><div class="pre"><span class="redcode">Map = #{Key1 => Expression1,
+<section id="_maps_strong_creating_instances_strong"><h2>Maps: <strong>creating instances</strong></h2><div class="pre"><b>Map = #{Key1 => Expression1,
         ...,
-        KeyN => ExpressionN}</span>
+        KeyN => ExpressionN}</b>
 
 Person = #{name => “Joe", phone => [1,2,3,4]}
 
 
 </div>
 <div class="ulist"><ul><li><p>Only the given fields will be included in the map</p></li></ul></div></section>
-<section id="_maps_strong_field_selectors_strong"><h2>Maps: <strong>field selectors</strong></h2><div class="pre"><span class="redcode">FieldVar = maps:get(Key, Map)</span>
+<section id="_maps_strong_field_selectors_strong"><h2>Maps: <strong>field selectors</strong></h2><div class="pre"><b>FieldVar = maps:get(Key, Map)</b>
 
 P = #{name => “Mike”, age => 0}
-Name  = maps:get(name, P)                <span class="dimcode">% Name =:= "Mike"</span>
-Age   = maps:get(age, P)                 <span class="dimcode">% Age =:= 0</span>
-Phone = maps:get(phone, P)               <span class="redcode">exception</span>
+Name  = maps:get(name, P)                <span class="comment">% Name =:= "Mike"</span>
+Age   = maps:get(age, P)                 <span class="comment">% Age =:= 0</span>
+Phone = maps:get(phone, P)               <b>exception</b>
 
 </div>
 <div class="ulist"><ul><li><p>Only works with keys in the map</p></li><li><p>Generates an exception otherwise</p></li></ul></div></section>
-<section id="_maps_strong_updating_strong"><h2>Maps: <strong>updating</strong></h2><div class="pre"><span class="redcode">NewVar = Map#{Field1 => Expression1,
+<section id="_maps_strong_updating_strong"><h2>Maps: <strong>updating</strong></h2><div class="pre"><b>NewVar = Map#{Field1 => Expression1,
               ...,
-              FieldN := ExpressionN}</span>
+              FieldN := ExpressionN}</b>
 
 P = #{name => “Mike”, age => 0}
-NewP = P#{age => 35}                    <span class="dimcode">% age = 35</span>
-NewP2 = P#{phone := [1,2,3,4]}          <span class="redcode">exception</span>
+NewP = P#{age => 35}                    <span class="comment">% age = 35</span>
+NewP2 = P#{phone := [1,2,3,4]}          <b>exception</b>
 
 </div>
 <div class="ulist"><ul><li><p><strong>&#8658;</strong> updates existing fields or adds new fields</p></li><li><p><strong>:=</strong> ONLY updates existing fields</p></li><li><p>Only fields to be changed have to be referred</p></li><li><p>Others will return their old values</p></li><li><p>Remember that Erlang variables are single assignment!</p></li></ul></div></section>
@@ -161,9 +161,9 @@ First = maps:get(first, maps:get(name, P))
 <aside class="notes"><div class="paragraph"><p>The parentheses around a nested record are no longer necessary in newer versions of the language.</p></div></aside></section>
 <section id="_maps_strong_information_strong"><h2>Maps: <strong>information</strong></h2><div class="ulist"><ul><li><p><strong>maps:keys(Map,)</strong></p><div class="ulist"><ul><li><p>returns a list of keys</p></li></ul></div></li><li><p><strong>maps:size(Map)</strong></p><div class="ulist"><ul><li><p>returns the size of the map</p></li></ul></div></li><li><p><strong>maps:is_key(Key, Map)</strong></p><div class="ulist"><ul><li><p>returns whether the map contains Key</p></li></ul></div></li><li><p><strong>maps:from_list(KeyValueList)</strong></p></li><li><p><strong>maps:from_list(Map)</strong></p><div class="ulist"><ul><li><p>convert between maps and list of {Key,Value}</p></li></ul></div></li></ul></div></section>
 <section id="_records_vs_maps"><h2>Records vs Maps</h2><div class="ulist"><ul><li><p>Records</p><div class="ulist"><ul><li><p>Static and compile time checking</p></li><li><p>Faster</p></li><li><p>More difficult to modify</p></li></ul></div></li><li><p>Maps</p><div class="ulist"><ul><li><p>Dynamic</p></li><li><p>Easier to modify</p></li><li><p>Easier with large number of keys</p></li></ul></div></li></ul></div></section>
-<section id="_funs"><h2>Funs</h2><div class="pre"><span class="redcode">1> Add = fun(X, Y) -> X+Y end.</span>
+<section id="_funs"><h2>Funs</h2><div class="pre"><b>1> Add = fun(X, Y) -> X+Y end.</b>
 #Fun<erl_eval>
-<span class="redcode">2> Add(2,3).</span>
+<b>2> Add(2,3).</b>
 5
  
  
@@ -235,17 +235,17 @@ s1.click( function() {
 </script>
 </svg></section>
 <section id="_funs_strong_syntax_strong"><h2>Funs: <strong>syntax</strong></h2><div class="left">
-<div class="pre"><span class="redcode">fun(</span>Var1, ..., VarN<span class="redcode">) -></span>
+<div class="pre"><b>fun(</b>Var1, ..., VarN<b>) -></b>
   &lt;Expr1&gt;,
   &lt;Expr2&gt;,
   ...
   &lt;ExprN&gt;;
-   <span class="redcode">(</span>Var1, ..., VarN<span class="redcode">) -></span>
+   <b>(</b>Var1, ..., VarN<b>) -></b>
   &lt;Expr1&gt;,
   &lt;Expr2&gt;,
    ...
   &lt;ExprN&gt;
-<span class="redcode">end</span>
+<b>end</b>
 
 
 
@@ -258,14 +258,14 @@ s1.click( function() {
 <section id="_funs_strong_higher_order_functions_strong"><h2>Funs: <strong>higher order functions</strong></h2><div class="ulist"><ul><li><p>Functions taking funs as arguments are called higher order functions</p></li><li><p>They encourage the encapsulation of common design patterns, facilitate the re-usage of these functions</p></li><li><p>Improves the clarity of the program</p></li><li><p>Hides recursive calls</p></li><li><p>The process of abstracting out common patterns in programs is called <strong>procedural abstraction</strong>.</p></li></ul></div></section>
 <section id="_funs_strong_procedural_abstraction_strong"><h2>Funs: <strong>procedural abstraction</strong></h2><div class="left"><div style="text-align:center; font-size:1.3em;"><strong>Before</strong></div>
 
-<div class="pre"><span class="redcode">double</span>([H|T]) ->
-   [H*2 | <span class="redcode">double</span>(T)];
-<span class="redcode">double</span>([]) ->
+<div class="pre"><b>double</b>([H|T]) ->
+   [H*2 | <b>double</b>(T)];
+<b>double</b>([]) ->
    [].
 
-<span class="redcode">bump</span>([H|T]) ->
-   [H+1 | <span class="redcode">bump</span>(T)];
-<span class="redcode">bump</span>([]) ->
+<b>bump</b>([H|T]) ->
+   [H+1 | <b>bump</b>(T)];
+<b>bump</b>([]) ->
    [].
 
 
@@ -279,16 +279,16 @@ s1.click( function() {
 
 <div class="right"><div style="text-align:center; font-size:1.3em;"><strong>After</strong></div>
 
-<div class="pre"><span class="redcode">map</span>(Fun, [H|T]) ->
-   [Fun(H) | <span class="redcode">map</span>(Fun, T)];
-<span class="redcode">map</span>(_Fun, []) ->
+<div class="pre"><b>map</b>(Fun, [H|T]) ->
+   [Fun(H) | <b>map</b>(Fun, T)];
+<b>map</b>(_Fun, []) ->
    [].
 
-<span class="redcode">double</span>(L) ->
-   <span class="redcode">map</span>(fun(X)-> X*2 end, L).
+<b>double</b>(L) ->
+   <b>map</b>(fun(X)-> X*2 end, L).
 
-<span class="redcode">bump</span>(L) ->
-   <span class="redcode">map</span>(fun(X)-> X+1 end, L).
+<b>bump</b>(L) ->
+   <b>map</b>(fun(X)-> X+1 end, L).
 
 
 
@@ -303,25 +303,25 @@ Give an example of a predicate on the whiteboard and suggest they use it in the 
 <div class="paragraph"><p>fun(Atom) when is_atom(Atom) &#8594; true;
      (_      )  0&gt; false
 end.</p></div></aside></section>
-<section id="_funs_strong_examples_strong"><h2>Funs: <strong>examples</strong></h2><div class="pre"><span class="redcode">1> Bump = fun(X) -> X+1 end.</span>
+<section id="_funs_strong_examples_strong"><h2>Funs: <strong>examples</strong></h2><div class="pre"><b>1> Bump = fun(X) -> X+1 end.</b>
 #Fun<erl_eval.19.120858100>
-<span class="redcode">2> lists:map(Bump, [1,2,3,4,5]).</span>
+<b>2> lists:map(Bump, [1,2,3,4,5]).</b>
 [2,3,4,5,6]
-<span class="redcode">3> Positive = fun(X) -> if X < 0 -> false;
+<b>3> Positive = fun(X) -> if X < 0 -> false;
                            X >= 0 -> true
-                        end end.</span>
+                        end end.</b>
 #Fun<erl_eval.19.120858100>
-<span class="redcode">4> lists:filter(Positive, [-2,-1,0,1,2]).</span>
+<b>4> lists:filter(Positive, [-2,-1,0,1,2]).</b>
 [0,1,2]
-<span class="redcode">5> lists:all(Positive, [0,1,2,3,4]).</span>
+<b>5> lists:all(Positive, [0,1,2,3,4]).</b>
 true
-<span class="redcode">6> lists:all(Positive, [-1,0,1]).</span>
+<b>6> lists:all(Positive, [-1,0,1]).</b>
 false
 </div></section>
 <section id="_funs_strong_scope_of_variables_strong"><h2>Funs: <strong>scope of variables</strong></h2><div class="ulist"><ul><li><p>All variables in the head of the Fun are considered fresh, and bound when the fun is first called</p></li><li><p>Variables bound before the Fun can be used in the Fun and in guard tests</p></li><li><p>No variables may be exported from the Fun</p></li><li><p>Variables in the function head shadow already bound variables in the function the Fun is defined in</p></li></ul></div></section>
 <section id="_funs_strong_scope_of_variables_strong_2"><h2>Funs: <strong>scope of variables</strong></h2><div class="pre">foo() ->
-  *X* = 2,
-  Bump = fun(*X*) -> *X* + 1 end,
+  <b>X</b> = 2,
+  Bump = fun(<b>X</b>) -> <b>X</b> + 1 end,
   Bump(10).
 
 
@@ -334,8 +334,8 @@ false
 
 </div></section>
 <section id="_funs_strong_scope_of_variables_strong_3"><h2>Funs: <strong>scope of variables</strong></h2><div class="pre">bar() ->
-  <span class="redcode">X</span> = 10,
-  Bump = fun(Y) -> <span class="redcode">X</span> + Y end,
+  <b>X</b> = 10,
+  Bump = fun(Y) -> <b>X</b> + Y end,
   Bump(10).
 
 
@@ -348,18 +348,18 @@ false
 
 </div></section>
 <section id="_funs_strong_scope_of_variables_strong_4"><h2>Funs: <strong>scope of variables</strong></h2><div class="left">
-<div class="pre"><span class="redcode">1> GreaterThan = fun(X) -> 
+<div class="pre"><b>1> GreaterThan = fun(X) -> 
 1>   fun(Y) -> Y > X end 
-1> end.</span>
+1> end.</b>
 #Fun<erl_eval.6.13229925>
-<span class="redcode">2> Gt4 = GreaterThan(4).</span>
+<b>2> Gt4 = GreaterThan(4).</b>
 #Fun<erl_eval.6.13229925>
-<span class="redcode">3> Gt4(3).</span>
+<b>3> Gt4(3).</b>
 false
-<span class="redcode">4> (GreaterThan(4))(5).</span>
+<b>4> (GreaterThan(4))(5).</b>
 true
-<span class="redcode">5> lists:filter(Gt4,
- 5>         [1,6,8,3,5,0,4,11]).</span>
+<b>5> lists:filter(Gt4,
+ 5>         [1,6,8,3,5,0,4,11]).</b>
 [6,8,5,11]
 
 

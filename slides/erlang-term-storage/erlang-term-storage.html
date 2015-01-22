@@ -436,13 +436,7 @@ s8_anim3 = function() { s8_g1.animate({"opacity":"0"}, 375, mina.linear, s8_anim
 s8_anim4 = function() { s8_g2_2.animate({"opacity":"1"}, 375, mina.linear, s8_anim5); };
 s8_anim5 = function() { s8_g2.animate({"opacity":"0"}, 375, mina.linear); };
 
-var s8_counter=1
-s8.click( function() {
-  switch(s8_counter) {
-    case 1: {s8_anim1(); s8_counter++; break};
-    case 2: {s8_anim5(); s8_counter++; break};
-    }
-} );
+s8.click(function() { s8_anim1() });
 
 </script>
 </svg>

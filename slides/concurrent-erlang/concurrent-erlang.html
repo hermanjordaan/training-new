@@ -164,7 +164,7 @@ s4.click( function() {
 </svg>
 <aside class="notes"><div class="ulist"><ul><li><p>Shared memory with lock</p></li><li><p>STM (software transactional memory)</p></li><li><p>Promises</p></li><li><p>Message Passing</p></li></ul></div></aside></section>
 <section id="_receiving_messages"><h2>Receiving Messages</h2><div class="left">
-<div class="pre"><span class="redcode">receive</span>
+<div class="pre"><b>receive</b>
     Pattern1 -&gt;
          &lt;expression 1&gt;,
          &lt;expression 2&gt;,
@@ -179,7 +179,7 @@ s4.click( function() {
          &lt;expression 1&gt;,
          ...
          &lt;expression N&gt;
-<span class="redcode">end</span>
+<b>end</b>
 </div></div>
 <div class="ulist right"><ul><li><p>Messages are retrieved using a <strong>receive</strong> clause</p></li><li><p><strong>receive</strong> suspends the process until a matching message is received</p></li><li><p>Message passing is asynchronous</p></li></ul></div></section>
 <section id="_receiving_messages_2"><h2>Receiving Messages</h2><svg id="receiving_messages_2" style="height:650px; width:650px;" class="left">
@@ -234,7 +234,7 @@ s5.click( function() {
 
 </script>
 </svg>
-<div class="ulist right"><ul><li><p>Messages can be matched and selectively retrieved</p></li><li><p>Messages are received when a message matches a clause</p></li><li><p>Mailboxes are scanned sequentially.</p></li></ul></div>
+<div class="ulist right w_500"><ul><li><p>Messages can be matched and selectively retrieved</p></li><li><p>Messages are received when a message matches a clause</p></li><li><p>Mailboxes are scanned sequentially.</p></li></ul></div>
 <aside class="notes"><div class="paragraph"><p>Have the students execute a receive statement in the shell.</p></div></aside></section>
 <section id="_receiving_messages_3"><h2>Receiving Messages</h2><svg id="receiving_messages_3" style="height:480px; width:1000px;">
 <script>
@@ -461,7 +461,10 @@ go() -&gt;
     {Pid, Msg} -&gt;
       io:format("~w~n",[Msg])
   end,
-  Pid ! stop.</pre></div></div>
+  Pid ! stop.
+ 
+ 
+ </pre></div></div>
 <div class="literalblock right"><div class="content"><pre> 
 loop() -&gt;
   receive
@@ -471,6 +474,9 @@ loop() -&gt;
     stop -&gt;
       true
   end.
+ 
+ 
+ 
  
  </pre></div></div>
 <aside class="notes"><div class="paragraph"><p>Use a white board &amp; pen and paper to explain this example.
@@ -596,14 +602,14 @@ s12.text(250,540,"end").addClass("code bold");
 <section id="_timeouts_2"><h2>Timeouts</h2><div class="left" style="width: 600px;">
 <div class="pre">read(Key) ->
     db ! {self(), {read, Key}},
-    <span class="redcode">receive</span>
+    <b>receive</b>
       {read, R} ->
          {ok, R};
       {error, Reason} ->
          {error, Reason}
-    <span class="redcode">after</span> 1000 ->
+    <b>after</b> 1000 ->
       {error, timeout}
-    <span class="redcode">end</span>.
+    <b>end</b>.
  
  
  
@@ -616,16 +622,16 @@ s12.text(250,540,"end").addClass("code bold");
           [self(),Time,Msg]).
 
 send(Pid, Time, Msg) ->
-    <span class="redcode">receive </span>
-    <span class="redcode">after</span> Time ->
+    <b>receive </b>
+    <b>after</b> Time ->
         Pid ! Msg 
-    <span class="redcode">end</span>.
+    <b>end</b>.
 
 sleep(T) ->
-    <span class="redcode">receive</span>
-    <span class="redcode">after</span> T ->
+    <b>receive</b>
+    <b>after</b> T ->
         true
-    <span class="redcode">end</span>.
+    <b>end</b>.
 </div></div>
 <div class="ulist right"><ul><li><p><strong>send_after(T, What)</strong> sends the message <strong>What</strong> to the current process after <strong>T</strong> milliseconds</p></li><li><p>The <strong>sleep(T)</strong> function will suspend the calling process for <strong>T</strong> milliseconds</p></li></ul></div>
 <aside class="notes"><div class="paragraph"><p>Explain that receive with no messages will never match any message</p></div></aside></section>

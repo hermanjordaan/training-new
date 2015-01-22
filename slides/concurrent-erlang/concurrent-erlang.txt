@@ -256,7 +256,7 @@ Receiving Messages
 [role="left"]
 ++++
 <div class="left">
-<div class="pre"><span class="redcode">receive</span>
+<div class="pre"><b>receive</b>
     Pattern1 -&gt;
          &lt;expression 1&gt;,
          &lt;expression 2&gt;,
@@ -271,7 +271,7 @@ Receiving Messages
          &lt;expression 1&gt;,
          ...
          &lt;expression N&gt;
-<span class="redcode">end</span>
+<b>end</b>
 </div></div>
 ++++
 
@@ -338,7 +338,7 @@ s5.click( function() {
 </svg>
 ++++
 
-[role="right"]
+[role="right w_500"]
 * Messages can be matched and selectively retrieved
 * Messages are received when a message matches a clause
 * Mailboxes are scanned sequentially.
@@ -615,6 +615,9 @@ go() ->
       io:format("~w~n",[Msg])
   end,
   Pid ! stop.
+ 
+ 
+ 
 ..............
 
 [role="right"]
@@ -628,6 +631,9 @@ loop() ->
     stop ->
       true
   end.
+ 
+ 
+ 
  
  
 ..............
@@ -836,14 +842,14 @@ Timeouts
 <div class="left" style="width: 600px;">
 <div class="pre">read(Key) ->
     db ! {self(), {read, Key}},
-    <span class="redcode">receive</span>
+    <b>receive</b>
       {read, R} ->
          {ok, R};
       {error, Reason} ->
          {error, Reason}
-    <span class="redcode">after</span> 1000 ->
+    <b>after</b> 1000 ->
       {error, timeout}
-    <span class="redcode">end</span>.
+    <b>end</b>.
  
  
  
@@ -866,16 +872,16 @@ Timeouts
           [self(),Time,Msg]).
 
 send(Pid, Time, Msg) ->
-    <span class="redcode">receive </span>
-    <span class="redcode">after</span> Time ->
+    <b>receive </b>
+    <b>after</b> Time ->
         Pid ! Msg 
-    <span class="redcode">end</span>.
+    <b>end</b>.
 
 sleep(T) ->
-    <span class="redcode">receive</span>
-    <span class="redcode">after</span> T ->
+    <b>receive</b>
+    <b>after</b> T ->
         true
-    <span class="redcode">end</span>.
+    <b>end</b>.
 </div></div>
 ++++
 

@@ -364,10 +364,11 @@ Pattern Matching: *controlling*
 
 Pattern Matching: *extracting*
 ------------------------------
-*+\{A, \_, [B|_], \{B\}\} = \{abc, 23, [22, x], \{22\}\}+* + 
+*+{A, \_, [B|_], \{B\}} = {abc, 23, [22, x], \{22\}}+* + 
 {nbsp}{nbsp}- Succeeds, +A=abc+, +B=22+
 
-*+C = 10, {C, C, 13, D, _} = {10, 10, 13, 12, 15}+* + 
+*+C = 10,  + 
+{C, C, 13, D, _} = {10, 10, 13, 12, 15}+* + 
 {nbsp}{nbsp}- Succeeds, +D=12+, +C=10+
 
 *+Var = {person, \'Francesco', \'Cesarini'},  + 
@@ -518,18 +519,18 @@ Functions: *syntax*
 
 ++++
 <div class="left" style="width:560px;">
-  <div class="pre"><span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+  <div class="pre"><b>Func(Pattern1, Pattern2, ...) -></b>
    &lt;expression 1&gt;,
    &lt;expression 2&gt;,
    ...
    &lt;expression n&gt;;
-<span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+<b>Func(Pattern1, Pattern2, ...) -></b>
    &lt;expression 1&gt;,
    &lt;expression 2&gt;,
    ...
    &lt;expression n&gt;;
 ...
-<span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+<b>Func(Pattern1, Pattern2, ...) -></b>
    &lt;expression 1&gt;,
    &lt;expression 2&gt;,
    ...

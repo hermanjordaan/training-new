@@ -151,6 +151,8 @@ body {
   margin-right: 15px;
 }
 
+.reveal .w_400 {width: 400px !important}
+.reveal .w_500 {width: 500px !important}
 .reveal .w_600 {width: 600px !important}
 .reveal .w_700 {width: 700px !important}
 
@@ -166,7 +168,12 @@ body {
 .darkred {color: #860404;}
 .bold {font-weight: bold !important;}
 .redcode {color: #860404; font-weight: bold !important;}
+.pre b, .centered b {color: #860404; font-weight: bold !important;}
+.pre strong {color: #000;}
+.comment {color: #4b5056;}
 .reveal h2 {font-weight: bold;}
+.reveal code, .reveal code strong {font-family: Menlo, monospace;}
+
 
 .reveal h1 {
 	color: #3A3F44 !important;

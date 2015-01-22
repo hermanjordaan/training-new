@@ -70,9 +70,9 @@ This is usually handled with make files.
 Records: *creating instances*
 -----------------------------
 ++++
-<div class="pre"><span class="redcode">Var = #Name{Field1 = Expression1,
+<div class="pre"><b>Var = #Name{Field1 = Expression1,
             ...,
-            FieldN = ExpressionN}</span>
+            FieldN = ExpressionN}</b>
 
 Person = #person{name = "Joe",
                  phone = [1,2,3,4]}
@@ -87,12 +87,12 @@ Person = #person{name = "Joe",
 Records: *field selectors*
 --------------------------
 ++++
-<div class="pre"><span class="redcode">FieldVar = RecordVar#Name.FieldName</span>
+<div class="pre"><b>FieldVar = RecordVar#Name.FieldName</b>
 
 P = #person{name = "Mike"}
 
-Name = P#person.name                    <span class="dimcode">% Name =:= "Mike"</span>
-Age  = P#person.age                     <span class="dimcode">% Age =:= 0</span>
+Name = P#person.name                    <span class="comment">% Name =:= "Mike"</span>
+Age  = P#person.age                     <span class="comment">% Age =:= 0</span>
 
 </div>
 ++++
@@ -103,13 +103,13 @@ Age  = P#person.age                     <span class="dimcode">% Age =:= 0</span>
 Records: *updating*
 -------------------
 ++++
-<div class="pre"><span class="redcode">NewVar = OldVar#Name{Field1 = Expression1,
+<div class="pre"><b>NewVar = OldVar#Name{Field1 = Expression1,
                      ...,
-                     FieldN = ExpressionN}</span>
+                     FieldN = ExpressionN}</b>
 
-P = #person{name = "Mike"}              <span class="dimcode">% age = 0</span>
-NewP = P#person{age = 35}               <span class="dimcode">% age = 35</span>
-NewP2 = P#person{name = "Joe"}          <span class="dimcode">% age = 0</span>
+P = #person{name = "Mike"}              <span class="comment">% age = 0</span>
+NewP = P#person{age = 35}               <span class="comment">% age = 35</span>
+NewP2 = P#person{name = "Joe"}          <span class="comment">% age = 0</span>
 
 </div>
 ++++
@@ -140,7 +140,7 @@ Records: *guards*
 <div class="pre">foobar(P) when is_record(P, person),
                P#person.name =:= "Joe" -> ...
 
-<span class="dimcode">is the same as, but less efficient than:</span>
+<span class="comment">is the same as, but less efficient than:</span>
 
 foobar(P = #person{name = "Joe"}) -> ...
 
@@ -171,7 +171,7 @@ Records: *internal representation*
 ----------------------------------
 ++++
 <div class="pre">#person{} =:= {person, undefined, 0, undefined}
-<div class="darkred" style="text-align:center; font-family:'Lucida Grande'; font-size:40pt; line-height:1em; margin-bottom:30pt;">
+<div class="darkred" style="text-align:center; font-family:'Lucida Grande'; font-size:40pt; line-height:1.1em; margin-bottom:30pt;">
   Warning! Never use the tuple representation of records!
 </div>
 
@@ -205,15 +205,15 @@ Records and the Shell
 ---------------------
 ++++
 <div class="left">
-<div class="pre"><span class="redcode">1> rr(person).</span>
+<div class="pre"><b>1> rr(person).</b>
 [person].
-<span class="redcode">2> rl().</span>
+<b>2> rl().</b>
 -record(person, {name,
                  age = 0,
                  phone}
 ok
-<span class="redcode">3> #person{name='Henry', 
-3>         phone=[0,1,2]}.</span>
+<b>3> #person{name='Henry', 
+3>         phone=[0,1,2]}.</b>
 #person{name='Henry',
         age=0,
         phone=[0,1,2]}
@@ -238,15 +238,15 @@ Records and the Shell
 ---------------------
 ++++
 <div class="left">
-<div class="pre"><span class="redcode">4> rd(request, {id, action,
-4>    data, stamp=now()}).</span>
+<div class="pre"><b>4> rd(request, {id, action,
+4>    data, stamp=now()}).</b>
 request
-<span class="redcode">5> #request{}.</span>
+<b>5> #request{}.</b>
 #request{id = undefined,
          action = undefined,
          data = undefined,
          stamp = {1151, 913849,                    108529}}
-<span class="redcode">6> rf(request).</span>
+<b>6> rf(request).</b>
 ok
 
 
@@ -275,9 +275,9 @@ Maps
 Maps: *creating instances*
 --------------------------
 ++++
-<div class="pre"><span class="redcode">Map = #{Key1 => Expression1,
+<div class="pre"><b>Map = #{Key1 => Expression1,
         ...,
-        KeyN => ExpressionN}</span>
+        KeyN => ExpressionN}</b>
 
 Person = #{name => “Joe", phone => [1,2,3,4]}
 
@@ -291,12 +291,12 @@ Person = #{name => “Joe", phone => [1,2,3,4]}
 Maps: *field selectors*
 -----------------------
 ++++
-<div class="pre"><span class="redcode">FieldVar = maps:get(Key, Map)</span>
+<div class="pre"><b>FieldVar = maps:get(Key, Map)</b>
 
 P = #{name => “Mike”, age => 0}
-Name  = maps:get(name, P)                <span class="dimcode">% Name =:= "Mike"</span>
-Age   = maps:get(age, P)                 <span class="dimcode">% Age =:= 0</span>
-Phone = maps:get(phone, P)               <span class="redcode">exception</span>
+Name  = maps:get(name, P)                <span class="comment">% Name =:= "Mike"</span>
+Age   = maps:get(age, P)                 <span class="comment">% Age =:= 0</span>
+Phone = maps:get(phone, P)               <b>exception</b>
 
 </div>
 ++++
@@ -308,13 +308,13 @@ Phone = maps:get(phone, P)               <span class="redcode">exception</span>
 Maps: *updating*
 ----------------
 ++++
-<div class="pre"><span class="redcode">NewVar = Map#{Field1 => Expression1,
+<div class="pre"><b>NewVar = Map#{Field1 => Expression1,
               ...,
-              FieldN := ExpressionN}</span>
+              FieldN := ExpressionN}</b>
 
 P = #{name => “Mike”, age => 0}
-NewP = P#{age => 35}                    <span class="dimcode">% age = 35</span>
-NewP2 = P#{phone := [1,2,3,4]}          <span class="redcode">exception</span>
+NewP = P#{age => 35}                    <span class="comment">% age = 35</span>
+NewP2 = P#{phone := [1,2,3,4]}          <b>exception</b>
 
 </div>
 ++++
@@ -392,9 +392,9 @@ Records vs Maps
 Funs
 ----
 ++++
-<div class="pre"><span class="redcode">1> Add = fun(X, Y) -> X+Y end.</span>
+<div class="pre"><b>1> Add = fun(X, Y) -> X+Y end.</b>
 #Fun<erl_eval>
-<span class="redcode">2> Add(2,3).</span>
+<b>2> Add(2,3).</b>
 5
  
  
@@ -487,17 +487,17 @@ Funs: *syntax*
 --------------
 ++++
 <div class="left">
-<div class="pre"><span class="redcode">fun(</span>Var1, ..., VarN<span class="redcode">) -></span>
+<div class="pre"><b>fun(</b>Var1, ..., VarN<b>) -></b>
   &lt;Expr1&gt;,
   &lt;Expr2&gt;,
   ...
   &lt;ExprN&gt;;
-   <span class="redcode">(</span>Var1, ..., VarN<span class="redcode">) -></span>
+   <b>(</b>Var1, ..., VarN<b>) -></b>
   &lt;Expr1&gt;,
   &lt;Expr2&gt;,
    ...
   &lt;ExprN&gt;
-<span class="redcode">end</span>
+<b>end</b>
 
 
 
@@ -539,14 +539,14 @@ Funs: *procedural abstraction*
 ++++
 <div class="left"><div style="text-align:center; font-size:1.3em;"><strong>Before</strong></div>
 
-<div class="pre"><span class="redcode">double</span>([H|T]) ->
-   [H*2 | <span class="redcode">double</span>(T)];
-<span class="redcode">double</span>([]) ->
+<div class="pre"><b>double</b>([H|T]) ->
+   [H*2 | <b>double</b>(T)];
+<b>double</b>([]) ->
    [].
 
-<span class="redcode">bump</span>([H|T]) ->
-   [H+1 | <span class="redcode">bump</span>(T)];
-<span class="redcode">bump</span>([]) ->
+<b>bump</b>([H|T]) ->
+   [H+1 | <b>bump</b>(T)];
+<b>bump</b>([]) ->
    [].
 
 
@@ -560,16 +560,16 @@ Funs: *procedural abstraction*
 
 <div class="right"><div style="text-align:center; font-size:1.3em;"><strong>After</strong></div>
 
-<div class="pre"><span class="redcode">map</span>(Fun, [H|T]) ->
-   [Fun(H) | <span class="redcode">map</span>(Fun, T)];
-<span class="redcode">map</span>(_Fun, []) ->
+<div class="pre"><b>map</b>(Fun, [H|T]) ->
+   [Fun(H) | <b>map</b>(Fun, T)];
+<b>map</b>(_Fun, []) ->
    [].
 
-<span class="redcode">double</span>(L) ->
-   <span class="redcode">map</span>(fun(X)-> X*2 end, L).
+<b>double</b>(L) ->
+   <b>map</b>(fun(X)-> X*2 end, L).
 
-<span class="redcode">bump</span>(L) ->
-   <span class="redcode">map</span>(fun(X)-> X+1 end, L).
+<b>bump</b>(L) ->
+   <b>map</b>(fun(X)-> X+1 end, L).
 
 
 
@@ -616,19 +616,19 @@ end.
 Funs: *examples*
 ----------------
 ++++
-<div class="pre"><span class="redcode">1> Bump = fun(X) -> X+1 end.</span>
+<div class="pre"><b>1> Bump = fun(X) -> X+1 end.</b>
 #Fun<erl_eval.19.120858100>
-<span class="redcode">2> lists:map(Bump, [1,2,3,4,5]).</span>
+<b>2> lists:map(Bump, [1,2,3,4,5]).</b>
 [2,3,4,5,6]
-<span class="redcode">3> Positive = fun(X) -> if X < 0 -> false; 
+<b>3> Positive = fun(X) -> if X < 0 -> false; 
                            X >= 0 -> true 
-                        end end.</span>
+                        end end.</b>
 #Fun<erl_eval.19.120858100>
-<span class="redcode">4> lists:filter(Positive, [-2,-1,0,1,2]).</span>
+<b>4> lists:filter(Positive, [-2,-1,0,1,2]).</b>
 [0,1,2]
-<span class="redcode">5> lists:all(Positive, [0,1,2,3,4]).</span>
+<b>5> lists:all(Positive, [0,1,2,3,4]).</b>
 true
-<span class="redcode">6> lists:all(Positive, [-1,0,1]).</span>
+<b>6> lists:all(Positive, [-1,0,1]).</b>
 false
 </div>
 ++++
@@ -646,8 +646,8 @@ Funs: *scope of variables*
 --------------------------
 ++++
 <div class="pre">foo() ->
-  *X* = 2,
-  Bump = fun(*X*) -> *X* + 1 end,
+  <b>X</b> = 2,
+  Bump = fun(<b>X</b>) -> <b>X</b> + 1 end,
   Bump(10).
 
 
@@ -670,8 +670,8 @@ Funs: *scope of variables*
 --------------------------
 ++++
 <div class="pre">bar() ->
-  <span class="redcode">X</span> = 10,
-  Bump = fun(Y) -> <span class="redcode">X</span> + Y end,
+  <b>X</b> = 10,
+  Bump = fun(Y) -> <b>X</b> + Y end,
   Bump(10).
 
 
@@ -694,18 +694,18 @@ Funs: *scope of variables*
 --------------------------
 ++++
 <div class="left">
-<div class="pre"><span class="redcode">1> GreaterThan = fun(X) -> 
+<div class="pre"><b>1> GreaterThan = fun(X) -> 
 1>   fun(Y) -> Y > X end 
-1> end.</span>
+1> end.</b>
 #Fun<erl_eval.6.13229925>
-<span class="redcode">2> Gt4 = GreaterThan(4).</span>
+<b>2> Gt4 = GreaterThan(4).</b>
 #Fun<erl_eval.6.13229925>
-<span class="redcode">3> Gt4(3).</span>
+<b>3> Gt4(3).</b>
 false
-<span class="redcode">4> (GreaterThan(4))(5).</span>
+<b>4> (GreaterThan(4))(5).</b>
 true
-<span class="redcode">5> lists:filter(Gt4,
- 5>         [1,6,8,3,5,0,4,11]).</span>
+<b>5> lists:filter(Gt4,
+ 5>         [1,6,8,3,5,0,4,11]).</b>
 [6,8,5,11]
 
 

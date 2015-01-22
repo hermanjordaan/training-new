@@ -53,6 +53,23 @@ svg {
   font-size: 22pt;
 }
 
+.rect_code {
+  stroke-width: 1px;
+  stroke: #d1d1d1;
+  fill: #f2f2f2;
+}
+
+.pt16 {font-size: 16pt;}
+.pt17 {font-size: 17pt;}
+.pt18 {font-size: 18pt;}
+.pt19 {font-size: 19pt;}
+.pt20 {font-size: 20pt;}
+
+.rect_lightgray {
+	fill: #e7e7e7;
+	stroke: #000;
+}
+
 .hide {
   opacity: 0;
 }

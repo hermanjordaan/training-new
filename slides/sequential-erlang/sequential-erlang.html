@@ -67,7 +67,7 @@ s1.click( function() {
 </svg>
 <aside class="notes"><div class="paragraph"><p>Mention that the case clause consists of the reserved words case of &amp; end.</p></div></aside></section>
 <section id="_conditional_evaluation_strong_case_strong_2"><h2>Conditional Evaluation: <strong>case</strong></h2><div class="left">
-<div class="pre"><span class="redcode">case</span> &lt;expression&gt; <span class="redcode">of</span>
+<div class="pre"><b>case</b> &lt;expression&gt; <b>of</b>
     Pattern1 ->
         &lt;expression 1&gt;,
         &lt;expression 2&gt;,
@@ -82,7 +82,7 @@ s1.click( function() {
         &lt;expression 1&gt;,
         ...
         &lt;expression N&gt;
-<span class="redcode">end</span>
+<b>end</b>
 </div></div>
 <div class="ulist right"><ul><li><p>One branch should always succeed</p></li><li><p>Using an unbound variable or '_' ensures that the clause will always match</p></li><li><p>The _ clause is not mandatory</p></li><li><p>An exception is raised if no clause matches</p></li><li><p>Returns the value of the last executed expression</p></li></ul></div></section>
 <section id="_defensive_programming"><h2>Defensive Programming</h2><div class="left">
@@ -95,18 +95,18 @@ s1.click( function() {
       friday    -> 5;
       saturday  -> 6;
       sunday    -> 7;
-      <span class="redcode">Other ->
-         {error, unknown_day}</span>
+      <b>Other ->
+         {error, unknown_day}</b>
   end.
 </div></div>
 <div class="ulist right"><ul><li><p>Defensive programming: program in the convert function for the error case or &#8230;&#8203;</p></li><li><p>&#8230;&#8203; let it fail here by deleting the <strong>Other</strong> clause.</p></li><li><p>This will raise an exception</p></li><li><p>The caller will have to handle the error that they have caused.</p></li></ul></div></section>
 <section id="_guards"><h2>Guards</h2><div class="left">
-<div class="pre">factorial(N) <span class="redcode">when</span> N > 0 ->
+<div class="pre">factorial(N) <b>when</b> N > 0 ->
     N * factorial(N - 1);
 factorial(0) -> 1.
 
 
- <b>This is <span class="redcode">NOT</span> the same as...</b>
+ <strong>This is <b>NOT</b> the same as...</strong>
 
 factorial(0) -> 1;
 factorial(N) ->
@@ -186,7 +186,7 @@ s2.click( function() {
 </script>
 </svg></section>
 <section id="_conditional_evaluation_strong_if_strong_2"><h2>Conditional Evaluation: <strong>if</strong></h2><div class="left">
-<div class="pre"><span class="redcode">if</span> Guard1 ->
+<div class="pre"><b>if</b> Guard1 ->
         &lt;expression 1&gt;,
         &lt;expression 2&gt;,
         ...
@@ -201,13 +201,13 @@ s2.click( function() {
         &lt;expression 1&gt;,
         ...
         &lt;expression N&gt;
-<span class="redcode">end</span>
+<b>end</b>
 </div></div>
 <div class="ulist right"><ul><li><p>One branch must always succeed</p></li><li><p>By using <strong>true</strong> as the last guard, we ensure that a clause will always succeed</p></li><li><p>The <strong>true</strong> guard is not mandatory</p></li><li><p>An exception is raised if no clause succeeds</p></li><li><p>Returns the value of the last executed expression</p></li></ul></div></section>
-<section id="_general_switch"><h2>General Switch</h2><div class="pre">if <span class="redcode">f(Args)</span> -> ok;
+<section id="_general_switch"><h2>General Switch</h2><div class="pre">if <b>f(Args)</b> -> ok;
    true    -> error
 end<div style="color:red; font-family:'Lucida Grande'; font-weight:bold; font-size:2em; position:absolute; left:500px; top:15px;">×</div>
-case <span class="redcode">f(Args)</span> of
+case <b>f(Args)</b> of
     true -> ok;
     false -> error
 end<div style="color:green; font-family:'Lucida Grande'; font-size:2em; position:absolute; left:500px; top:150px;">✓</div>
@@ -412,7 +412,7 @@ factorial(0) -&gt; 1.
  
  </pre></div></div>
 <div class="ulist right"><ul><li><p><strong>function_clause</strong> is returned when none of the existing function patterns matches</p></li></ul></div>
-<div class="pre" style="clear:both;"><span class="redcode">1> math:factorial(-1).</span>
+<div class="pre" style="clear:both;"><b>1> math:factorial(-1).</b>
 ** exception error: no function clause matching
   math:factorial(-1)
 
@@ -428,7 +428,7 @@ factorial(0) -&gt; 1.
  
  </pre></div></div>
 <div class="ulist right"><ul><li><p><strong>case_clause</strong> is returned when none of the existing patterns in the case statement matches</p></li></ul></div>
-<div class="pre" style="clear:both;"><span class="redcode">1> test:test(0).</span>
+<div class="pre" style="clear:both;"><b>1> test:test(0).</b>
 ** exception error: no case clause matching 0
      in function  test:test/1
 
@@ -444,22 +444,22 @@ factorial(0) -&gt; 1.
  
  </pre></div></div>
 <div class="ulist right"><ul><li><p><strong>if_clause</strong> is returned when none of the existing expressions in the if statement evaluates to <strong>true</strong></p></li></ul></div>
-<div class="pre" style="clear:both;"><span class="redcode">1> test:test(0).</span>
+<div class="pre" style="clear:both;"><b>1> test:test(0).</b>
 ** exception error: no true branch found when evaluating an if expression
      in function  test:test/1
 
 
 
 </div></section>
-<section id="_run_time_errors_strong_match_strong_3"><h2>Run Time Errors: <strong>match</strong></h2><div class="pre"><span class="redcode">1> Tuple = {1, two, 3}.</span>
+<section id="_run_time_errors_strong_match_strong_3"><h2>Run Time Errors: <strong>match</strong></h2><div class="pre"><b>1> Tuple = {1, two, 3}.</b>
 {1,two,3}
-<span class="redcode">2> {1, two, 3, Four} = Tuple.</span>
+<b>2> {1, two, 3, Four} = Tuple.</b>
 ** exception error: no match of right hand side value
   {1,two,3}
 
 </div>
 <div class="ulist"><ul><li><p><strong>badmatch</strong> errors occur in situations when pattern matching fails and there are no other alternative clauses to choose from.</p></li></ul></div></section>
-<section id="_run_time_errors_strong_others_strong"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><span class="redcode">1> length(helloWorld).</span>
+<section id="_run_time_errors_strong_others_strong"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><b>1> length(helloWorld).</b>
 ** exception error: bad argument in function length/1
         called as length(helloWorld)
 
@@ -467,7 +467,7 @@ factorial(0) -&gt; 1.
 
 </div>
 <div class="ulist"><ul><li><p><strong>badarg</strong> is returned when a BIF with wrong arguments is called.</p></li></ul></div></section>
-<section id="_run_time_errors_strong_others_strong_2"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><span class="redcode">1> test:hello().</span>
+<section id="_run_time_errors_strong_others_strong_2"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><b>1> test:hello().</b>
   ** exception error: undefined function test:hello/0
 
 
@@ -475,7 +475,7 @@ factorial(0) -&gt; 1.
 
 </div>
 <div class="ulist"><ul><li><p><strong>undef</strong> will be returned if the global function being called is not defined or exported</p></li></ul></div></section>
-<section id="_run_time_errors_strong_others_strong_3"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><span class="redcode">1> 1 + a.</span>
+<section id="_run_time_errors_strong_others_strong_3"><h2>Run Time Errors: <strong>others</strong></h2><div class="pre"><b>1> 1 + a.</b>
 ** exception error: bad argument in an arithmetic expression
      in operator  +/2
         called as 1 + a
@@ -484,17 +484,17 @@ factorial(0) -&gt; 1.
 </div>
 <div class="ulist"><ul><li><p><strong>badarith</strong> is returned when arithmetical operations are executed with values that are neither integers or floats.</p></li></ul></div></section>
 <section id="_try_catch"><h2>Try &#8230;&#8203; catch</h2><div class="left" style="width:600px;">
-<div class="pre"><span class="redcode">try</span> Expressions <span class="redcode">of</span>
+<div class="pre"><b>try</b> Expressions <b>of</b>
   Pattern1 ->
      ExpressionBody1;
   Pattern2 ->
      ExpressionBody2
-<span class="redcode">catch</span>
-  [Class1:]ExceptionPattern1 ->
+<b>catch</b>
+  <i>[Class1:]</i>ExceptionPattern1 ->
      ExceptionBody1;
-  [Class2:]ExceptionPattern2 ->
+  <i>[Class2:]</i>ExceptionPattern2 ->
      ExceptionBody2
-<span class="redcode">end</span>
+<b>end</b>
 
 
 </div></div>
@@ -507,11 +507,11 @@ factorial(0) -&gt; 1.
 ** exception error: no match of right hand side value 3
 3> self().
 <0.57.0>
-4> <span class="redcode">try</span> (X = 3) <span class="redcode">of</span>
+4> <b>try</b> (X = 3) <b>of</b>
 4>   Val -> {normal, Val}
-4> <span class="redcode">catch</span>
+4> <b>catch</b>
 4>   _:_ -> 43
-4> <span class="redcode">end</span>.
+4> <b>end</b>.
 43
 5> self().
 <0.57.0>
@@ -521,18 +521,18 @@ factorial(0) -&gt; 1.
 <section id="_try_catch_3"><h2>Try &#8230;&#8203; catch</h2><div class="left">
 <div class="pre">1> X = 2.
 2
-2> <span class="redcode">try</span> (X = 3) <span class="redcode">of</span>
+2> <b>try</b> (X = 3) <b>of</b>
 2>   Val -> {normal, Val}
-2> <span class="redcode">catch</span>
+2> <b>catch</b>
 2>   error:Error -> {error, Error}
-2> <span class="redcode">end</span>.
+2> <b>end</b>.
 {error,{badmatch,3}}
 
-3> </span>try</span> (X = 3) <span class="redcode">of</span>
+3> </span>try</span> (X = 3) <b>of</b>
 3>   Val -> {normal, Val}
-3> <span class="redcode">catch</span>
+3> <b>catch</b>
 3>   error:{badmatch,_} -> 42
-3> <span class="redcode">end</span>.
+3> <b>end</b>.
 42
 
 </div></div>
@@ -562,16 +562,16 @@ s5.text(130,279,"and understand").addClass("text");
    test(X),
    X + Y.
 test(X) when is_integer(X) -> ok;
-test(X) -> <span class="redcode">throw</span>({error, {non_integer, X}}<span class="redcode">)</span>.
+test(X) -> <b>throw</b>({error, {non_integer, X}}<b>)</b>.
 </div>
 
 <div class="pre">1> math:add(1, one).
 ** exception throw: {error,{non_integer,one}}
-2> <span class="redcode">try</span> math:add(1, one) <span class="redcode">of</span>
+2> <b>try</b> math:add(1, one) <b>of</b>
 2>   _ -> ok
 2> </span>catch</span>
 2>   Class:Reason -> {Class, Reason}
-2> <span class="redcode">end</span>.
+2> <b>end</b>.
 {throw,{error,{non_integer,one}}}
 
 </div></section>
@@ -579,19 +579,19 @@ test(X) -> <span class="redcode">throw</span>({error, {non_integer, X}}<span cla
 -export([try_wildcard/1]).
 
 try_wildcard(X) when is_integer(X) ->
-  <span class="redcode">try</span> return_error(X)
-  <span class="redcode">catch</span>
+  <b>try</b> return_error(X)
+  <b>catch</b>
     throw:Throw -> {throw, Throw};
     error:_     -> error;
     Type:Error  -> {Type, Error};
     _           -> other;        %% Will never be returned
     _:_         -> other         %% Will never be returned
-  <span class="redcode">end</span>.
+  <b>end</b>.
 
 
 </div></section>
 <section id="_try_catch_strong_examples_strong_2"><h2>Try &#8230;&#8203; catch: <strong>examples</strong></h2><div class="pre">return_error(X) when X < 0 ->
-  <span class="redcode">throw</span>({'EXIT',{badarith,[{exception,return_error,1},
+  <b>throw</b>({'EXIT',{badarith,[{exception,return_error,1},
                            {erl_eval,do_apply,5},
                            {shell,exprs,6},
                            {shell,eval_exprs,6},
@@ -605,15 +605,15 @@ return_error(X) when X > 0 ->
                      {shell,eval_loop,3}]}}.
 
 </div></section>
-<section id="_try_catch_strong_examples_strong_3"><h2>Try &#8230;&#8203; catch: <strong>examples</strong></h2><div class="pre"><span class="redcode">1> exception:try_wildcard(-1).</span>
+<section id="_try_catch_strong_examples_strong_3"><h2>Try &#8230;&#8203; catch: <strong>examples</strong></h2><div class="pre"><b>1> exception:try_wildcard(-1).</b>
 {throw,{'EXIT',{badarith,[{exception,return_error,1},
                           {erl_eval,do_apply,5},
                           {shell,exprs,6},
                           {shell,eval_exprs,6},
                           {shell,eval_loop,3}]}}}
-<span class="redcode">2> exception:try_wildcard(0).</span>
+<b>2> exception:try_wildcard(0).</b>
 error
-<span class="redcode">3> exception:try_wildcard(1).</span>
+<b>3> exception:try_wildcard(1).</b>
 {'EXIT',{badarith,[{exception,return_error,1},
                    {erl_eval,do_apply,5},
                    ...
@@ -622,30 +622,30 @@ error
 </div></section>
 <section id="_catch"><h2>Catch</h2><div class="literalblock centered redcode"><div class="content"><pre>catch &lt;expression&gt;</pre></div></div>
 <div class="ulist"><ul><li><p><strong>catch</strong> provides a mechanism for monitoring the evaluation of an expression</p></li><li><p>It will trap exits caused by runtime errors</p></li><li><p>A function call resulting in a run time error called in the scope or a catch will return the tuple <strong>{<em>EXIT</em>, Reason}</strong></p></li><li><p><strong>Reason</strong> is the runtime error which occurred</p></li></ul></div></section>
-<section id="_catch_2"><h2>Catch</h2><div class="pre"><span class="redcode">1> self().</span>
+<section id="_catch_2"><h2>Catch</h2><div class="pre"><b>1> self().</b>
 <0.28.0>
-<span class="redcode">2> catch list_to_integer("one").</span>
+<b>2> catch list_to_integer("one").</b>
 {'EXIT',{badarg,[{erlang,list_to_integer,["one"]},
              ...,{shell,eval_loop,3}]}}
-<span class="redcode">3> self().</span>
+<b>3> self().</b>
 <0.28.0>
-<span class="redcode">4> list_to_integer("one").</span>
+<b>4> list_to_integer("one").</b>
 ** exception error: bad argument
      in function  list_to_integer/1
         called as list_to_integer("one")
-<span class="redcode">5> self().</span>
+<b>5> self().</b>
 <0.33.0>
 
 </div></section>
-<section id="_catch_3"><h2>Catch</h2><div class="pre"><span class="redcode">1> catch 1/0.</span>
+<section id="_catch_3"><h2>Catch</h2><div class="pre"><b>1> catch 1/0.</b>
 {'EXIT',{badarith,[{erlang,'/',[1,0]},
                    {erl_eval,do_apply,5},
                    {erl_eval,expr,5},
                    ...,
                    {shell,eval_loop,3}]}}
-<span class="redcode">2> X = catch 1/0.</span>
+<b>2> X = catch 1/0.</b>
 * 1: syntax error before: 'catch'
-<span class="redcode">2> X = (catch 1/0).</span>
+<b>2> X = (catch 1/0).</b>
 {'EXIT',{badarith,[{erlang,'/',[1,0]},
                    {erl_eval,do_apply,5},
                    {erl_eval,expr,5},

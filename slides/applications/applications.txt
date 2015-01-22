@@ -99,7 +99,7 @@ Applications
 ------------
 ++++
 <div class="pre">-module(my_application).
-<span class="redcode">-behaviour(application).</span>
+<b>-behaviour(application).</b>
 
 -export([start/2, stop/1]).
 
@@ -512,8 +512,8 @@ Distributed Applications
 ------------------------
 ++++
 <div class="centered">
-<pre>{kernel, [<span class="redcode">{distributed, [{Application, Time, NodeList</span>}]}]}
-<span class="redcode">NodeList = [Node1, {Node2, Node3}, Node4, ...]</span></pre>
+<pre>{kernel, [{distributed, [<b>{Application, Time, NodeList</b>}]}]}
+<b>NodeList = [Node1, {Node2, Node3}, Node4, ...]</b></pre>
 </div>
 ++++
 

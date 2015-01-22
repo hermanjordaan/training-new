@@ -174,9 +174,10 @@ _
 &#160;&#160;- succeeds, <code>A=1</code>, <code>B=2</code>, <code>C=[3,4,5,6,7]</code></p></div>
 <div class="paragraph"><p><strong><code>[H|T] = []</code></strong><br>
 &#160;&#160;- fails</p></div></section>
-<section id="_pattern_matching_strong_extracting_strong"><h2>Pattern Matching: <strong>extracting</strong></h2><div class="paragraph"><p><strong><code>\{A, _, [B|_], {B}\} = \{abc, 23, [22, x], {22}\}</code></strong><br>
+<section id="_pattern_matching_strong_extracting_strong"><h2>Pattern Matching: <strong>extracting</strong></h2><div class="paragraph"><p><strong><code>{A, _, [B|_], {B}} = {abc, 23, [22, x], {22}}</code></strong><br>
 &#160;&#160;- Succeeds, <code>A=abc</code>, <code>B=22</code></p></div>
-<div class="paragraph"><p><strong><code>C = 10, {C, C, 13, D, _} = {10, 10, 13, 12, 15}</code></strong><br>
+<div class="paragraph"><p><strong><code>C = 10, <br>
+{C, C, 13, D, _} = {10, 10, 13, 12, 15}</code></strong><br>
 &#160;&#160;- Succeeds, <code>D=12</code>, <code>C=10</code></p></div>
 <div class="paragraph"><p><strong><code>Var = {person, 'Francesco', 'Cesarini'}, <br>
 {person, Name, Surname} = Var</code></strong><br>
@@ -277,18 +278,18 @@ s2.click( function() {
 </script>
 </svg></section>
 <section id="_functions_strong_syntax_strong_3"><h2>Functions: <strong>syntax</strong></h2><div class="left" style="width:560px;">
-  <div class="pre"><span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+  <div class="pre"><b>Func(Pattern1, Pattern2, ...) -></b>
    &lt;expression 1&gt;,
    &lt;expression 2&gt;,
    ...
    &lt;expression n&gt;;
-<span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+<b>Func(Pattern1, Pattern2, ...) -></b>
    &lt;expression 1&gt;,
    &lt;expression 2&gt;,
    ...
    &lt;expression n&gt;;
 ...
-<span class="redcode">Func(Pattern1, Pattern2, ...) -></span>
+<b>Func(Pattern1, Pattern2, ...) -></b>
    &lt;expression 1&gt;,
    &lt;expression 2&gt;,
    ...

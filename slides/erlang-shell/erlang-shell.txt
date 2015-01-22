@@ -80,13 +80,13 @@ Erlang R16B03 (erts-5.10.3) [source] [smp:4:4] [rq:4]
  [async-threads:0] [hipe] [kernel-poll:false]
 
 Eshell V5.10.3  (abort with ^G)
-1> <span class="redcode">pwd().</span>
+1> <b>pwd().</b>
 /Users/rv/erlang
 ok
-2> <span class="redcode">ls().</span>
+2> <b>ls().</b>
 exercises
 ok 
-3> <span class="redcode">cd(“exercises/ex01”).</span>
+3> <b>cd(“exercises/ex01”).</b>
 /Users/rv/erlang/exercises/ex01
 ok
 
@@ -96,18 +96,18 @@ ok
 Erlang Shell Example
 --------------------
 ++++
-<div class="pre">4> <span class="redcode">c(demo).</span>
+<div class="pre">4> <b>c(demo).</b>
 {ok,demo}
-5> <span class="redcode">demo:double(25).</span>
+5> <b>demo:double(25).</b>
 50
-6> <span class="redcode">demo:times(4,3).</span>
+6> <b>demo:times(4,3).</b>
 ** exception error: undefined function demo:times/2
-7> <span class="redcode">4 * 3.</span>
+7> <b>4 * 3.</b>
 12
-8> <span class="redcode">h().</span>
+8> <b>h().</b>
 1: pwd()
 ....
-9> <span class="redcode">demo:double(v(7)).</span>
+9> <b>demo:double(v(7)).</b>
 24
 
 
@@ -118,15 +118,15 @@ Erlang Shell Example
 Erlang Shell Example
 --------------------
 ++++
-<div class="pre">10> <span class="redcode">A = “hello”.</span>
+<div class="pre">10> <b>A = “hello”.</b>
 “hello”
-11> <span class="redcode">[$h,$e,$l,$l,$o] = A.</span>
+11> <b>[$h,$e,$l,$l,$o] = A.</b>
 “hello”
-12> <span class="redcode"><<"hello">> = erlang:list_to_binary(A).</span>
+12> <b><<"hello">> = erlang:list_to_binary(A).</b>
 <<hello>>
-13> <span class="redcode">4.2 / 3.</span>
+13> <b>4.2 / 3.</b>
 1.4000000000000001
-14> <span class="redcode">{greeting, A, world} = {greeting, "hello", world}.</span>
+14> <b>{greeting, A, world} = {greeting, "hello", world}.</b>
 {greeting, “hello”, world}
 
 

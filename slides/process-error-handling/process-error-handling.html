@@ -337,7 +337,7 @@ start() ->
     register(frequency, spawn(frequency, init, [])).
 
 init() ->
-    <span class="redcode">process_flag(trap_exit, true),</span>
+    <b>process_flag(trap_exit, true),</b>
     Frequencies = {get_frequencies(), []},
     loop(Frequencies).
 
@@ -349,13 +349,13 @@ get_frequencies() -> [10,11,12,13,14, 15].
 <section id="_a_robust_server_3"><h2>A Robust Server</h2><div class="pre">allocate({[], Allocated}, Pid) ->
     {{[], Allocated}, {error, no_frequencies}};
 allocate({[Freq|Frequencies], Allocated}, Pid) ->
-    <span class="redcode">link(Pid),</span>
+    <b>link(Pid),</b>
     {{Frequencies, [{Freq, Pid}|Allocated]}, {ok, Freq}}.
 
 deallocate({Free, Allocated}, Freq) ->
-    <span class="redcode">{value, {Freq, Pid}} =
+    <b>{value, {Freq, Pid}} =
       lists:keysearch(Freq, 1, Allocated),
-    unlink(Pid),</span>
+    unlink(Pid),</b>
     NewAllocated = lists:keydelete(Freq, 1, Allocated),
     {[Freq|Free],  NewAllocated}.
 
@@ -370,9 +370,9 @@ deallocate({Free, Allocated}, Freq) ->
       reply(Pid, Reply),
       loop(NewFrequencies);
     ...
-    <span class="redcode">{'EXIT', Pid, Reason} ->
+    <b>{'EXIT', Pid, Reason} ->
       NewFrequencies = exited(Frequencies, Pid),
-      loop(NewFrequencies);</span>
+      loop(NewFrequencies);</b>
     {request, Pid, stop} ->
       reply(Pid, ok)
   end.

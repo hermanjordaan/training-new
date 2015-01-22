@@ -125,8 +125,8 @@ s2.click( function() {
  <0.11.0>,<0.12.0>,<0.13.0>,<0.14.0>,<0.15.0>, ...,
  <0.23.0>,<0.24.0>,<0.25.0>,<0.26.0>,<0.27.0>,<0.31.0>]
 2> i().
-<span class="redcode">Pid           Initial Call           Heap     Reds Msgs
-Registered    Current Function       Stack              </span>
+<b>Pid           Initial Call           Heap     Reds Msgs
+Registered    Current Function       Stack              </b>
 <0.0.0>       otp_ring0:start/2      1597     2814    0
 init          init:loop/1            2
 <0.3.0>       erlang:apply/2         2584   196279    0
@@ -136,7 +136,7 @@ error_logger  gen_event:fetch_msg/5  8
 ...
 </div></section>
 <section id="_system_information_strong_processes_strong_3"><h2>System Information: <strong>Processes</strong></h2><div class="ulist"><ul><li><p>process_info(Pid [, Tag]).</p></li><li><p>BIF returning one or all of the process attributes:</p><div class="ulist"><ul><li><p>{initial_call, {M,F,A}}, {current_function, {M,F,A}}</p></li><li><p>{registered_name, Atom},</p></li><li><p>{error_handler, Module},</p></li><li><p>{trap_exit, true | false}, {links, Pids},</p></li><li><p>{status, waiting | running | runnable},</p></li><li><p>{messages, Msgs}, {message_queue_len, N},</p></li><li><p>{stack_size, Size}, {heap_size, Size}, {reductions, N},</p></li><li><p>etc.</p></li></ul></div></li></ul></div></section>
-<section id="_system_information_strong_processes_strong_4"><h2>System Information: <strong>Processes</strong></h2><div class="pre"><span class="redcode">1> process_info(whereis(error_logger)).</span>
+<section id="_system_information_strong_processes_strong_4"><h2>System Information: <strong>Processes</strong></h2><div class="pre"><b>1> process_info(whereis(error_logger)).</b>
 [{registered_name,error_logger},
  {current_function,{gen_event,fetch_msg,5}},
  {initial_call,{proc_lib,init_p,5}},
@@ -151,9 +151,9 @@ error_logger  gen_event:fetch_msg/5  8
  {stack_size,8},
  ...
 </div></section>
-<section id="_system_information_strong_registered_names_strong"><h2>System Information: <strong>Registered Names</strong></h2><div class="pre"><span class="redcode">2> regs().</span>
+<section id="_system_information_strong_registered_names_strong"><h2>System Information: <strong>Registered Names</strong></h2><div class="pre"><b>2> regs().</b>
 ** Registered procs on node nonode@nohost **
-<span class="redcode">Name             Pid      Initial Call         Reds Msgs</span>
+<b>Name             Pid      Initial Call         Reds Msgs</b>
 application_cont <0.6.0>  erlang:apply/2        436    0
 code_server      <0.18.0> erlang:apply/2     156896    0
 erl_prim_loader  <0.3.0>  erlang:apply/2     197318    0
@@ -164,7 +164,7 @@ global_name_serv <0.12.0> global:init/1          50    0
 inet_db          <0.15.0> inet_db:init/1        256    0
 ...
 ** Registered ports on node nonode@nohost **
-<span class="redcode">Name                  Id              Command</span>
+<b>Name                  Id              Command</b>
 </div></section>
 <section id="_system_information_strong_saving_calls_strong"><h2>System Information: <strong>Saving Calls</strong></h2><div class="ulist"><ul><li><p><strong>process_flag(save_calls, N) </strong> <br>
 <strong>process_info(Pid, last_calls</strong>)</p></li><li><p>Activates call saving mode</p></li><li><p>Saves N (1 .. 10,000) most recent:</p><div class="ulist"><ul><li><p>Global function calls</p></li><li><p>BIF calls</p></li><li><p>Sending/receiving messages</p></li></ul></div></li><li><p>Has to be called by the process saving calls</p></li><li><p>process_info/2 retrieves the calls</p></li></ul></div></section>
@@ -182,7 +182,7 @@ inet_db          <0.15.0> inet_db:init/1        256    0
  
  </pre></div></div></section>
 <section id="_system_information_strong_saving_calls_strong_3"><h2>System Information: <strong>Saving Calls</strong></h2><div class="ulist"><ul><li><p><strong>erlang:process_display(Pid, backtrace).</strong></p></li><li><p>Writes the information of the process on Standard Error</p></li><li><p>It will display information on the</p><div class="ulist"><ul><li><p>Stack</p></li><li><p>The Call Chain</p></li></ul></div></li><li><p>The most recent data is printed last</p></li><li><p><strong>process_info(Pid, backtrace)</strong> returns a binary containing a string with the information</p></li></ul></div></section>
-<section id="_system_information_strong_saving_calls_strong_4"><h2>System Information: <strong>Saving Calls</strong></h2><div class="pre"><span class="redcode">4> erlang:process_display(self(), backtrace).</span>
+<section id="_system_information_strong_saving_calls_strong_4"><h2>System Information: <strong>Saving Calls</strong></h2><div class="pre"><b>4> erlang:process_display(self(), backtrace).</b>
 Program counter: 0x0000000010668028 (unknown function)
 CP: 0x0000000011480448 (erl_eval:do_apply/5 + 2328)
 

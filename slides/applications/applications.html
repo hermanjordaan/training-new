@@ -20,7 +20,7 @@
 </div>
 <div class="ulist"><ul><li><p>Applications are implemented in the application module</p></li><li><p>The behaviour directive must be included in the callback module.</p></li></ul></div></section>
 <section id="_applications_8"><h2>Applications</h2><div class="pre">-module(my_application).
-<span class="redcode">-behaviour(application).</span>
+<b>-behaviour(application).</b>
 
 -export([start/2, stop/1]).
 
@@ -312,8 +312,8 @@ s5.click( function() {
 {mod, {Mod, StartArgs}}</pre></div></div>
 <div class="ulist"><ul><li><p><strong>env</strong> lists environment variables</p><div class="ulist"><ul><li><p>Keys should be atoms, while values can be any term</p></li><li><p>Retrieved with <strong>application:get_env(Key)</strong></p></li></ul></div></li><li><p><strong>mod</strong> states the callback module and start arguments</p><div class="ulist"><ul><li><p>Optional for applications consisting of library modules</p></li></ul></div></li><li><p>Other optional fields include:</p><div class="ulist"><ul><li><p><strong>start_phases</strong>, allowing to start the application in phases</p></li><li><p><strong>maxP</strong>, limiting the maximum number of allowed processes</p></li><li><p><strong>maxT</strong>, denoting the max time the application can run (default is <strong>infinity</strong>)</p></li></ul></div></li></ul></div></section>
 <section id="_distributed_applications"><h2>Distributed Applications</h2><div class="centered">
-<pre>{kernel, [<span class="redcode">{distributed, [{Application, Time, NodeList</span>}]}]}
-<span class="redcode">NodeList = [Node1, {Node2, Node3}, Node4, ...]</span></pre>
+<pre>{kernel, [{distributed, [<b>{Application, Time, NodeList</b>}]}]}
+<b>NodeList = [Node1, {Node2, Node3}, Node4, ...]</b></pre>
 </div>
 <div class="ulist"><ul><li><p>Used to distribute applications across Erlang nodes</p><div class="ulist"><ul><li><p>For load balancing and fault tolerance reasons</p></li></ul></div></li><li><p>Change the distributed parameter in the kernel app file</p></li><li><p>Specify the time you want to wait for the node to come up</p><div class="ulist"><ul><li><p>A failover will occur after this time in milliseconds</p></li></ul></div></li><li><p>List the nodes in the priority of execution</p><div class="ulist"><ul><li><p>Tuples denote equality</p></li></ul></div></li></ul></div>
 <aside class="notes"><div class="paragraph"><p>This does NOT go in the .app file but in system configuration file</p></div></aside></section>

@@ -52,14 +52,14 @@ List Comprehensions
 List Comprehensions: *examples*
 -------------------------------
 ++++
-<div class="pre"><span class="redcode">1> [Int || Int <- [zero, 1, two, three, 4, 5],</span>
- <span class="redcode">1>         is_integer(Int)].</span>
+<div class="pre"><b>1> [Int || Int <- [zero, 1, two, three, 4, 5],</b>
+ <b>1>         is_integer(Int)].</b>
 [1,4,5]
-<span class="redcode">2> [{X,Y} || X <- [1,2,3], Y <- [a,b,c]].</span>
+<b>2> [{X,Y} || X <- [1,2,3], Y <- [a,b,c]].</b>
 [{1,a},{1,b},{1,c},{2,a},{2,b},{2,c},{3,a},{3,b},{3,c}]
-<span class="redcode">3> [X || X <- [1,2,3,4], Y <- [3,4,5,6], X == Y].</span>
+<b>3> [X || X <- [1,2,3,4], Y <- [3,4,5,6], X == Y].</b>
 [3,4]
-<span class="redcode">4> [X+1 || X <- [1,2,3,4], X rem 2 == 0].</span>
+<b>4> [X+1 || X <- [1,2,3,4], X rem 2 == 0].</b>
 [3,5]
 </div>
 ++++
@@ -116,13 +116,13 @@ List Comprehensions: *variables*
 --------------------------------
 ++++
 <div class="pre">
-<span class="redcode">1></span> X <span class="redcode">= 1,</span> Y <span class="redcode">= 2.</span>
+<b>1></b> X <b>= 1,</b> Y <b>= 2.</b>
 2
-<span class="redcode">2> [{X,</span> Y<span class="redcode">} || X <- lists:seq(1,3)].</span>
+<b>2> [{X,</b> Y<b>} || X <- lists:seq(1,3)].</b>
 [{1,2},{2,2},{3,2}]
-<span class="redcode">3> List = [{1,one}, {2,two}, {3,three}].</span>
+<b>3> List = [{1,one}, {2,two}, {3,three}].</b>
 [{1,one},{2,two},{3,three}]
-<span class="redcode">4> [Z || {X1, Z} <- List, X1 == </span>X<span class="redcode">].</span>
+<b>4> [Z || {X1, Z} <- List, X1 == </b>X<b>].</b>
 [one]
 
 
@@ -264,17 +264,17 @@ Binaries
 Binaries: *examples*
 --------------------
 ++++
-<div class="pre"><span class="redcode">1> <<5:4, 5:4>>.</span>
+<div class="pre"><b>1> <<5:4, 5:4>>.</b>
 <<"U">>
-<span class="redcode">2> <<Int1:2, Int2:6>> = <<128>>.</span>
+<b>2> <<Int1:2, Int2:6>> = <<128>>.</b>
 <<128>>
-<span class="redcode">3> {Int1, Int2}.</span>
+<b>3> {Int1, Int2}.</b>
 {2,0}
-<span class="redcode">4> <<5:4/little-signed-integer-unit:4>>.</span>
+<b>4> <<5:4/little-signed-integer-unit:4>>.</b>
 <<5,0>>
-<span class="redcode">5> <<5:4/big-signed-integer-unit:4>>.</span>
+<b>5> <<5:4/big-signed-integer-unit:4>>.</b>
 <<0,5>>
-<span class="redcode">6> <<5:2,5:8>>.</span>
+<b>6> <<5:2,5:8>>.</b>
 <<65,1:2>>
 
 </div>
@@ -284,17 +284,17 @@ Binaries: *examples*
 Binaries: *examples*
 --------------------
 ++++
-<div class="pre"><span class="redcode">1> A = 1.</span>
+<div class="pre"><b>1> A = 1.</b>
 1
-<span class="redcode">2> Bin = <<A, 17, 42:16>>.</span>
+<b>2> Bin = <<A, 17, 42:16>>.</b>
 <<1,17,0,42>>
-<span class="redcode">3> <<D:16, E, F/binary>> = Bin.</span>
+<b>3> <<D:16, E, F/binary>> = Bin.</b>
 <<1,17,0,42>>
-<span class="redcode">4> [D,E,F].</span>
+<b>4> [D,E,F].</b>
 [273,0,<<"*">>]
-<span class="redcode">5> <<X:7/bitstring,Y:1/bitstring>> = <<42:8>>.</span>
+<b>5> <<X:7/bitstring,Y:1/bitstring>> = <<42:8>>.</b>
 <<"*">>
-<span class="redcode">6> {X, Y}.</span>
+<b>6> {X, Y}.</b>
 {<<21:7>>,<<0:1>>}
 
 
@@ -332,8 +332,8 @@ Binaries: *binary comprehensions*
 ++++
 <div class="pre" style="text-align:center; line-height:1.5em;"> 
  
-<span class="redcode">[</span> ... <span class="redcode">||</span> X <span class="redcode"><-</span> List, Test, ... <span class="redcode">]</span>
-<span class="redcode"><<</span> <<...>> <span class="redcode">||</span> <<X>> <span class="redcode"><=</span> Bin, Test, ... <span class="redcode">>></span>
+<b>[</b> ... <b>||</b> X <b><-</b> List, Test, ... <b>]</b>
+<b><<</b> <<...>> <b>||</b> <<X>> <b><=</b> Bin, Test, ... <b>>></b>
 
 
 </div>
@@ -348,17 +348,17 @@ Binaries: binary comprehensions
 -------------------------------
 ++++
 <div class="pre">
-<span class="redcode">1> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</span>
+<b>1> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</b>
 <<0,1,2,3>>
-<span class="redcode">2> << <<(X+1)/integer>> || &lt;&lt;X&gt;&gt; <= <<3,7,5,4,7>> >>.</span>
+<b>2> << <<(X+1)/integer>> || &lt;&lt;X&gt;&gt; <= <<3,7,5,4,7>> >>.</b>
 <<4,8,6,5,8>>
-<span class="redcode">3> << <<(bnot X)>> || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</span>
+<b>3> << <<(bnot X)>> || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>> >>.</b>
 <<"ÿþýü">>
-<span class="redcode">4> << &lt;&lt;X&gt;&gt; || X <- [0,1,2,3] >>.</span>
+<b>4> << &lt;&lt;X&gt;&gt; || X <- [0,1,2,3] >>.</b>
 <<0,1,2,3>>
-<span class="redcode">5> [ X || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>>].</span>
+<b>5> [ X || &lt;&lt;X&gt;&gt; <= <<0,1,2,3>>].</b>
 [0,1,2,3]
-<span class="redcode">6> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<1,2,3,4>>, X rem 2 =:= 0 >>.</span>
+<b>6> << &lt;&lt;X&gt;&gt; || &lt;&lt;X&gt;&gt; <= <<1,2,3,4>>, X rem 2 =:= 0 >>.</b>
 <<2,4>>
 
 </div>
@@ -388,32 +388,33 @@ A reference is related to a node's name and is an incrementing value. It is impo
 References
 ----------
 ++++
+<div class="left">
 <div class="pre">call(Message) ->
-  <span class="redcode">Ref = make_ref(),</span>
+  <b>Ref = make_ref(),</b>
   frequency ! {request, 
-          {<span class="redcode">Ref</span>,self()},Message},
+          {<b>Ref</b>,self()},Message},
   receive 
-     {reply, <span class="redcode">Ref</span>, Reply} ->
+     {reply, <b>Ref</b>, Reply} ->
         Reply
   end.
 
-reply({<span class="redcode">Ref</span>, Pid}, Message) ->
-   Pid ! {reply, <span class="redcode">Ref</span>, Message}.
+reply({<b>Ref</b>, Pid}, Message) ->
+   Pid ! {reply, <b>Ref</b>, Message}.
 
 
 
-</div>
+</div></div>
 ++++
 
-
+[role="right"]
 * Recall the robust server call? How do we differentiate between messages following the same protocol?
 
 
 Operators: logical
 ------------------
 ++++
-<div class="pre"><span class="redcode">not</span> ((1 < 3) <span class="redcode">or 
-</span> lists:member(Key,List))
+<div class="pre"><b>not</b> ((1 < 3) <b>or 
+</b> lists:member(Key,List))
 
 and        andalso
 or         orelse
@@ -473,11 +474,15 @@ Macros
   receive
        after ?TIMEOUT -> ok
   end
+ 
+ 
+ 
 ....
 
 [role="right"]
 * Macros are defined using the define construct
-* They are used whenever the *?Name* syntax is encountered
+* They are used whenever the  + 
+  *?Name* syntax is encountered
 
 
 Macros
@@ -485,11 +490,11 @@ Macros
 ++++
 <div class="left" style="width: 600px;">
 <div class="pre">
--define(<span class="redcode">DOUBLE(Y)</span>, Y*2).
+-define(<b>DOUBLE(Y)</b>, Y*2).
 
 
-foo(X) -> span class="redcode">?DOUBLE(X)</span>.
- <span style="color:#4B5056">%% Becomes </span>
+foo(X) -> <b>?DOUBLE(X)</b>.
+ <span class="comment">%% Becomes </span>
 foo(X)  -> X*2.
 </div>
 </div>
@@ -513,11 +518,11 @@ foo(X)  -> X*2.
 Macros
 ------
 ++++
-<div class="pre">-define(CALLSTRING(Call), print(<span class="redcode">??Call</span>)).
+<div class="pre">-define(CALLSTRING(Call), print(<b>??Call</b>)).
 
-<span class="redcode">?CALLSTRING</span>(foo(X)<span class="redcode">)</span>
-%% Becomes  
-print(<span class="redcode">"foo(X)"</span>)
+<b>?CALLSTRING</b>(foo(X)<b>)</b>
+<span class="comment">%% Becomes</span>
+print(<b>"foo(X)"</b>)
 
 
 </div>
@@ -548,11 +553,11 @@ Expands to the current machine name
 Macros: *example of flow control*
 ---------------------------------
 ++++
-<div class="pre"><span class="redcode">-ifdef(debug).</span>
+<div class="pre"><b>-ifdef(debug).</b>
   -define(SYS_DEBUG(Str, Args), io:format(Str, Args)).
-<span class="redcode">-else.</span>
+<b>-else.</b>
   -define(SYS_DEBUG(Str, Args), ok).
-<span class="redcode">-endif.</span>
+<b>-endif.</b>
 
 
 </div>
@@ -588,11 +593,11 @@ terminates the *ifdef* and *ifndef* constructs
 Macros: *flow control*
 ----------------------
 ++++
-<div class="pre"><span class="redcode">-ifdef(Macro).</span>
+<div class="pre"><b>-ifdef(Macro).</b>
   -define(Name1, Replacement1).
-<span class="redcode">-else.</span>
+<b>-else.</b>
   -define(Name2, Replacement2).
-<span class="redcode">-endif.</span>
+<b>-endif.</b>
 
 
 </div>
