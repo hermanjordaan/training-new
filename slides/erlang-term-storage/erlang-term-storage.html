@@ -1,0 +1,520 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Erlang Term Storage</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Erlang Term Storage</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_overview_strong_erlang_term_storage_strong"><h2>Overview: <strong>Erlang term storage</strong></h2><div class="ulist"><ul><li><p>ETS Tables</p></li><li><p>Handling Elements</p></li><li><p>Searching and Traversing</p></li><li><p>Match Specifications and Select</p></li><li><p>Other Issues</p></li><li><p>Table Visualiser</p></li></ul></div></section>
+<section id="_ets_tables"><h2>ETS Tables</h2><div class="ulist"><ul><li><p>Provides a mechanism to store large data quantities</p><div class="ulist"><ul><li><p>Data is stored as tuples</p></li></ul></div></li><li><p>Data is stored in dynamic tables and accessed though keys as hash tables or binary trees</p></li><li><p>Constant lookup time regardless of table size</p></li><li><p>Has a low level search mechanism</p></li><li><p>No transaction handling</p></li></ul></div></section>
+<section id="_ets_tables_2"><h2>ETS Tables</h2><div class="imageblock left" style=""><div class="content"><img src="images/ets_tables.png" alt="ETS Tables" width="auto" height="auto"></div></div>
+<div class="ulist right"><ul><li><p>Tables can be sets, bags or ordered sets</p></li><li><p>Sets and bags are implemented as hash tables</p><div class="ulist"><ul><li><p>A hash function maps the key to the element&#8217;s memory position</p></li></ul></div></li><li><p>Ordered sets are arranged as binary trees</p></li></ul></div></section>
+<section id="_creating_and_deleting_strong_example_strong"><h2>Creating and Deleting: <strong>example</strong></h2><svg id="creating_and_deleting_example_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#creating_and_deleting_example_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_darkred = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_darkred = arrow_darkred.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s1_g1_1 = s1.text(10,40,"1> TabId = ets:new(myTable, [ ]).").addClass("code bold darkred");
+s1_g1_2 = s1.text(10,80,"10").addClass("code");
+s1_g1_3 = s1.path("M280,50 l160,300").addClass("line").attr({"marker-end":marker});
+s1_g2_1 = s1.rect(330,360,280,130).addClass("rect_lightgray");
+s1_g2_2 = s1.text(336,388,"id = 10").addClass("code pt18");
+s1_g2_3 = s1.text(336,418,"Type = set").addClass("code pt18");
+s1_g2_4 = s1.text(336,448,"Access = protected").addClass("code pt18");
+s1_g2_5 = s1.text(336,478,"Keypos = 1").addClass("code pt18");
+
+s1_g3_1 = s1.text(10,120,"2> TabId2 = ets:new(myOtherTable, [named_table, private, bag]).").addClass("code bold darkred");
+s1_g3_2 = s1.text(10,160,"myOtherTable").addClass("code");
+s1_g3_3 = s1.path("M430,130 l240,87").addClass("line").attr({"marker-end":marker});
+s1_g4_1 = s1.rect(680,220,270,130).addClass("rect_lightgray");
+s1_g4_2 = s1.text(686,248,"Id = myOtherTable").addClass("code pt18");
+s1_g4_3 = s1.text(686,278,"Type = bag").addClass("code pt18");
+s1_g4_4 = s1.text(686,308,"Access = private").addClass("code pt18");
+s1_g4_5 = s1.text(686,338,"Keypos = 1").addClass("code pt18");
+
+s1_g5_1 = s1.text(10,200,"3> ets:delete(TabId).").addClass("code bold darkred");
+s1_g5_2 = s1.text(10,240,"true").addClass("code");
+s1_g5_3 = s1.path("M230,210 l95,140").addClass("line_darkred").attr({"marker-end":marker_darkred});
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2, s1_g1_3).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3, s1_g2_4, s1_g2_5).addClass("hide");
+s1_g3 = s1.g(s1_g3_1, s1_g3_2, s1_g3_3).addClass("hide");
+s1_g4 = s1.g(s1_g4_1, s1_g4_2, s1_g4_3, s1_g4_4, s1_g4_5).addClass("hide");
+s1_g5 = s1.g(s1_g5_1, s1_g5_2, s1_g5_3).addClass("hide");
+
+s1_anim1 = function() { s1_g2.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: { s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break };
+    case 2: { s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_g4.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break };
+    case 3: { s1_g5.animate({"opacity":"1"}, 375, mina.linear, s1_anim1); s1_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Let the students open their own ets table in the shell.
+Warn them that if they cause the shell to crash, they will loose the ets table.</p></div></aside></section>
+<section id="_ets_tables_strong_creating_deleting_strong"><h2>ETS tables: <strong>creating &amp; deleting</strong></h2><div class="ulist"><ul><li><p>Table Options can be:</p><div class="ulist"><ul><li><p><strong>set</strong>, where every key is unique</p></li><li><p><strong>ordered_set</strong>, keys are unique, traversed linearly</p></li><li><p><strong>bag</strong>, duplicate keys can exist, elements are unique</p></li><li><p><strong>duplicate_bag</strong>, duplicate elements can coexist</p></li></ul></div></li><li><p>Access rights include:</p><div class="ulist"><ul><li><p><strong>public</strong>, every process can read and write</p></li><li><p><strong>protected</strong>, everyone can read, owner can write</p></li><li><p><strong>private</strong>, only owner can read and write</p></li><li><p><strong>{keypos,Pos}</strong>, which tuple element is the key</p></li><li><p><strong>named_table</strong> statically registers the name</p></li></ul></div></li></ul></div></section>
+<section id="_handling_elements_strong_example_strong"><h2>Handling Elements: <strong>example</strong></h2><svg id="handling_elements_example_1" style="width:1150px; height:600px;" viewBox="0 0 1150 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#handling_elements_example_1");
+
+s2_g1_1 = s2.text(10,40,"1> ets:new(countries, [set, named_table]).").addClass("code bold darkred");
+s2_g1_2 = s2.text(10,80,"countries").addClass("code");
+s2_g2_1 = s2.text(10,120,"2> ets:insert(countries, {luigi, italy}).").addClass("code bold darkred");
+s2_g2_2 = s2.text(10,160,"true").addClass("code");
+s2_g3_1 = s2.text(10,200,"3> ets:lookup(countries, dieter).").addClass("code bold darkred");
+s2_g3_2 = s2.text(10,240,"[]").addClass("code");
+s2_g4_1 = s2.text(10,280,"4> ets:lookup(countries, luigi).").addClass("code bold darkred");
+s2_g4_2 = s2.text(10,320,"[{luigi,italy}]").addClass("code");
+s2_g5_1 = s2.text(10,360,"5> ets:insert(countries, {luigi, austria}).").addClass("code bold darkred");
+s2_g5_2 = s2.text(10,400,"true").addClass("code");
+s2_g6_1 = s2.text(10,440,"6> ets:lookup(countries, luigi).").addClass("code bold darkred");
+s2_g6_2 = s2.text(10,480,"[{luigi,austria}]").addClass("code");
+s2_g7_1 = s2.text(10,520,"7> ets:delete(countries, luigi).").addClass("code bold darkred");
+s2_g7_2 = s2.text(10,560,"true").addClass("code");
+
+s2_g1_3 = s2.rect(800,140,320,300).addClass("rect_lightgray");
+s2_g1_4 = s2.text(810,170,"Id = countries").addClass("code pt20");
+s2_g1_5 = s2.text(810,208,"Type = set").addClass("code pt20");
+s2_g1_6 = s2.text(810,246,"Access = protected").addClass("code pt20");
+s2_g1_7 = s2.text(810,284,"Keypos = 1").addClass("code pt20");
+s2_g1_8 = s2.text(810,322,"==================").addClass("code pt20");
+
+s2_g1 = s2.g(s2_g1_1, s2_g1_2, s2_g1_3, s2_g1_4, s2_g1_5, s2_g1_6, s2_g1_7, s2_g1_8).addClass("hide");
+s2_g2 = s2.g(s2_g2_1, s2_g2_2).addClass("hide");
+s2_g3 = s2.g(s2_g3_1, s2_g3_2).addClass("hide");
+s2_g4 = s2.g(s2_g4_1, s2_g4_2).addClass("hide");
+s2_g5 = s2.g(s2_g5_1, s2_g5_2).addClass("hide");
+s2_g6 = s2.g(s2_g6_1, s2_g6_2).addClass("hide");
+s2_g7 = s2.g(s2_g7_1, s2_g7_2).addClass("hide");
+
+s2_g8 = s2.text(810,360,"{luigi, italy}").addClass("code pt20 hide");
+s2_g9 = s2.text(810,398,"{luigi, austria}").addClass("code pt20 hide");
+
+s2_anim2 = function() { s2_g8.animate({"opacity":"1"}, 250, mina.linear); };
+s2_anim5_1 = function() { s2_g8.animate({"opacity":"0"}, 250, mina.linear, s2_anim5_2); };
+s2_anim5_2 = function() { s2_g9.animate({"opacity":"1"}, 250, mina.linear); };
+s2_anim7 = function() { s2_g9.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: { s2_g1.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break };
+    case 2: { s2_g2.animate({"opacity":"1"}, 250, mina.linear, s2_anim2); s2_counter++; break };
+    case 3: { s2_g3.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break };
+    case 4: { s2_g4.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break };
+    case 5: { s2_g5.animate({"opacity":"1"}, 250, mina.linear, s2_anim5_1); s2_counter++; break };
+    case 6: { s2_g6.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break };
+    case 7: { s2_g7.animate({"opacity":"1"}, 250, mina.linear, s2_anim7); s2_counter++; break };
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_handling_elements"><h2>Handling Elements</h2><div class="literalblock centered darkred bold"><div class="content"><pre>ets:insert(TabId | TableName, Tuple)
+ets:delete(TabId | TableName, Key)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>insert/2</strong> inserts an element in the table</p></li><li><p>The tuple must be of size greater than or equal to the key position</p></li><li><p>In sets or ordered sets, inserting elements with the same key or identical elements will result in the old elements being deleted</p></li><li><p><strong>delete/2</strong> removes the element from the table</p></li></ul></div></section>
+<section id="_handling_elements_2"><h2>Handling Elements</h2><div class="literalblock centered darkred bold"><div class="content"><pre>ets:lookup(TabId | TabName, Key)</pre></div></div>
+<div class="ulist"><ul><li><p>Searches the table for elements with the key</p></li><li><p>For sets, the return value is <strong>[]</strong> or <strong>[Tuple]</strong></p></li><li><p>For bags, the return value is <strong>[]</strong> or a list of tuples</p></li><li><p>Constant lookup time for sets and bags</p></li><li><p>Proportional lookup time to the log(Size) for ordered_sets</p></li></ul></div></section>
+<section id="_handling_elements_strong_example_strong_2"><h2>Handling Elements: <strong>example</strong></h2><div class="literalblock"><div class="content"><pre>1&gt; TabId = ets:new(people, [bag]).
+10
+2&gt; ets:insert(TabId, {luigi, france}).
+true
+3&gt; ets:insert(TabId, {luigi, france}).
+true
+4&gt; ets:insert(TabId, {luigi, italy}).
+true
+5&gt; ets:lookup(TabId, luigi).
+[{luigi,france},{luigi,italy}]</pre></div></div>
+<div class="ulist"><ul><li><p>In a bag, the same object can not occur more than once</p></li><li><p>Time order of the object insertion is preserved</p><div class="ulist"><ul><li><p>If {X,Y} is inserted after {X,Z}, a lookup will return [{X,Z}, {X,Y}]</p></li></ul></div></li></ul></div></section>
+<section id="_traversing_tables_strong_example_strong"><h2>Traversing Tables: <strong>example</strong></h2><svg id="traversing_tables_example_1" style="width:1150px; height:650px;" viewBox="0 0 1150 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#traversing_tables_example_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3_g1a_1 = s3.text(10,40,"1> ets:new(jobs, [named_table, ordered_set]).").addClass("code bold darkred");
+s3_g1a_2 = s3.text(10,80,"jobs").addClass("code");
+s3_g2a_1 = s3.text(10,120,"2> ets:insert(jobs, [{cesarini, axd301}, {lelle, anx}]).").addClass("code bold darkred");
+s3_g2a_2 = s3.text(10,160,"true").addClass("code");
+s3_g3a_1 = s3.text(10,200,"3> ets:insert(jobs, [{anders, gprs}, {ola, axd301}]).").addClass("code bold darkred");
+s3_g3a_2 = s3.text(10,240,"true").addClass("code");
+s3_g4_1 = s3.text(10,280,"4> K1 = ets:first(jobs).").addClass("code bold darkred");
+s3_g4_2 = s3.text(10,320,"anders").addClass("code");
+s3_g5_1 = s3.text(10,360,"5> K2 = ets:next(jobs, K1).").addClass("code bold darkred");
+s3_g5_2 = s3.text(10,400,"cesarini").addClass("code");
+s3_g6_1 = s3.text(10,440,"6> ets:next(jobs, lelle).").addClass("code bold darkred");
+s3_g6_2 = s3.text(10,480,"ola").addClass("code");
+s3_g7_1 = s3.text(10,520,"7> ets:next(jobs, ola).").addClass("code bold darkred");
+s3_g7_2 = s3.text(10,560,"'$end_of_table'").addClass("code");
+s3_g8_1 = s3.text(10,600,"8> ets:last(jobs).").addClass("code bold darkred");
+s3_g8_2 = s3.text(10,640,"ola").addClass("code");
+
+s3_g1b_1 = s3.rect(640,260,320,350).addClass("rect_lightgray");
+s3_g1b_2 = s3.text(650,290,"Id = jobs").addClass("code pt20");
+s3_g1b_3 = s3.text(650,328,"Type = ordered_set").addClass("code pt20");
+s3_g1b_4 = s3.text(650,366,"Access = protected").addClass("code pt20");
+s3_g1b_5 = s3.text(650,404,"Keypos = 1").addClass("code pt20");
+s3_g1b_6 = s3.text(650,442,"==================").addClass("code pt20");
+s3_g3b_1 = s3.text(650,480,"{anders, gprs}").addClass("code pt20");
+s3_g2b_1 = s3.text(650,518,"{cesarini, axd301}").addClass("code pt20");
+s3_g2b_2 = s3.text(650,556,"{lelle, anx}").addClass("code pt20");
+s3_g3b_2 = s3.text(650,594,"{ola, axd301}").addClass("code pt20");
+
+s3_g9 = s3.path("M570,470 l50,0").addClass("line_darkred hide").attr({"marker-end":marker});
+
+s3_g1a = s3.g(s3_g1a_1, s3_g1a_2).addClass("hide");
+s3_g1b = s3.g(s3_g1b_1, s3_g1b_2, s3_g1b_3, s3_g1b_4, s3_g1b_5, s3_g1b_6).addClass("hide");
+s3_g2a = s3.g(s3_g2a_1, s3_g2a_2).addClass("hide");
+s3_g2b = s3.g(s3_g2b_1, s3_g2b_2).addClass("hide");
+s3_g3a = s3.g(s3_g3a_1, s3_g3a_2).addClass("hide");
+s3_g3b = s3.g(s3_g3b_1, s3_g3b_2).addClass("hide");
+s3_g4 = s3.g(s3_g4_1, s3_g4_2).addClass("hide");
+s3_g5 = s3.g(s3_g5_1, s3_g5_2).addClass("hide");
+s3_g6 = s3.g(s3_g6_1, s3_g6_2).addClass("hide");
+s3_g7 = s3.g(s3_g7_1, s3_g7_2).addClass("hide");
+s3_g8 = s3.g(s3_g8_1, s3_g8_2).addClass("hide");
+
+s3_anim1a = function() { s3_g1a.animate({"opacity":"1"}, 250, mina.linear, s3_anim1b); };
+s3_anim1b = function() { s3_g1b.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim2a = function() { s3_g2a.animate({"opacity":"1"}, 250, mina.linear, s3_anim2b); };
+s3_anim2b = function() { s3_g2b.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim3a = function() { s3_g3a.animate({"opacity":"1"}, 250, mina.linear, s3_anim3b); };
+s3_anim3b = function() { s3_g3b.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim4a = function() { s3_g4.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim4b = function() { s3_g9.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim5a = function() { s3_g5.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim5b = function() { s3_g9.animate({"transform":"t0 38"}, 250, mina.linear); };
+s3_anim6a = function() { s3_g6.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim6b = function() { s3_g9.animate({"transform":"t0 114"}, 250, mina.linear); };
+s3_anim7a = function() { s3_g7.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim7b = function() { s3_g9.animate({"transform":"t0 152"}, 250, mina.linear); };
+s3_anim8a = function() { s3_g8.animate({"opacity":"1"}, 250, mina.linear); };
+s3_anim8b = function() { s3_g9.animate({"transform":"t0 114"}, 250, mina.linear); };
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: { s3_anim1a(); s3_counter++; break };
+    case 2: { s3_anim2a(); s3_counter++; break };
+    case 3: { s3_anim3a(); s3_counter++; break };
+    case 4: { s3_anim4a(); s3_anim4b(); s3_counter++; break };
+    case 5: { s3_anim5a(); s3_anim5b(); s3_counter++; break };
+    case 6: { s3_anim6a(); s3_anim6b(); s3_counter++; break };
+    case 7: { s3_anim7a(); s3_anim7b(); s3_counter++; break };
+    case 8: { s3_anim8a(); s3_anim8b(); s3_counter++; break };
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_traversing_tables"><h2>Traversing Tables</h2><div class="imageblock" style=""><div class="content"><img src="images/traversing_tables.png" alt="Traversing tables" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Returns the first/next key or <strong>'$end_of_table'</strong></p></li><li><p>In ordered sets, keys are returned in lexicographical order</p></li><li><p>In bag sets, the hash order is returned</p></li><li><p><strong>last/1</strong> returns the last element in ordered_sets and the first element in bags and sets</p></li></ul></div></section>
+<section id="_traversing_tables_strong_match_example_strong"><h2>Traversing Tables: <strong>match example</strong></h2><svg id="traversing_tables_match_example_1" style="width:1000px; height:600px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#traversing_tables_match_example_1");
+
+s4_g1_1 = s4.text(10,40,"1> ets:new(countries, [bag, named_table]).").addClass("code bold darkred");
+s4_g1_2 = s4.text(10,80,"countries").addClass("code");
+s4_g2_1 = s4.text(10,120,"2> ets:insert(countries, {yves, france, cook}).").addClass("code bold darkred");
+s4_g2_2 = s4.text(10,160,"true").addClass("code");
+s4_g3_1 = s4.text(10,200,"3> ets:insert(countries, {sean, ireland, bartender}).").addClass("code bold darkred");
+s4_g3_2 = s4.text(10,240,"true").addClass("code");
+s4_g4_1 = s4.text(10,280,"4> ets:insert(countries, {marco, italy, cook}).").addClass("code bold darkred");
+s4_g4_2 = s4.text(10,320,"true").addClass("code");
+s4_g5_1 = s4.text(10,360,"5> ets:insert(countries, {chris, ireland, tester}).").addClass("code bold darkred");
+s4_g5_2 = s4.text(10,400,"true").addClass("code");
+s4_g6_1 = s4.text(10,440,"6> ets:match(countries, {'$1',ireland,'_'}).").addClass("code bold darkred");
+s4_g6_2 = s4.text(10,480,"[[sean],[chris]]").addClass("code");
+s4_g7_1 = s4.text(10,520,"7> ets:match(countries, {'$1','$0',cook}).").addClass("code bold darkred");
+s4_g7_2 = s4.text(10,560,"[[france,yves],[italy,marco]]").addClass("code");
+
+s4_g1 = s4.g(s4_g1_1, s4_g1_2).addClass("hide");
+s4_g2 = s4.g(s4_g2_1, s4_g2_2).addClass("hide");
+s4_g3 = s4.g(s4_g3_1, s4_g3_2).addClass("hide");
+s4_g4 = s4.g(s4_g4_1, s4_g4_2).addClass("hide");
+s4_g5 = s4.g(s4_g5_1, s4_g5_2).addClass("hide");
+s4_g6 = s4.g(s4_g6_1, s4_g6_2).addClass("hide");
+s4_g7 = s4.g(s4_g7_1, s4_g7_2).addClass("hide");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 250, mina.linear, s4_anim2); };
+s4_anim2 = function() { s4_g2.animate({"opacity":"1"}, 250, mina.linear, s4_anim3); };
+s4_anim3 = function() { s4_g3.animate({"opacity":"1"}, 250, mina.linear, s4_anim4); };
+s4_anim4 = function() { s4_g4.animate({"opacity":"1"}, 250, mina.linear, s4_anim5); };
+s4_anim5 = function() { s4_g5.animate({"opacity":"1"}, 250, mina.linear); };
+s4_anim6 = function() { s4_g6.animate({"opacity":"1"}, 250, mina.linear); };
+s4_anim7 = function() { s4_g7.animate({"opacity":"1"}, 250, mina.linear); };
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: { s4_anim1(); s4_counter++; break };
+    case 2: { s4_anim6(); s4_counter++; break };
+    case 3: { s4_anim7(); s4_counter++; break };
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_traversing_tables_2"><h2>Traversing Tables</h2><div class="literalblock centered bold darkred"><div class="content"><pre>ets:match(TableId | TableName, Pattern)</pre></div></div>
+<div class="ulist"><ul><li><p>Matches the elements in the table with the pattern</p></li><li><p><strong>Pattern</strong> is a tuple containing:</p><div class="ulist"><ul><li><p><strong>'_'</strong>, which matches anything</p></li><li><p><strong>'$0'</strong>, <strong>'$1'</strong>, &#8230;&#8203;, acting as variables</p></li></ul></div></li><li><p>Returns a deep list containing bound variables from elements matching, e.g. <strong>[['$0', '$1'], &#8230;&#8203;]</strong></p></li><li><p>If the key is a variable or wildcard, all elements are examined</p></li></ul></div></section>
+<section id="_traversing_tables_3"><h2>Traversing Tables</h2><div class="literalblock centered bold darkred"><div class="content"><pre>ets:match_object(TableId | TableName, Pattern)
+ets:match_delete(TableId | TableName, Pattern)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>match_object</strong> returns a list of elements matching the pattern</p></li><li><p><strong>match_delete</strong> deletes elements matching the pattern</p><div class="ulist"><ul><li><p>Useful with bags when you want to delete an element</p></li></ul></div></li></ul></div></section>
+<section id="_traversing_tables_4"><h2>Traversing Tables</h2><svg id="traversing_tables_warning" style="width:460px; height:360px;" viewBox="0 0 460 360" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s5 = Snap("#traversing_tables_warning");
+
+s5_g1_1 = s5.polyline([75,10, 165,10, 230,75, 230,165, 165,230, 75,230, 10,165, 10,75, 75,10]).attr({"fill":"red"});
+s5_g1_2 = s5.text(40,100,"WARNING!!").addClass("text bold").attr({"fill":"#fff"});
+s5_g1_3 = s5.text(32,132,"Use match with").addClass("text").attr({"fill":"#fff","font-size":"18pt"});
+s5_g1_4 = s5.text(42,164,"extreme care!").addClass("text").attr({"fill":"#fff","font-size":"18pt"});
+
+s5_g1 = s5.g(s5_g1_1, s5_g1_2, s5_g1_3, s5_g1_4).attr({"transform":"scale(1.5)"});
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>All match operations are implemented as BIFs</p></li><li><p>BIFs disrupt the real time properties of the system</p><div class="ulist"><ul><li><p>Match operations on big tables stop other processes from executing</p></li></ul></div></li><li><p>Use first/next to traverse big tables</p></li></ul></div></section>
+<section id="_match_specifications_strong_example_strong"><h2>Match Specifications: <strong>example</strong></h2><svg id="match_specifications_example_1" style="width:1000px; height:600px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#match_specifications_example_1");
+
+s6_g1_1 = s6.text(10,40,"1> ets:new(countries, [bag, named_table]).").addClass("code bold darkred");
+s6_g1_2 = s6.text(10,80,"countries").addClass("code");
+s6_g2_1 = s6.text(10,120,"2> ets:insert(countries, {yves, france, cook}).").addClass("code bold darkred");
+s6_g2_2 = s6.text(10,160,"true").addClass("code");
+s6_g3_1 = s6.text(10,200,"3> ets:insert(countries, {sean, ireland, bartender}).").addClass("code bold darkred");
+s6_g3_2 = s6.text(10,240,"true").addClass("code");
+s6_g4_1 = s6.text(10,280,"4> ets:insert(countries, {marco, italy, cook}).").addClass("code bold darkred");
+s6_g4_2 = s6.text(10,320,"true").addClass("code");
+s6_g5_1 = s6.text(10,360,"5> ets:select(countries, [{{'$1', '$2', '$3'},").addClass("code bold darkred");
+s6_g5_2 = s6.text(10,400,"                           [{'==', '$3', cook}],").addClass("code bold darkred");
+s6_g5_3 = s6.text(10,440,"                           [['$2', '$1']]}]).").addClass("code bold darkred");
+s6_g5_4 = s6.text(10,480,"[[france,yves],[italy,marco]]").addClass("code");
+
+s6_g1 = s6.g(s6_g1_1, s6_g1_2).addClass("hide");
+s6_g2 = s6.g(s6_g2_1, s6_g2_2).addClass("hide");
+s6_g3 = s6.g(s6_g3_1, s6_g3_2).addClass("hide");
+s6_g4 = s6.g(s6_g4_1, s6_g4_2).addClass("hide");
+s6_g5 = s6.g(s6_g5_1, s6_g5_2, s6_g5_3, s6_g5_4).addClass("hide");
+
+s6_anim1 = function() { s6_g1.animate({"opacity":"1"}, 250, mina.linear, s6_anim2); };
+s6_anim2 = function() { s6_g2.animate({"opacity":"1"}, 250, mina.linear, s6_anim3); };
+s6_anim3 = function() { s6_g3.animate({"opacity":"1"}, 250, mina.linear, s6_anim4); };
+s6_anim4 = function() { s6_g4.animate({"opacity":"1"}, 250, mina.linear); };
+s6_anim5 = function() { s6_g5.animate({"opacity":"1"}, 250, mina.linear); };
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_anim1(); s6_counter++; break};
+    case 2: {s6_anim5(); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_match_specifications"><h2>Match Specifications</h2><div class="literalblock centered bold darkred"><div class="content"><pre>[{{'$1','$2','$3'},
+      [{'==','$3','cook'}],
+[['$2','$1']]}]</pre></div></div>
+<div class="ulist"><ul><li><p>A match specification consists of an Erlang Term</p></li><li><p>Describes a "programme" that tries to match</p></li><li><p>Compiled to something more efficient than a function</p></li><li><p>Powerful, but complex to write, and often unreadable</p></li><li><p>Match specifications can be generated from literal anonymous functions</p></li></ul></div></section>
+<section id="_match_specifications_strong_fun2ms_strong"><h2>Match Specifications: <strong>fun2ms</strong></h2><div class="literalblock centered bold darkred"><div class="content"><pre>ets:fun2ms(LiteralFun)</pre></div></div>
+<div class="ulist"><ul><li><p>Translates a literal fun into a match specification</p></li><li><p>The fun is transformed at compile time and can not be dynamic</p><div class="ulist"><ul><li><p>It must be statically declared in the call to fun2ms in a module</p></li><li><p><strong>ets:fun2ms/1</strong> in the shell, with funs defined in the shell still works</p></li></ul></div></li><li><p>Fun can only take one argument a tuple of arguments</p></li><li><p>A header file must be included:</p><div class="ulist"><ul><li><p><strong>-include_lib("stdlib/include/ms_transform.hrl")</strong></p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Explain what –include_lib() does if the students haven&#8217;t seen it before
+2 types of fun in Erlang. The compiled type and the eval&#8217;ed type (from the shell). You can use ets:fun2ms as a parse transform or as a function call; you can&#8217;t use the parse transform with a fun defined somewhere else, unless it&#8217;s a shell fun with the fun2ms function call.</p></div></aside></section>
+<section id="_match_specifications_strong_example_strong_2"><h2>Match Specifications: <strong>example</strong></h2><svg id="match_specifications_example_2" style="width:1000px; height:600px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#match_specifications_example_2");
+
+s7_g1_1 = s7.text(10,40,"1> ets:new(countries, [bag, named_table]).").addClass("code bold darkred");
+s7_g1_2 = s7.text(10,80,"countries").addClass("code");
+s7_g2_1 = s7.text(10,120,"2> ets:insert(countries, {yves, france, cook}).").addClass("code bold darkred");
+s7_g2_2 = s7.text(10,160,"true").addClass("code");
+s7_g3_1 = s7.text(10,200,"3> ets:insert(countries, {sean, ireland, bartender}).").addClass("code bold darkred");
+s7_g3_2 = s7.text(10,240,"true").addClass("code");
+s7_g4_1 = s7.text(10,280,"4> ets:insert(countries, {marco, italy, cook}).").addClass("code bold darkred");
+s7_g4_2 = s7.text(10,320,"true").addClass("code");
+s7_g5_1 = s7.text(10,360,"5> MS = ets:fun2ms(fun({Name, Country, Job}) when Job ==").addClass("code bold darkred");
+s7_g5_2 = s7.text(10,400,"cook -> [Country, Name] end).").addClass("code bold darkred");
+s7_g5_3 = s7.text(10,440,"[{{'$1','$2','$3'},[{'==','$3',cook}],[['$2','$1']]}]").addClass("code");
+s7_g6_1 = s7.text(10,480,"6> ets:select(countries, MS).").addClass("code bold darkred");
+s7_g6_2 = s7.text(10,520,"[[france,yves],[italy,marco]]").addClass("code");
+
+s7_g1 = s7.g(s7_g1_1, s7_g1_2).addClass("hide");
+s7_g2 = s7.g(s7_g2_1, s7_g2_2).addClass("hide");
+s7_g3 = s7.g(s7_g3_1, s7_g3_2).addClass("hide");
+s7_g4 = s7.g(s7_g4_1, s7_g4_2).addClass("hide");
+s7_g5 = s7.g(s7_g5_1, s7_g5_2, s7_g5_3).addClass("hide");
+s7_g6 = s7.g(s7_g6_1, s7_g6_2).addClass("hide");
+
+s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 250, mina.linear, s7_anim2); };
+s7_anim2 = function() { s7_g2.animate({"opacity":"1"}, 250, mina.linear, s7_anim3); };
+s7_anim3 = function() { s7_g3.animate({"opacity":"1"}, 250, mina.linear, s7_anim4); };
+s7_anim4 = function() { s7_g4.animate({"opacity":"1"}, 250, mina.linear); };
+s7_anim5 = function() { s7_g5.animate({"opacity":"1"}, 250, mina.linear, s7_anim6); };
+s7_anim6 = function() { s7_g6.animate({"opacity":"1"}, 250, mina.linear); };
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_anim1(); s7_counter++; break};
+    case 2: {s7_anim5(); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_select"><h2>Select</h2><div class="literalblock centered bold darkred"><div class="content"><pre>ets:select(TableId | TableName, MatchSpec)
+ets:select(TableId | TableName, MatchSpec, Limit)
+ets:select(Continuation)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>select/2</strong> is a more general version of match that uses a match specification</p></li><li><p><strong>select/3</strong> takes a limit on how many answers are returned, and returns the matched list and a continuation</p></li><li><p><strong>select/1</strong> takes a continuation from a limited select and returns the next <strong>Limit</strong> elements that match</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>A continuation is a marker/descriptor on the table that lets ETS know where and what to read if you want to keep on matching</p></div></aside></section>
+<section id="_other_issues"><h2>Other Issues</h2><div class="literalblock centered bold darkred"><div class="content"><pre>ets:tab2file(TableId | TableName, FileName)
+ets:file2tab(FileName)
+ets:tab2list(TableId | TableName)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>tab2file/2</strong> dumps a table on file</p><div class="ulist"><ul><li><p>returns <strong>ok | {error, Reason}</strong></p></li></ul></div></li><li><p><strong>file2tab/1</strong> reads it</p><div class="ulist"><ul><li><p>returns <strong>{ok, Tab} or {error, Reason}</strong></p></li></ul></div></li><li><p><strong>tab2list/1</strong> returns a list with all the elements of the table</p></li></ul></div></section>
+<section id="_other_issues_2"><h2>Other Issues</h2><div class="pre">
+<span class="redcode">9> ets:info(countries).</span>
+[{memory,320},{owner,<0.48.0>}, {name,countries},{size,4},
+ {node,nonode@nohost},{named_table,true},{type,bag},
+ {keypos,1}, {protection,protected}]
+<span class="redcode">10> ets:i().</span>
+ id        name       type size mem	  owner
+----------------------------------------------------------
+ 8         code       set  250  9854  code_server
+ 9         code_names set   37  3822  code_server
+ ac_tab    ac_tab     set    6   842  application_contr...
+ countries countries  bag    4   320  <0.48.0>
+...
+
+
+</div></section>
+<section id="_other_issues_3"><h2>Other Issues</h2><div class="ulist"><ul><li><p>Records can also be inserted in ETS tables</p></li><li><p>Set the key position of the tuple representation when creating the table</p><div class="ulist"><ul><li><p>Use the <strong>#RecordType.KeyField</strong> information directive</p></li></ul></div></li><li><p>If you want to insert records from the shell, you must use the tuple representation or load the definition in the shell</p></li><li><p>If you want to match record tables, remember to set the fields to <em>_</em>:</p><div class="ulist"><ul><li><p><code><strong>#Record{name=Name, phone='$1', _ = '_'}</strong></code></p></li></ul></div></li></ul></div></section>
+<section id="_other_issues_4"><h2>Other Issues</h2><svg id="other_issues_1" style="width:580; height:360px; margin-left:100pt;" viewBox="0 0 580 360" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#other_issues_1");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+shape = s8.g(s8.rect(10,30,80,70).addClass("shape"),
+       s8.ellipse(50,100,40,18).addClass("shape").attr({"fill":"#a6a6a6"}),
+       s8.rect(11,30,78,70).attr({"fill":"#a6a6a6"}),
+       s8.ellipse(50,30,40,18).addClass("shape grey"))
+
+explode = s8.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape").transform("t-10 -50");
+
+s8_g1_1 = s8.text(65,80,"PidA").addClass("code");
+s8_g1_2 = explode.addClass("hide");
+s8_g1_3 = s8.circle(100,150,40).addClass("shape grey");
+s8_g1_4 = s8.path("M170,150 l237,0").attr({"stroke-dasharray":"7,6", "stroke-width":3, "marker-end":marker}).addClass("line dashed");
+s8_g1_5 = s8.path("M163,150 l-1,0").attr({"stroke-dasharray":"7,6", "stroke-width":3, "marker-end":marker}).addClass("line dashed");
+
+s8_g2_1 = s8.text(86,280,"{'EXIT', PidA, Reason}").addClass("code hide");
+s8_g2_2 = explode.clone().transform("t365 -50").addClass("hide");
+s8_g2_3 = shape.transform("t425 85");
+
+s8_g1 = s8.g(s8_g1_1, s8_g1_2, s8_g1_3, s8_g1_4, s8_g1_5);
+s8_g2 = s8.g(s8_g2_1, s8_g2_2, s8_g2_3);
+
+s8_anim1 = function() { s8_g2_1.animate({"opacity":"1"}, 375, mina.linear, s8_anim2); };
+s8_anim2 = function() { s8_g1_2.animate({"opacity":"1"}, 375, mina.linear, s8_anim3); };
+s8_anim3 = function() { s8_g1.animate({"opacity":"0"}, 375, mina.linear, s8_anim4); };
+s8_anim4 = function() { s8_g2_2.animate({"opacity":"1"}, 375, mina.linear, s8_anim5); };
+s8_anim5 = function() { s8_g2.animate({"opacity":"0"}, 375, mina.linear); };
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_anim1(); s8_counter++; break};
+    case 2: {s8_anim5(); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Tables are linked to the process which created them</p></li><li><p>If the process terminates, the table is automatically deleted</p></li><li><p>Be careful when creating and using ETS tables from the shell</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>There is an option to set a heir to transfer the table to if the original owner dies</p></div></aside></section>
+<section id="_other_issues_5"><h2>Other Issues</h2><div class="ulist"><ul><li><p>Tables are not garbage collected</p></li><li><p>They must be deleted manually</p></li><li><p>With over 20 elements, ETS tables are more efficient than lists</p></li><li><p>ETS operations are implemented in BIFs</p></li><li><p>ETS tables are stored in RAM</p></li><li><p>Disk only ETS tables are implemented in the dets module</p></li></ul></div></section>
+<section id="_table_visualizer"><h2>Table Visualizer</h2><div class="ulist"><ul><li><p>A graphical tool used to examine ETS and Mnesia tables</p><div class="ulist"><ul><li><p>It includes tables in connected nodes</p></li></ul></div></li><li><p>Allows creating and editing of tables</p></li><li><p>Polls the tables for changes</p><div class="ulist"><ul><li><p>Changes are visible through a colouring scheme</p></li></ul></div></li><li><p>Can view table information</p></li></ul></div></section>
+<section id="_table_visualizer_2"><h2>Table Visualizer</h2><div class="imageblock" style=""><div class="content"><img src="images/table_visualizer_1.png" alt="Table Visualizer" width="750" height="auto"></div></div>
+<div class="ulist"><ul><li><p>tv:start()</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Let the students try this out in the shell, with the ets table they previously created.</p></div></aside></section>
+<section id="_table_visualizer_3"><h2>Table Visualizer</h2><div class="imageblock" style=""><div class="content"><img src="images/table_visualizer_2.png" alt="Table Visualizer" width="600" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Click on the table to visualise it</p></li></ul></div></section>
+<section id="_erlang_term_storage"><h2>Erlang Term Storage</h2><div class="ulist"><ul><li><p>ETS Tables</p></li><li><p>Handling Elements</p></li><li><p>Searching and Traversing</p></li><li><p>Match Specifications and Select</p></li><li><p>Other Issues</p></li><li><p>Table Visualizer</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>
