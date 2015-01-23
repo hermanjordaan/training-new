@@ -1,0 +1,432 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Ports and Sockets</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Ports and Sockets</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_ports_and_sockets"><h2>Ports and Sockets</h2><div class="ulist"><ul><li><p>UDP</p></li><li><p>TCP</p></li><li><p>Inet</p></li><li><p>Ports</p></li></ul></div></section>
+<section id="_udp"><h2>UDP</h2><div class="imageblock" style=""><div class="content"><img src="images/udp.png" alt="UDP" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>The User Datagram Protocol is a connectionless protocol</p></li><li><p>Provides no transmission error recovery</p><div class="ulist"><ul><li><p>It is left up to the application to ensure packet reception and ordering</p></li></ul></div></li><li><p>Has very little overhead</p><div class="ulist"><ul><li><p>It is ideal for transmissions where dropping a packet is more acceptable than waiting for it to be re-sent</p></li></ul></div></li><li><p>Implemented in the <strong>gen_udp</strong> module</p></li></ul></div></section>
+<section id="_udp_2"><h2>UDP</h2><div class="ulist"><ul><li><p>Opens a UDP socket on a local host, used for sending and receiving</p></li><li><p>Some options when opening sockets include</p><div class="ulist"><ul><li><p><strong>list | binary</strong> forwards messages either as lists or binaries</p></li><li><p><strong>{active, once | true | false}</strong> for active and passive socket modes</p></li><li><p><strong>{header, Bytes}</strong> splits the package in a list of length <strong>Bytes</strong> and a binary</p></li><li><p><strong>{ip, IpAddress}</strong> specifies which network interface to use when the computer has more than one</p></li><li><p><strong>inet6</strong> sets up the socket for IPv6</p></li></ul></div></li></ul></div></section>
+<section id="_udp_3"><h2>UDP</h2><div class="literalblock centered"><div class="content"><pre>gen_udp:send(Socket, Address, Port, Packet)
+gen_udp:recv(Socket, Length, Timeout)
+gen_udp:controlling_process(Socket, Pid)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>send(Socket, Port, Address, Packet)</strong> allows to send a <strong>Packet</strong> through <strong>Socket</strong> to whatever is listening on <strong>Port</strong> at <strong>Address</strong></p></li><li><p>In passive mode, <strong>recv/3</strong> allows to receive a message from the socket.</p></li><li><p>In active mode, messages are sent directly to the process in charge of the socket</p></li><li><p><strong>gen_udp:controlling_process(Socket, Pid)</strong> allows to change the process in charge of the socket.</p></li></ul></div></section>
+<section id="_udp_strong_example_strong"><h2>UDP: <strong>example</strong></h2><svg id="udp_example_1" style="width:1100; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#udp_example_1");
+
+s1.rect(10,8,1050,311).addClass("rect_code");
+s1.text(20,40,"1> {ok, Socket} = gen_udp:open(1234).").addClass("code bold darkred")
+s1.text(20,78,"{ok,#Port<0.512>}").addClass("code")
+s1_g3 = s1.g(s1.text(20,116,"2> flush().").addClass("code bold darkred"),
+       s1.text(20,154,"Shell got {udp,#Port<0.512>,{127,0,0,1},1235,\"Hello world\"}").addClass("code"),
+       s1.text(20,192,"Shell got {udp,#Port<0.512>,{127,0,0,1},1235,\"Hello world\"}").addClass("code"),
+       s1.text(20,230,"ok").addClass("code")
+      ).addClass("hide");
+s1_g5 = s1.g(s1.text(20,268,"3> gen_udp:close(Socket).").addClass("code bold darkred"),
+       s1.text(20,306,"ok").addClass("code")
+      ).addClass("hide");
+
+s1.rect(10,334,1050,311).addClass("rect_code");
+s1.text(20,366,"1> {ok, Socket} = gen_udp:open(1235).").addClass("code bold darkred");
+s1.text(20,404,"{ok,#Port<0.512>}").addClass("code");
+s1_g1 = s1.g(s1.text(20,442,"2> gen_udp:send(Socket,{127,0,0,1},1234,<<\"Hello world\">>).").addClass("code bold darkred"),
+       s1.text(20,480,"ok").addClass("code")
+      ).addClass("hide");
+s1_g2 = s1.g(s1.text(20,518,"3> gen_udp:send(Socket,{127,0,0,1},1234,\"Hello world\").    ").addClass("code bold darkred"),
+       s1.text(20,556,"ok").addClass("code")
+      ).addClass("hide");
+s1_g4 = s1.g(s1.text(20,594,"4> gen_udp:close(Socket).").addClass("code bold darkred"),
+       s1.text(20,632,"ok").addClass("code")
+      ).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 250, mina.linear, s1_anim2) };
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 250, mina.linear) };
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear) };
+s1_anim4 = function() { s1_g4.animate({"opacity":"1"}, 250, mina.linear, s1_anim5) };
+s1_anim5 = function() { s1_g5.animate({"opacity":"1"}, 250, mina.linear) };
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim3(); s1_counter++; break};
+    case 3: {s1_anim4(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_udp_strong_example_strong_2"><h2>UDP: <strong>example</strong></h2><svg id="udp_example_2" style="width:1100; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#udp_example_2");
+
+s2.rect(10,8,1050,387).addClass("rect_code");
+s2.text(20,40,"1> {ok,Socket}=gen_udp:open(1236,[binary,{active, false}]).").addClass("code bold darkred")
+s2.text(20,78,"{ok,#Port<0.536>}").addClass("code")
+s2_g3 = s2.g(s2.text(20,116,"2> flush().").addClass("code bold darkred"),
+       s2.text(20,154,"ok").addClass("code")
+      ).addClass("hide");
+s2_g4 = s2.g(s2.text(20,192,"3> gen_udp:recv(Socket, 0).").addClass("code bold darkred"),
+       s2.text(20,230,"{ok,{{127,0,0,1},1235,<<\"Hello world\">>}}").addClass("code")
+      ).addClass("hide");;
+s2_g5 = s2.g(s2.text(20,268,"4> gen_udp:recv(Socket, 0).").addClass("code bold darkred"),
+       s2.text(20,306,"{ok,{{127,0,0,1},1235,<<\"Hello world\">>}}").addClass("code")
+      ).addClass("hide");;
+s2_g6 = s2.g(s2.text(20,344,"5> gen_udp:recv(Socket, 0, 10).").addClass("code bold darkred"),
+       s2.text(20,382,"{error,timeout}").addClass("code")
+      ).addClass("hide");;
+
+s2.rect(10,410,1050,233).addClass("rect_code");
+s2.text(20,442,"1> {ok, Socket} = gen_udp:open(1235).").addClass("code bold darkred")
+s2.text(20,480,"{ok,#Port<0.539>}").addClass("code")
+s2_g1 = s2.g(s2.text(20,518,"2> gen_udp:send(Socket,{127,0,0,1},1236,\"Hello world\").").addClass("code bold darkred"),
+       s2.text(20,556,"ok").addClass("code")
+      ).addClass("hide");;
+s2_g2 = s2.g(s2.text(20,594,"3> gen_udp:send(Socket,{127,0,0,1},1236,<<\"Hello world\">>).").addClass("code bold darkred"),
+       s2.text(20,632,"ok").addClass("code")
+      ).addClass("hide");;
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 250, mina.linear, s2_anim2) };
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 250, mina.linear) };
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 250, mina.linear) };
+s2_anim4 = function() { s2_g4.animate({"opacity":"1"}, 250, mina.linear, s2_anim5) };
+s2_anim5 = function() { s2_g5.animate({"opacity":"1"}, 250, mina.linear) };
+s2_anim6 = function() { s2_g6.animate({"opacity":"1"}, 250, mina.linear) };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim3(); s2_counter++; break};
+    case 3: {s2_anim4(); s2_counter++; break};
+    case 4: {s2_anim6(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_udp_strong_example_strong_3"><h2>UDP: <strong>example</strong></h2><svg id="udp_example_3" style="width:1100; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#udp_example_3");
+
+s3.rect(10,8,1050,349).addClass("rect_code");
+s3.text(20,40,"1> {ok, Socket} = gen_udp:open(1234).").addClass("code bold darkred")
+s3.text(20,78,"{ok,#Port<0.505>}").addClass("code")
+s3_g1 = s3.g(s3.text(20,116,"2> Pid = spawn(fun() ->").addClass("code bold darkred"),
+       s3.text(20,154,"2>   receive Msg -> io:format(\"Received: ~p~n\", [Msg]) end").addClass("code bold darkred"),
+       s3.text(20,192,"2> end).").addClass("code bold darkred"),
+       s3.text(20,230,"<0.34.0>").addClass("code")
+      ).addClass("hide");
+s3_g2 = s3.g(s3.text(20,268,"3> gen_udp:controlling_process(Socket, Pid).").addClass("code bold darkred"),
+       s3.text(20,306,"ok").addClass("code")
+      ).addClass("hide");
+s3_g4 = s3.text(20,344,"Received: {udp,#Port<0.505>,{127,0,0,1},1235,\"Hello world\"}").addClass("code").addClass("hide");
+
+s3.rect(10,372,1050,233).addClass("rect_code");
+s3.text(20,404,"1> {ok, Socket} = gen_udp:open(1235).").addClass("code bold darkred")
+s3.text(20,442,"{ok,#Port<0.539>}").addClass("code")
+s3_g3 = s3.g(s3.text(20,480,"2> gen_udp:send(Socket, {127,0,0,1}, 1234, \"Hello world\").").addClass("code bold darkred"),
+       s3.text(20,518,"ok").addClass("code")
+      ).addClass("hide");
+s3_g5 = s3.g(s3.text(20,556,"3> gen_udp:close(Socket).").addClass("code bold darkred"),
+       s3.text(20,594,"ok").addClass("code")
+      ).addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 250, mina.linear) };
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 250, mina.linear) };
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 250, mina.linear, s3_anim4) };
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 250, mina.linear) };
+s3_anim5 = function() { s3_g5.animate({"opacity":"1"}, 250, mina.linear) };
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim2(); s3_counter++; break};
+    case 3: {s3_anim3(); s3_counter++; break};
+    case 4: {s3_anim5(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_tcp"><h2>TCP</h2><div class="imageblock" style=""><div class="content"><img src="images/tcp.png" alt="TCP" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>The Transmission Control Protocol is connection oriented</p></li><li><p>The peers exchange streams of data</p></li><li><p>Package reception and ordering is guaranteed</p><div class="ulist"><ul><li><p>Used for HTTP, IM, peer-to-peer applications, mail, Erlang distribution, etc.</p></li></ul></div></li><li><p>Implemented in the <strong>gen_tcp</strong> module</p></li></ul></div></section>
+<section id="_tcp_2"><h2>TCP</h2><svg id="tcp_1" style="width:600; height:460px;" viewBox="0 0 600 460" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s4 = Snap("#tcp_1");
+
+var arrow_end = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_end = arrow_end.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+var arrow_start = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r180');
+var marker_start = arrow_start.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.text(435,70,"Client").addClass("code");
+s4.circle(490,140,40).addClass("shape grey");
+
+s4_g1 = s4.path("M180,140 l250,0").attr({"marker-start":marker_start, "marker-end":marker_end}).addClass("line hide");
+
+s4_g2 = s4.text(70,45,"Listen").addClass("code print_hide");
+s4_g3 = s4.text(70,45,"Accept").addClass("code").addClass("hide");
+s4.text(62,80,"process").addClass("code");
+s4.circle(120,140,40).addClass("shape darkred");
+
+s4_g4 = s4.path("M65,140 Q-50,270 62,385").attr({"stroke-dasharray":"7,6", "marker-end":marker_end}).addClass("line dashed hide");
+
+s4_g5 = s4.g(s4.text(70,305,"Listen").addClass("code"),
+       s4.text(62,340,"process").addClass("code"),
+       s4.circle(120,400,40).addClass("shape darkred")
+      ).addClass("hide");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 250, mina.linear) };
+s4_anim2 = function() { s4_g2.animate({"opacity":"0"}, 250, mina.linear); s4_g3.animate({"opacity":"1"}, 250, mina.linear, s4_anim3); };
+s4_anim3 = function() { s4_g4.animate({"opacity":"1"}, 250, mina.linear, s4_anim4) };
+s4_anim4 = function() { s4_g5.animate({"opacity":"1"}, 250, mina.linear) };
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_anim1(); s4_counter++; break};
+    case 2: {s4_anim2(); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Once a connection is set up, it remains open until either side closes it</p></li><li><p>A TCP server then requires a process to listen to incoming requests and to handle the connection.</p></li><li><p>The listener process can either spawn an acceptor and go back to listening, or accept the connection itself, then spawn a new listener.</p></li></ul></div></section>
+<section id="_tcp_strong_clients_strong"><h2>TCP: <strong>clients</strong></h2><div class="literalblock centered"><div class="content"><pre>gen_tcp:connect(Address, Port, Options) -&gt; {ok, Socket}
+gen_tcp:connect(Address, Port, Options, Timeout) -&gt; {ok,Socket}</pre></div></div>
+<div class="ulist"><ul><li><p>A client process is responsible for starting a connection towards the server with <strong>connect/3-4</strong></p></li><li><p>Some options when connecting to a socket include:</p><div class="ulist"><ul><li><p><strong>list | binary</strong> forwards messages either as lists or binaries.</p></li><li><p><strong>{active, once | true | false}</strong> for active and passive socket modes</p></li><li><p><strong>{port, Port}</strong> specifies which local port to use</p></li><li><p><strong>inet6</strong> sets up the socket for IPv6</p></li></ul></div></li></ul></div></section>
+<section id="_tcp_strong_clients_strong_2"><h2>TCP: <strong>clients</strong></h2><div class="literalblock left w_600"><div class="content"><pre>client(Host, Data) -&gt;
+  {ok, Socket} =
+  gen_tcp:connect(Host,1234,[]),
+  send(Socket, Data),
+  ok = gen_tcp:close(Socket).
+
+send(Socket, &lt;&lt;Chunk:100/binary,
+Rest/binary&gt;&gt;) -&gt;
+  gen_tcp:send(Socket, Chunk),
+  send(Socket, Rest);
+send(Socket, Rest) -&gt;
+    gen_tcp:send(Socket, Rest).
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>A client process is responsible for starting a connection to the server</p></li><li><p>A connection can be opened with <strong>connect/3-4</strong></p></li><li><p>It sends some data and closes the socket</p></li><li><p>Data is sent with <strong>send/2</strong></p></li><li><p>The socket could have been closed by the other side.</p></li><li><p>TCP connections can be closed with <strong>close/1</strong></p></li></ul></div></section>
+<section id="_tcp_strong_servers_strong"><h2>TCP: <strong>servers</strong></h2><div class="pre" style="text-align:center; padding:10pt 0 !important;">gen_tcp:listen(Port, Options) -> {ok, ListenSocket}
+gen_tcp:accept(ListenSocket) -> {ok, Socket}
+gen_tcp:accept(ListenSocket, Timeout) -> {ok, Socket}
+</div>
+<div class="ulist"><ul><li><p>The server must set up a special socket to listen to incoming connections. It is opened by calling <strong>gen_tcp:listen(Port, Opts)</strong>.</p></li><li><p>Some options when opening a listen socket include:</p><div class="ulist"><ul><li><p><strong>list | binary</strong> forwards messages either as lists or binaries.</p></li><li><p><strong>{active, once | true | false}</strong> for active and passive socket modes</p></li><li><p><strong>{ip, IpAddress}</strong> specifies which network interface to use when the computer has more than one.</p></li><li><p><strong>inet6</strong> sets up the socket for IPv6</p></li></ul></div></li><li><p>The server can accept a connection request with <strong>accept/1-2</strong>. A regular socket is returned</p></li></ul></div></section>
+<section id="_tcp_strong_servers_strong_2"><h2>TCP: <strong>servers</strong></h2><div class="literalblock"><div class="content"><pre>start() -&gt; spawn(fun server/0).
+
+server() -&gt;
+    {ok, ListenSocket} =
+         gen_tcp:listen(1234,[binary,{active,false}]),
+    spawn(?MODULE, wait_connect, [ListenSocket,0]),
+    timer:sleep(infinity).
+ </pre></div></div>
+<div class="ulist"><ul><li><p>The server creates a listen socket and passes it to a process in charge of listening</p></li><li><p>The server&#8217;s main loop sleeps to keep the socket alive</p><div class="ulist"><ul><li><p>When the server terminates, the listen socket and all the related sockets close with it</p></li></ul></div></li></ul></div></section>
+<section id="_tcp_strong_servers_strong_3"><h2>TCP: <strong>servers</strong></h2><div class="literalblock"><div class="content"><pre>wait_connect(ListenSocket, Count) -&gt;
+  {ok, Socket} = gen_tcp:accept(ListenSocket),
+  spawn(?MODULE, wait_connect, [ListenSocket, Count+1]),
+  get_request(Socket, [], Count).
+
+get_request(Socket, BinaryList, Count) -&gt;
+  case gen_tcp:recv(Socket, 0, 5000) of
+    {ok, Bin} -&gt;
+      get_request(Socket, [Bin|BinaryList], Count);
+    {error, closed} -&gt;
+   io:format("~p: ~p~n",[Count,lists:reverse(BinaryList)])
+  end.</pre></div></div>
+<div class="ulist"><ul><li><p>The listening socket accepts the connection, then spawns a new process to become the listener in its place.</p></li><li><p>The process handles the socket request.</p></li></ul></div></section>
+<section id="_tcp_strong_example_strong"><h2>TCP: <strong>example</strong></h2><div class="left w_600">
+<div class="pre"><b>1> tcp:start().</b>
+<0.35.0>
+<b>2> tcp:client({127,0,0,1}, <<"Hello, Concurrent World!">>).</b>
+ok
+0: [<<"Hello, Concurrent World!">>]
+<b>3> tcp:client({127,0,0,1}, <<"Another process handles this">>).</b>
+ok
+1: [<<"Another process handles this">>]
+
+
+
+</div></div>
+<div class="ulist right"><ul><li><p>The TCP server is started and listens on port 1234</p></li><li><p>The client establishes a connection with the listening process</p></li><li><p>The listening process accepts the connection and becomes an accepting process</p></li><li><p>A new listening process is spawned and waits for the next connection</p></li></ul></div></section>
+<section id="_inet"><h2>Inet</h2><div class="ulist"><ul><li><p>The <strong>inet</strong> module contains generic functions that will work on any sockets, whether you are using UDP or TCP.</p></li><li><p>Allows to change socket options after they were started with <strong>setopts(Socket, OptionList)</strong></p></li><li><p>Lets you find what options were given to a socket with <strong>getopts(Socket, Options)</strong></p></li><li><p>Can retrieve statistics about a socket with  <strong>getstat(Socket)</strong></p></li><li><p>Can list all currently active sockets with <strong>i()</strong></p></li></ul></div></section>
+<section id="_inet_strong_example_strong"><h2>Inet: <strong>example</strong></h2><div class="pre"><b>1> {ok,Sock} = gen_udp:open(1234).</b>
+{ok,#Port<0.528>}
+<b>2> inet:getopts(Sock,[active,header,broadcast,keepalive]).</b>
+{ok,[{active,true},{header,0},{broadcast,false},{keepalive,false}]}
+<b>3> inet:setopts(Sock, [{active, once}]),
+3> inet:getopts(Sock, [active]).</b>
+{ok,[{active,once}]
+<b>4> gen_udp:send(Sock, {127,0,0,1}, 1234, "Hi").</b>
+ok
+<b>5> inet:getopts(Sock, [active]).</b>
+{ok,[{active,false}]}
+<b>6> flush().</b>
+Shell got {udp,#Port<0.528>,{127,0,0,1},1234,"Hi"}
+
+
+</div>
+<aside class="notes"><div class="paragraph"><p>Explain how {active, once} can be used to regulate message receiving between gen_udp/gen_tcp and inet to reset the option after each message received.</p></div></aside></section>
+<section id="_inet_strong_example_strong_2"><h2>Inet: <strong>example</strong></h2><div class="pre"><b>1> {ok, Socket1} = gen_udp:open(1234),
+1> {ok, Socket2} = gen_udp:open(1235).</b>
+{ok,#Port<0.511>}
+<b>2> gen_udp:send(Socket1, {127,0,0,1}, 1235, <<"test">>),
+2> gen_udp:send(Socket1, {127,0,0,1}, 1235, "test 2").</b>
+ok
+<b>3> inet:i().</b>
+Port Module   Recv Sent Owner    Local Address   Foreign Address State
+505  inet_udp 0    10   <0.31.0> *:search-agent  *:*             BOUND
+511  inet_udp 10   0    <0.31.0> *:mosaicsyssvc1 *:*             BOUND
+<b>4> inet:getstat(Socket1).</b>
+{ok,[{recv_oct,0},{recv_cnt,0},{recv_max,0},{recv_avg,0},
+     {recv_dvi,0},{send_oct,10},{send_cnt,2},{send_max,6},
+     {send_avg,5},{send_pend,0}]}
+
+</div>
+<aside class="notes"><div class="paragraph"><p>oct=bytes, cnt=packets, max=largest packet in bytes, avg=average byte size, dvi=average byte size deviation, send_pend</p></div></aside></section>
+<section id="_ports"><h2>Ports</h2><div class="imageblock" style=""><div class="content"><img src="images/ports.png" alt="Ports" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Ports allow communication between an Erlang node and an external program</p></li><li><p>The communication with the external program can be done through binary messages or standard input and output</p></li><li><p>Ports act like Erlang processes that do not trap exits: they can be linked to, send and receive messages and receive exit signals</p></li><li><p>Port functions are implemented in the <strong>erlang</strong> module</p></li></ul></div></section>
+<section id="_ports_2"><h2>Ports</h2><div class="literalblock centered"><div class="content"><pre>open_port({spawn, Cmd}, Options) -&gt; Port</pre></div></div>
+<div class="ulist"><ul><li><p><strong>Cmd</strong> will be run as an external program</p></li><li><p>Some options when opening a port include:</p><div class="ulist"><ul><li><p><strong>stream | {packet, N}</strong> gives the size of binary packets to be used for this port. <strong>N</strong> can be 1, 2 or 4. If the packet size is variable, use stream.</p></li><li><p><strong>binary</strong> all I/O from the port comprises data objects instead of bytes</p></li><li><p><strong>use_stdio</strong> this uses the (Unix) standard input and output for communications. Use <strong>nouse_stdio</strong> to avoid this.</p></li><li><p><strong>exit_status</strong> ensures that a message is sent to the port when the external program exits.</p></li></ul></div></li></ul></div></section>
+<section id="_ports_3"><h2>Ports</h2><div class="ulist"><ul><li><p>The function <strong>port_connect/2</strong> allows to change the owner of the port. The previous owner remains linked to the port.</p></li><li><p><strong>port_command(Port, Data)</strong> is used to send <strong>Data</strong> to the <strong>Port</strong></p></li><li><p>Information about the port can be retrieved with <strong>port_info/1</strong></p></li><li><p>Ports can be closed with <strong>port_close(Port)</strong> when called from the controlling process.</p></li></ul></div></section>
+<section id="_ports_strong_example_c_program_strong"><h2>Ports: <strong>example (C program)</strong></h2><div class="literalblock left w_600"><div class="content"><pre>/* echo.c */
+#include &lt;stdio.h&gt;
+#define BUFFER_LENGTH 80
+int main() {
+    char line[BUFFER_LENGTH];
+    while (1) {
+        if (fgets(line, BUFFER_LENGTH, stdin) != NULL) {
+            printf("%s", line);
+            printf("ECHOED\n");
+            fflush(stdout);
+        } else {
+            return 0;
+        }
+    }
+}</pre></div></div>
+<div class="ulist right"><ul><li><p>This program is an echo server that repeats what is sent on standard input, followed by "ECHOED".</p></li><li><p>The Port has to make sure standard input is open (!= NULL), otherwise the port program will remain alive even after the Erlang VM terminates</p></li><li><p>The output buffers need to be flushed, otherwise the program might not reply.</p></li></ul></div></section>
+<section id="_ports_strong_example_erlang_program_strong"><h2>Ports: <strong>example (Erlang program)</strong></h2><div class="literalblock left w_600"><div class="content"><pre>-module(echo).
+-export([start/0, stop/1, repeat/2]).
+
+start() -&gt; open_port({spawn, "./echo.o"}, [stream, {line, 80}]).
+
+stop(Port) -&gt; port_close(Port).
+
+repeat(Port, Msg) -&gt;
+  case is_valid(Msg) of
+    false-&gt;erlang:error(badarg);
+    true -&gt; ok
+  end,
+  port_command(Port, Msg),
+  get_reply(Port).</pre></div></div>
+<div class="ulist right"><ul><li><p><strong>start()</strong> opens the port with the executable "echo.o"</p></li><li><p><strong>stop(Port)</strong> closes it</p></li><li><p><strong>repeat(Port, Msg)</strong> takes care of validating the message, sending it to the port and returning the port&#8217;s reply.</p></li></ul></div></section>
+<section id="_ports_strong_example_erlang_program_strong_2"><h2>Ports: <strong>example (Erlang program)</strong></h2><div class="literalblock"><div class="content"><pre>is_valid(Msg) when length(Msg) =&lt; 80 -&gt;
+    [Last|_] = lists:reverse(Msg),
+    Total = length([1 || $\n &lt;- Msg]),
+    if Last =:= $\n, Total =:= 1 -&gt; true;
+       Last =/= $\n; Total =/= 1 -&gt; false
+    end;
+
+is_valid(_) -&gt; false.</pre></div></div>
+<div class="ulist"><ul><li><p>The port program is line-based. All messages coming from Erlang need to end with a line break</p></li><li><p>Only one line break is allowed per message</p></li><li><p>A line is 80 characters long at most.</p></li></ul></div></section>
+<section id="_ports_strong_example_erlang_program_strong_3"><h2>Ports: <strong>example (Erlang program)</strong></h2><div class="pre">get_reply(Port) -> get_reply(Port, []).
+get_reply(Port, Acc) ->
+ receive
+  <b>{Port, {data, {eol, "ECHOED"}}}</b> ->
+     {ok, lists:flatten(lists:reverse(Acc))};
+  <b>{Port, {data,{eol, Line}}}</b> ->
+     get_reply(Port,[Line|Acc]);
+  <b>{Port,{data,{noeol, Txt}}}</b> ->
+     get_reply(Port, [Txt|Acc])
+ after 5000 ->
+     {error, timeout, Acc}
+ end.
+</div>
+<div class="ulist"><ul><li><p>The port replies with messages of the form <strong>{Port, {data, Data}}</strong></p></li><li><p>Assumes the port is sending data until it ends a line <strong>(eol)</strong> with "ECHOED"</p></li></ul></div></section>
+<section id="_ports_strong_example_erlang_program_strong_4"><h2>Ports: <strong>example (Erlang program)</strong></h2><div class="pre">
+<b>1> os:cmd("gcc echo.c -o echo.o"),
+1> Port = echo:start().</b>
+#Port<0.510>
+<b>2> echo:repeat(Port, "Hello, port!\n").</b>
+{ok,"Hello, port!"}
+<b>3> echo:repeat(Port, "How are you?\n").</b>
+{ok,"How are you?"}
+<b>4> erlang:port_info(Port).</b>
+[{name,"./echo.o"}, {links,[<0.31.0>]}, {id,510},
+connected,<0.31.0>}, {input,40}, {output,26}]
+<b>5> echo:stop(Port).</b>
+true
+<b>6> erlang:port_info(Port).</b>
+undefined
+</div></section>
+<section id="_ports_and_sockets_2"><h2>Ports and Sockets</h2><div class="ulist"><ul><li><p>UDP</p></li><li><p>TCP</p></li><li><p>Inet</p></li><li><p>Ports</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>
