@@ -1,0 +1,354 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Distributed Programming</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Distributed Programming</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_distributed_programming"><h2>Distributed Programming</h2><div class="ulist"><ul><li><p>Distributed Systems</p></li><li><p>Erlang Distribution</p></li><li><p>Node Connections</p></li><li><p>Distributed BIFs</p></li><li><p>Net Kernel</p></li><li><p>Hidden Nodes</p></li><li><p>Firewalls and Erlang Distribution</p></li></ul></div></section>
+<section id="_distributed_systems"><h2>Distributed Systems</h2><div class="imageblock" style=""><div class="content"><img src="images/distributed_systems.png" alt="Distributed Systems" width="90%" height="auto"></div></div>
+<div class="ulist"><ul><li><p>A distributed system consists of a program running on a collection of loosely coupled processors</p></li></ul></div></section>
+<section id="_distributed_systems_2"><h2>Distributed Systems</h2><div class="paragraph"><p><strong>There are many reasons for building distributed systems</strong></p></div>
+<div class="ulist"><ul><li><p>Performance</p></li><li><p>Reliability and fault tolerance</p></li><li><p>Accessing remote resources</p></li><li><p>Distributed applications (possibly heterogeneous)</p></li><li><p>Extendibility and Scalability</p></li></ul></div></section>
+<section id="_erlang_distribution_strong_example_strong"><h2>Erlang Distribution: <strong>example</strong></h2><svg id="erlang_distribution_example_1" style="width:1100; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#erlang_distribution_example_1");
+
+s1.rect(10,12,1050,325).attr({"stroke":"#e7e7e7", "fill":"#f5f5f5"});
+s1.rect(10,402,1050,190).attr({"stroke":"#e7e7e7", "fill":"#f5f5f5"});
+
+s1.text(18,45,"$ erl -sname foo").addClass("code");
+s1.text(18,85,"...").addClass("code");
+s1_g1_1 = s1.text(18,125,"(foo@node)1> S = self().").addClass("code bold darkred");
+s1_g1_2 = s1.text(18,165,"<0.37.0>").addClass("code");
+s1_g2_1 = s1.text(18,205,"(foo@node)2> spawn('bar@node', fun() -> S ! node() end).").addClass("code bold darkred");
+s1_g2_2 = s1.text(18,245,"<5827.42.0>").addClass("code");
+s1_g4_1 = s1.text(18,285,"(foo@node)3> flush().").addClass("code bold darkred");
+s1_g4_2 = s1.text(18,325,"Shell got 'bar@node'").addClass("code");
+s1_g3 = s1.text(28,380,"fun() -> S ! node() end runs on bar@node").addClass("code bold darkred");
+s1.text(18,435,"$ erl -sname bar").addClass("code");
+s1.text(18,475,"...").addClass("code");
+s1.text(18,515,"(bar@node)1>").addClass("code");
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2).addClass("hide");
+s1_g3.addClass("hide");
+s1_g4 = s1.g(s1_g4_1, s1_g4_2).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 375, mina.linear, s1_anim2); };
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear); };
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 375, mina.linear); };
+s1_anim4 = function() { s1_g3.animate({"opacity":"0"}, 375, mina.linear, s1_anim5); };
+s1_anim5 = function() { s1_g4.animate({"opacity":"1"}, 375, mina.linear); };
+
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim3(); s1_counter++; break};
+    case 3: {s1_anim4(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_erlang_distribution"><h2>Erlang Distribution</h2><div class="ulist"><ul><li><p>A <strong>node</strong> is an executing instance of the Erlang VM</p></li><li><p>A node is said to be <strong>alive</strong> if it can communicate with other nodes</p></li><li><p>Nodes that are alive have a unique name on that host</p></li><li><p><strong>Name@Host</strong> is the identifier of an Erlang node</p></li><li><p>A distributed Erlang node is started using the  <strong>-name</strong> and <strong>-sname</strong> flag</p><div class="ulist"><ul><li><p>In Windows, use the DOS prompt to run the command</p></li></ul></div></li></ul></div></section>
+<section id="_erlang_distribution_2"><h2>Erlang Distribution</h2><div class="ulist"><ul><li><p>Erlang nodes can communicate only if they share the same cookie or if they know each other&#8217;s cookies</p></li><li><p>Simple on trusted networks and local clusters</p></li><li><p>Harder on untrusted networks</p></li></ul></div></section>
+<section id="_erlang_distribution_strong_starting_strong"><h2>Erlang Distribution: <strong>starting</strong></h2><div class="pre"><b>cesarini@caen> erl -sname foo  -setcookie hello</b>
+<span class="comment" style="font-style:italic;">will start a node with the short name foo@caen</span>
+
+<b>cesarini@caen> erl -name foo</b>
+<span class="comment" style="font-style:italic;">will start a node with the long name foo@caen.ericsson.se</span>
+
+</div>
+<div class="ulist"><ul><li><p>Nodes started with long names may not communicate with nodes using short names</p></li><li><p>Nodes using short names do not require a DNS server</p></li><li><p>If no cookie is defined when starting up the system, then one will be created and stored in the <strong>~/.erlang.cookie</strong> file</p></li></ul></div></section>
+<section id="_messages_strong_example_strong"><h2>Messages: <strong>example</strong></h2><svg id="messages_example_1" style="width:1100; height:640px;" viewBox="0 0 1100 640" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#messages_example_1");
+
+s2.rect(10,12,1050,260).attr({"stroke":"#e7e7e7", "fill":"#f5f5f5"});
+s2.rect(10,362,1050,250).attr({"stroke":"#e7e7e7", "fill":"#f5f5f5"});
+
+s2_g1_1 = s2.text(18,45,"(foo@node)4> spawn('bar@node', s, s, []).").addClass("code bold darkred");
+s2_g1_2 = s2.text(18,85,"<5827.47.0>").addClass("code");
+s2_g3_1 = s2.text(18,125,"(foo@node)5> {server, 'bar@node'} ! {hi, self()}.").addClass("code bold darkred");
+s2_g3_2 = s2.text(18,165,"{hi, <0.37.0>}").addClass("code");
+s2_g5_1 = s2.text(18,205,"(foo@node)6> flush().").addClass("code bold darkred");
+s2_g5_2 = s2.text(18,245,"Shell got hi").addClass("code");
+
+s2_g2_1 = s2.text(18,325,"         starts      , runs the     function").addClass("code");
+s2_g2_2 = s2.text(18,325,"bar@node        s:s()           l()         ").addClass("code bold darkred");
+
+s2_g4_1 = s2.text(18,325,"   sent from          to         , which replies with   ").addClass("code");
+s2_g4_2 = s2.text(18,325,"hi           foo@node    bar@node                     hi").addClass("code bold darkred");
+
+s2.text(18,395,"-module(s).").addClass("code");
+s2.text(18,435,"-export([s/0]).").addClass("code");
+s2.text(18,475,"").addClass("code");
+s2.text(18,515,"s() -> register(server, self()), l().").addClass("code");
+s2.text(18,555,"").addClass("code");
+s2.text(18,595,"l() -> receive {M, Pid} -> Pid ! M end, l().").addClass("code");
+
+s2_g1 = s2.g(s2_g1_1, s2_g1_2).addClass("hide");
+s2_g2 = s2.g(s2_g2_1, s2_g2_2).addClass("hide");
+s2_g3 = s2.g(s2_g3_1, s2_g3_2).addClass("hide");
+s2_g4 = s2.g(s2_g4_1, s2_g4_2).addClass("hide");
+s2_g5 = s2.g(s2_g5_1, s2_g5_2).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 250, mina.linear, s2_anim2); };
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 250, mina.linear); };
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 250, mina.linear, s2_anim4); };
+s2_anim4 = function() { s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_g4.animate({"opacity":"1"}, 375, mina.linear); };
+s2_anim5 = function() { s2_g5.animate({"opacity":"1"}, 250, mina.linear); };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim3(); s2_counter++; break};
+    case 3: {s2_anim5(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_erlang_distribution_strong_messages_strong"><h2>Erlang Distribution: <strong>messages</strong></h2><div class="literalblock centered bold darkred"><div class="content"><pre>Pid ! Message
+{Name, Node} ! Msg</pre></div></div>
+<div class="ulist"><ul><li><p>Send messages to processes on remote nodes transparently using the ! construct</p></li><li><p>Messages will be delivered in the same order they are sent.</p></li><li><p>Only difference is that the remote node might go down.</p></li><li><p>With little changes (or doing it right from the start), programs running on a single processor can easily become distributed</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>The message should not be lost and not be corrupted by going over the network</p></div></aside></section>
+<section id="_node_connections"><h2>Node Connections</h2><div class="ulist"><ul><li><p>Nodes are loosely connected to each other</p><div class="ulist"><ul><li><p>Connections are based on TCP/IP</p></li></ul></div></li><li><p>Connections are explicitly set up by the run time system when a node is first referred to</p><div class="ulist"><ul><li><p>They are not set up by the programmer</p></li></ul></div></li><li><p>Connected nodes share information on new node</p></li><li><p>Nodes monitor each other checking if their peers are alive</p></li><li><p>Nodes can come and go dynamically in a similar manner as processes</p></li></ul></div></section>
+<section id="_node_connections_2"><h2>Node Connections</h2><div style="text-align:center">
+<svg id="node_connections_1" style="width:750; height:350px;" viewBox="0 0 750 350" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#node_connections_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_darkred = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_darkred = arrow_darkred.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.ellipse(100,60,90,50).addClass("shape darkred")
+s3.ellipse(650,60,90,50).addClass("shape darkred")
+s3.ellipse(100,260,90,50).addClass("shape darkred")
+s3.ellipse(650,260,90,50).addClass("shape darkred")
+
+s3.text(35,68,"dog@home").attr({"font-size":"18pt", "fill":"white"})
+s3.text(571,68,"mouse@work").attr({"font-size":"18pt", "fill":"white"})
+s3.text(42,268,"cat@work").attr({"font-size":"18pt", "fill":"white"})
+s3.text(585,268,"flea@home").attr({"font-size":"18pt", "fill":"white"})
+
+s3.path("M100,120 l0,80").addClass("line").attr({"marker-end":marker})
+s3.path("M100,130 l0,-10").addClass("line").attr({"marker-end":marker})
+
+s3.path("M650,120 l0,80").addClass("line").attr({"marker-end":marker})
+s3.path("M650,130 l0,-10").addClass("line").attr({"marker-end":marker})
+
+s3_g1 = s3.g(s3.path("M200,60 l345,0").addClass("line_darkred").attr({"marker-end":marker_darkred}),
+       s3.text(210,90,"{Name, mouse@work} ! Msg").addClass("darkred").attr({"font-size":"18pt"})
+      ).addClass("hide");
+
+s3.click(function() { s3_g1.animate({"opacity":"1"}, 250, mina.linear); });
+
+</script>
+</svg>
+</div>
+<div class="ulist"><ul><li><p>dog@home is connected to cat@work and mouse@work to flea@home</p></li><li><p>A process in dog@home sends a message to a registered process in mouse@work</p></li></ul></div></section>
+<section id="_node_connections_3"><h2>Node Connections</h2><div style="text-align:center">
+<svg id="node_connections_2" style="width:750; height:350px;" viewBox="0 0 750 350" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#node_connections_2");
+
+var arrow_end = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_end = arrow_end.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_start = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r180');
+var marker_start = arrow_start.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.ellipse(100,60,90,50).addClass("shape darkred")
+s4.ellipse(650,60,90,50).addClass("shape darkred")
+s4.ellipse(100,260,90,50).addClass("shape darkred")
+s4.ellipse(650,260,90,50).addClass("shape darkred")
+
+s4.text(35,68,"dog@home").attr({"font-size":"18pt", "fill":"white"})
+s4.text(571,68,"mouse@work").attr({"font-size":"18pt", "fill":"white"})
+s4.text(42,268,"cat@work").attr({"font-size":"18pt", "fill":"white"})
+s4.text(585,268,"flea@home").attr({"font-size":"18pt", "fill":"white"})
+
+s4.path("M100,120 l0,80").addClass("line").attr({"marker-end":marker_end, "marker-start":marker_start});
+s4.path("M650,120 l0,80").addClass("line").attr({"marker-end":marker_end, "marker-start":marker_start})
+
+s4_g1 = s4.path("M205,60 l340,0").addClass("line hide").attr({"marker-end":marker_end, "marker-start":marker_start});
+s4_g2 = s4.path("M205,80 l340,160").addClass("line hide").attr({"marker-end":marker_end, "marker-start":marker_start});
+s4_g3 = s4.path("M545,80 l-340,160").addClass("line hide").attr({"marker-end":marker_end, "marker-start":marker_start});
+s4_g4 = s4.path("M205,260 l340,0").addClass("line hide").attr({"marker-end":marker_end, "marker-start":marker_start});
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 250, mina.linear, s4_anim2); }
+s4_anim2 = function() { s4_g2.animate({"opacity":"1"}, 250, mina.linear, s4_anim3); }
+s4_anim3 = function() { s4_g3.animate({"opacity":"1"}, 250, mina.linear, s4_anim4); }
+s4_anim4 = function() { s4_g4.animate({"opacity":"1"}, 250, mina.linear); }
+
+s4.click(function() { s4_anim1() });
+
+</script>
+</svg>
+</div>
+<div class="ulist"><ul><li><p>dog@home sets up a connection to mouse@work and is informed of flea@home</p></li><li><p>dog@home tells cat@work of mouse@work and flea@home, and tells mouse@work of cat@work</p></li><li><p>This goes on and they all get happily connected</p></li></ul></div></section>
+<section id="_distributed_example"><h2>Distributed Example</h2><div class="pre">call(Message, ServerNode) ->
+    {frequency, <b>ServerNode</b>} ! {request,self(),Message},
+    receive
+        {reply, Reply} -> Reply
+    end.
+reply(Pid, Message) ->
+    Pid ! {reply, Message}.
+
+</div>
+<div class="ulist"><ul><li><p>Recall the resource server call? We can now receive requests to safely allocate resources from other nodes</p></li></ul></div></section>
+<section id="_distributed_example_2"><h2>Distributed Example</h2><div class="pre">call(Message, ServerNode) ->
+    monitor_node(ServerNode, true),
+    {resource, ServerNode} ! {request,self(),Message},
+    receive
+        {nodedown, ServerNode}->
+           {error, node_down};
+        {reply, Reply} ->
+           monitor_node(ServerNode, false),
+           Reply
+    end.
+
+
+</div>
+<div class="paragraph darkred"><p>The node might go down before we have received the reply!</p></div></section>
+<section id="_distributed_bifs"><h2>Distributed BIFs</h2><div class="ulist"><ul><li><p><code>Pid = spawn(Node, Mod, Func, Args)</code></p></li><li><p><code>Pid = spawn_link(Node, Mod, Func, Args)</code></p></li><li><p><code>monitor_node(Node, Flag)</code></p></li><li><p><code>MyName@Host = node()</code></p></li><li><p><code>[Node|Nodes] = nodes()</code></p></li><li><p><code>Node = node(Item) % Item is a PID, Ref or Port</code></p></li><li><p><code>disconnect_node(Node)</code></p></li><li><p><code>erlang:set_cookie(Node, Cookie)</code></p></li></ul></div></section>
+<section id="_net_kernel"><h2>Net Kernel</h2><div class="ulist"><ul><li><p>The net_kernel is an Erlang process that coordinates operations in a distributed node</p></li><li><p>BIFs such as <strong>spawn/4</strong> are converted by net_kernel to messages, and sent to the net_kernel on the remote node</p></li><li><p>Handles authentication and rejects bad cookies</p></li><li><p>You can change the net_kernel with a user-defined process giving a specific behaviour</p><div class="ulist"><ul><li><p>Changing the authentication scheme,</p></li><li><p>not allowing remote nodes to spawn processes, etc</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Mention that Erlang distribution security is weak! Based on cookies.
+Single TCP/IP connection which could get congested.
+Use it for what it was originally intended for.
+It is strongly recommended not to change Net Kernel.</p></div></aside></section>
+<section id="_hidden_nodes_strong_example_strong"><h2>Hidden Nodes: <strong>example</strong></h2><svg id="hidden_nodes_example_1" style="width:1100; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#hidden_nodes_example_1");
+
+s5.rect(10,10,540,560).addClass("rect_code");
+s5.text(20,40,"erl -sname a ").addClass("code");
+s5.text(20,80,"...").addClass("code");
+s5_g1 = s5.g(s5.text(20,120,"(a@node)1> ").addClass("code bold darkred"),
+       s5.text(20,160," net_kernel:connect('b@node'),").addClass("code bold darkred"),
+       s5.text(20,200," net_kernel:connect('c@node'). ").addClass("code bold darkred"),
+       s5.text(20,240,"true").addClass("code")
+      ).addClass("hide");
+s5_g2 = s5.g(s5.text(20,280,"(a@node)1> nodes()").addClass("code bold darkred"),
+       s5.text(20,320,"['b@node']").addClass("code")
+      ).addClass("hide");
+s5_g3 = s5.g(s5.text(20,360,"(a@node)1> nodes(hidden)").addClass("code bold darkred"),
+       s5.text(20,400,"['c@node']").addClass("code")
+      ).addClass("hide");
+s5_g4 = s5.g(s5.text(20,440,"(a@node)1> nodes(connected)").addClass("code bold darkred"),
+       s5.text(20,480,"['b@node','c@node']").addClass("code")
+      ).addClass("hide");
+
+s5.rect(570,10,510,260).addClass("rect_code");
+s5.text(580,40,"erl -sname b").addClass("code");
+s5.text(580,80,"...").addClass("code");
+s5_g5 = s5.g(s5.text(580,120,"(b@node)1> nodes().").addClass("code bold darkred"),
+       s5.text(580,160,"['a@node']").addClass("code")
+      ).addClass("hide");
+s5_g6 = s5.g(s5.text(580,200,"(b@node)2> nodes(connected)").addClass("code bold darkred"),
+       s5.text(580,240,"['a@node']").addClass("code")
+      ).addClass("hide");
+
+s5.rect(570,290,510,280).addClass("rect_code");
+s5.text(580,320,"erl -sname c -hidden").addClass("code");
+s5.text(580,360,"...").addClass("code");
+s5_g7 = s5.g(s5.text(580,400,"(c@node)1> nodes(). ").addClass("code bold darkred"),
+         s5.text(580,440,"[]").addClass("code")
+        ).addClass("hide");
+s5_g8 = s5.g(s5.text(580,480,"(c@node)2> nodes(hidden). ").addClass("code bold darkred"),
+        s5.text(580,520,"['a@node']").addClass("code")
+       ).addClass("hide");
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_g1.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 2: {s5_g2.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 3: {s5_g3.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 4: {s5_g4.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 5: {s5_g5.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 6: {s5_g6.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 7: {s5_g7.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    case 8: {s5_g8.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_hidden_nodes"><h2>Hidden Nodes</h2><div class="centered">
+<p><b>erl -sname foo -hidden</b></p>
+<p><i>will start a hidden node</i></p>
+</div>
+<div class="ulist"><ul><li><p>Hidden nodes have to be connected individually</p></li><li><p>Typically used for Operation and Maintenance</p></li><li><p>Can be used to create hierarchies of nodes</p></li></ul></div></section>
+<section id="_firewalls_and_erlang_distribution"><h2>Firewalls and Erlang Distribution</h2><div class="ulist"><ul><li><p>Poke a hole in the firewall, port 4369</p><div class="ulist"><ul><li><p>Erlang Port Mapper Daemon (EPMD), listens to incoming connection requests</p></li></ul></div></li><li><p>Poke a hole in the firewall, ports 9100 to 9105</p><div class="ulist"><ul><li><p>Set undocumented kernel variables:</p></li><li><p><strong>application:set_env(kernel, inet_dist_listen_min, 9100)</strong></p></li><li><p><strong>application:set_env(kernel_inet_dist_listen_max, 9105)</strong></p></li><li><p>Forces Erlang to use ports 9100 to 9105 for distribution</p></li></ul></div></li><li><p>Tunnel over using SSH</p></li><li><p>Roll your own distribution handler</p></li></ul></div></section>
+<section id="_distributed_programming_2"><h2>Distributed Programming</h2><div class="ulist"><ul><li><p>Distributed Systems</p></li><li><p>Erlang Distribution</p></li><li><p>Node Connections</p></li><li><p>Distributed BIFs</p></li><li><p>Net Kernel</p></li><li><p>Hidden Nodes</p></li><li><p>Firewalls and Erlang Distribution</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

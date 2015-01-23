@@ -1,7 +1,5 @@
-/*
 @import url(https://fonts.googleapis.com/css?family=News+Cycle:400,700);
 @import url(https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic);
-*/
 /**
  * A simple theme for reveal.js presentations, similar
  * to the default theme. The accent color is darkblue.
@@ -17,10 +15,10 @@ body {
   background-color: white; }
 
 .reveal {
-  font-family: "Lucida Grande", sans-serif;
-  font-size: 30px;
+  font-family: "Lato", sans-serif;
+  font-size: 36px;
   font-weight: normal;
-  /*letter-spacing: -0.02em;*/
+  letter-spacing: -0.02em;
   color: black; }
 
 ::selection {
@@ -39,9 +37,9 @@ body {
 .reveal h6 {
   margin: 0 0 20px 0;
   color: black;
-  font-family: "Lucida Grande", sans-serif;
+  font-family: "News Cycle", Impact, sans-serif;
   line-height: 0.9em;
-  /*letter-spacing: 0.02em;*/
+  letter-spacing: 0.02em;
   text-transform: none;
   text-shadow: none; }
 
@@ -138,168 +136,3 @@ body {
  *********************************************/
 .reveal .slide-number {
   color: darkblue; }
-
-/*********************************************
- * ESL ADDITIONS
- *********************************************/
-
-.reveal .left {
-  display: block;
-  float: left;
-  position: relative;
-  width: 45%;
-  margin-right: 15px;
-}
-
-.reveal .w_400 {width: 400px !important}
-.reveal .w_500 {width: 500px !important}
-.reveal .w_600 {width: 600px !important}
-.reveal .w_700 {width: 700px !important}
-
-.reveal .right {
-  display: block;
-  width: 45%;
-  margin-right: 0;
-  padding-right: 0;
-  float: left;
-}
-
-.reveal strong {color: #860404;}
-.darkred {color: #860404;}
-.bold {font-weight: bold !important;}
-/* .redcode {color: #860404; font-weight: bold !important;} */
-.pre b, .centered b {color: #860404; font-weight: bold !important;}
-.pre strong {color: #000;}
-.comment {color: #4b5056;}
-.reveal h2 {font-weight: bold;}
-.reveal code, .reveal code strong {font-family: Menlo, monospace;}
-
-
-.reveal h1 {
-	color: #3A3F44 !important;
-	font-size: 2.5em !important;
-	font-weight: bold;
-	margin-bottom: 0.5em !important;
-}
-
-.reveal h1+p {
-	color: #860404;
-	font-size: 1.4em;
-	font-weight: bold;
-}
-
-.reveal .pre {
-  white-space: pre-wrap;
-  font-family: Menlo, monospace !important;
-  /* (look at '.reveal pre' in reveal.min.css) */
-  display: block;
-  position: relative;
-  text-align: left;
-  line-height: 1.3em;
-  padding: 2pt 6pt 3pt !important;
-  margin: 8px 0 20px;
-  font-size: 0.9em;
-  font-family: Menlo, monospace;
-  border: 1px solid #E1E1E1 !important;
-  background-color: #F2F2F2;
-  width: 95%;
-}
-
-.reveal .left .pre {
-	width: 95%;
-}
-
-.reveal .ulist li {
-  margin-bottom: 15pt;
-}
-
-.reveal pre,
-.reveal .codebox, /*.codebox unused?*/
-.reveal .centered {
-  /* NB: additions/overrides to reveal.min.css */
-  width: 95%;
-  margin: 8px 0 20px;
-  font-size: 0.9em !important;
-  font-family: Menlo, monospace !important;
-  box-shadow: none !important;
-  padding: 2pt 6pt 3pt;
-  border: 1px solid #E1E1E1;
-  background-color: #F2F2F2;
-}
-
-.reveal .centered {
-  padding: 35pt 0 25pt;
-  text-align: center;
-  font-size: 1.08em !important;
-  /*font-weight: bold;
-  color: #860404;*/
-}
-
-.reveal .centered pre {
-  border: none;
-  padding: 0;
-  text-align: center;
-}
-
-.reveal dd {
-  margin-left: 30pt;
-  margin-bottom: 15pt;
-}
-
-div.slides:after {
-
-  content: "                                © 1999-2015 Erlang Solutions Ltd.";
-  font-size: 12pt;
-  position: absolute;
-  top: 340px;
-  left: -620px;
-  opacity: 0.5;
-  background-image: url('ESLlogo.jpg');
-  background-position: 0px 12px;
-  background-size: 120px auto;
-  background-repeat: no-repeat;
-  height: 100%;
-  padding-top: 50px;
-  bottom: 0;
-}
-
-.reveal div.imageblock {
-	text-align: center;
-}
-
-.reveal img {
-  border: none !important;
-  box-shadow: none !important;
-  background-color: #fff !important;
-}
-
-.reveal ul ul {
-  color: #4B5056;
-  margin-top: 12pt;
-  font-size: 0.94em;
-}
-
-.reveal ul ul li {
-  margin-bottom: 5pt !important;
-  font-size: 0.9em;
-}
-
-/* to fit long list: */
-.reveal .closer ul li {
-	margin-bottom: 12pt !important;
-}
-
-.reveal .ref {
-	text-align: right;
-	font-size: 18pt;
-	color: #4b5056;
-}
-
-.reveal .slides {
-  text-align: left;
-}
-
-.reveal h2 {
-  font-size: 1.55em;
-  margin-bottom: 1em !important;
-}
