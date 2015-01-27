@@ -1,0 +1,337 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Style and Efficiency</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Style and Efficiency</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_style_and_efficiency"><h2>Style and Efficiency</h2><div class="ulist"><ul><li><p>Style</p><div class="ulist"><ul><li><p>Applications and Modules</p></li><li><p>Libraries</p></li><li><p>Return Values</p></li><li><p>Internal Data Structures</p></li><li><p>Concurrency</p></li><li><p>Conventions</p></li></ul></div></li><li><p>Efficiency</p></li></ul></div></section>
+<section id="_applications_and_modules"><h2>Applications and Modules</h2><div class="ulist"><ul><li><p>Prefix module names part of a given application or library with the name of the application/library</p></li><li><p>If many submodules exist for the same application, create an interface module acting as a single point of entry</p><div class="ulist"><ul><li><p>Allows more flexibility to refactor internal code.</p></li></ul></div></li><li><p>For the user, the complexity of a module is proportional to the number of exported functions</p><div class="ulist"><ul><li><p>Try to write modules with fewer responsibilities and exported functions</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>The application part might be too complex for EbE</p></div></aside></section>
+<section id="_applications_and_modules_2"><h2>Applications and Modules</h2><svg id="applications_and_modules_1" style="width:1000; height:400;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#applications_and_modules_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+var arrow_darkred = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_darkred = arrow_darkred.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s1.rect(360,30,100,100).addClass("shape darkred"); s1.text(368,88,"files.erl").addClass("white pt17");
+s1.rect(10,150,100,100).addClass("shape darkred"); s1.text(25,208,"api.erl").addClass("white pt17");
+s1.rect(660,100,100,100).addClass("shape darkred"); s1.text(668,158,"utils.erl").addClass("white pt17");
+s1.rect(360,270,100,100).addClass("shape darkred"); s1.text(377,328,"db.erl").addClass("white pt17");
+
+s1.path("M110,175 c100,0 152,-95 242,-95").addClass("line").attr({"marker-end":marker});
+s1_g2_1 = s1.text(125,108,"get_access").addClass("darkred pt19");
+s1.path("M110,200 c90,20 442,-50 542,-50").addClass("line").attr({"marker-end":marker});
+s1_g2_2 = s1.text(210,220,"get_config").addClass("darkred pt19");
+s1.path("M110,225 c100,0 152,95 242,95").addClass("line").attr({"marker-end":marker});
+s1_g2_3 = s1.text(150,310,"start_db").addClass("darkred pt19");
+
+s1_g3 = s1.text(40,40,"Reorganise code!").addClass("darkred").addClass("hide");
+
+s1.path("M660,125 c-100,0 -102,-45 -192,-45").addClass("line").attr({"marker-end":marker});
+s1_g1_1 = s1.path("M660,125 c-100,0 -102,-45 -188,-45").addClass("line_darkred").attr({"stroke-width":"5", "marker-end":marker_darkred});
+s1_g4_1 = s1.text(510,75,"lock_db_file").addClass("darkred pt19");
+
+s1_g5 = s1.path("M405,130 L410,262").addClass("line").attr({"marker-end":marker});
+s1_g1_2 = s1.path("M405,130 L410,258").addClass("line_darkred").attr({"stroke-width":"5", "marker-end":marker_darkred});
+s1_g4_2 = s1.text(420,230,"db_config").addClass("darkred pt19");
+
+s1.path("M460,320 c125,0 205,-60 235,-113").addClass("line").attr({"marker-end":marker});
+s1_g1_3 = s1.path("M460,320 c125,0 205,-60 233,-110").addClass("line_darkred").attr({"stroke-width":"5", "marker-end":marker_darkred});
+s1_g4_3 = s1.text(540,340,"get_db_file").addClass("darkred pt19");
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2, s1_g1_3).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3);
+s1_g4 = s1.g(s1_g4_1, s1_g4_2, s1_g4_3);
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 250, mina.linear) };
+s1_anim2 = function() { s1_g2.animate({"opacity":"0"}, 250, mina.linear, s1_anim3) };
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear, s1_anim4) };
+s1_anim4 = function() { s1_g4.animate({"opacity":"0"}, 250, mina.linear); s1_g5.animate({"opacity":"0"}, 250, mina.linear); s1_g1.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim2(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Try to reduce inter-module dependencies</p><div class="ulist"><ul><li><p>Makes it easier to refactor</p></li></ul></div></li><li><p>The call graph should be an acyclic graph</p></li></ul></div></section>
+<section id="_applications_and_modules_3"><h2>Applications and Modules</h2><svg id="applications_and_modules_2" style="width:1000; height:400;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#applications_and_modules_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+var arrow_darkred = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_darkred = arrow_darkred.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2.rect(360,30,100,100).addClass("shape darkred"); s2.text(368,88,"files.erl").addClass("white pt17");
+s2.rect(10,150,100,100).addClass("shape darkred"); s2.text(25,208,"api.erl").addClass("white pt17");
+s2.rect(660,100,100,100).addClass("shape darkred"); s2.text(668,158,"utils.erl").addClass("white pt17");
+s2.rect(360,270,100,100).addClass("shape darkred"); s2.text(377,328,"db.erl").addClass("white pt17");
+
+s2.path("M110,175 c100,0 152,-95 242,-95").addClass("line").attr({"marker-end":marker});
+s2_g3_1 = s2.text(125,108,"get_access").addClass("darkred pt19");
+s2.path("M110,200 c90,20 442,-50 542,-50").addClass("line").attr({"marker-end":marker});
+s2_g3_2 = s2.text(210,220,"get_config").addClass("darkred pt19");
+s2.path("M110,225 c100,0 152,95 242,95").addClass("line").attr({"marker-end":marker});
+s2_g3_3 = s2.text(150,310,"start_db").addClass("darkred pt19");
+
+s2.path("M660,125 c-100,0 -102,-45 -192,-45").addClass("line").attr({"marker-end":marker});
+s2_g2 = s2.text(510,75,"lock_file(File)").addClass("darkred pt19 hide");
+
+s2.path("M460,320 c125,0 205,-60 235,-113").addClass("line").attr({"marker-end":marker});
+s2_g1 = s2.text(540,340,"get_db_file(DbConf)").addClass("darkred pt19 hide");
+
+s2_g3 = s2.g(s2_g3_1, s2_g3_2, s2_g3_3).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Try to reduce inter-module dependencies</p><div class="ulist"><ul><li><p>Makes it easier to refactor</p></li></ul></div></li><li><p>The call graph should be an acyclic graph</p></li></ul></div></section>
+<section id="_libraries"><h2>Libraries</h2><div class="ulist"><ul><li><p>Collections of related functions should be regrouped into libraries</p></li><li><p>The functions should be free of side effects</p></li><li><p>If they have side effects, make sure they are related together</p><div class="ulist"><ul><li><p>Functions manipulating a given ETS table, for example</p></li></ul></div></li><li><p>Document the exported functions!</p></li></ul></div></section>
+<section id="_return_values"><h2>Return Values</h2><div class="ulist"><ul><li><p>The return value of a failing function call should be distinct from a successful one</p><div class="ulist"><ul><li><p>it is sometimes impossible to know if there is an error or a value that is the same as the error case</p></li><li><p>tag tuples: <strong>{ok, undefined}</strong> vs. <strong>{error, undefined}</strong>.</p></li><li><p>If the function call always returns a value of a different type when it successful than when it fails, tagging tuples is not necessary</p></li></ul></div></li><li><p>Pick values that will simplify the caller&#8217;s task</p><div class="ulist"><ul><li><p>Do not tag values if the call should always succeed, let it crash when it fails</p></li></ul></div></li></ul></div></section>
+<section id="_internal_data_structures"><h2>Internal Data Structures</h2><div class="left w_600">
+<div class="pre">-module(q).
+-export([add/2, fetch/1]).
+
+add(Item, Q) ->
+   lists:append(Q, [Item]).
+
+fetch([])    -> {error, empty}.
+fetch([H|T]) -> {ok, H, T};
+
+<span class="comment">%% Used as follows</span>
+main() ->
+   <b>NewQ = [],</b>
+   Queue1 = q:add(joe, NewQ),
+   Queue2 = q:add(mike, Queue1).
+
+
+</div></div>
+<div class="ulist right"><ul><li><p>Do not allow private data to leak out</p><div class="ulist"><ul><li><p>All details about the data structure should be abstracted away by the interface</p></li></ul></div></li><li><p>In the example, <strong>NewQ = []</strong> exposes information about the structure of the queue</p><div class="ulist"><ul><li><p>It is impossible to change the representation without changing all the callers</p></li></ul></div></li></ul></div></section>
+<section id="_internal_data_structures_2"><h2>Internal Data Structures</h2><div class="left">
+<div class="pre">-module(q).
+-export([add/2, fetch/1,
+          <b>empty/0</b>]).
+
+<b>empty() -> [].</b>
+
+...
+
+<span class="comment">%% Used as follows</span>
+main() ->
+   <b>NewQ = q:empty(),</b>
+   Queue1 = q:add(joe, NewQ),
+   Queue2 = q:add(mike, Queue1).
+
+
+</div></div>
+<div class="ulist right"><ul><li><p>The new representation is equivalent in functionality</p></li><li><p>Allows to change the queue representation without modifying the callers</p></li></ul></div></section>
+<section id="_concurrency_strong_hiding_information_strong"><h2>Concurrency: <strong>hiding information</strong></h2><div class="pre">
+resource_server ! {free, Resource}
+<span class="comment">%% becomes</span>
+resource_server:free(Resource)
+
+</div>
+<div class="ulist"><ul><li><p>Hide all message passing in a <strong>functional interface</strong> for greater flexibility, debugging capabilities and information hiding</p></li><li><p>Place the client functions in the same module as the process</p><div class="ulist"><ul><li><p>Makes it easier to follow the message flow without jumping between modules</p></li></ul></div></li><li><p>Create a mapping between each process and a concurrent activity in the system you are modelling.</p></li></ul></div></section>
+<section id="_concurrency_strong_tagging_messages_strong"><h2>Concurrency: <strong>tagging messages</strong></h2><div class="left w_600">
+<div class="pre">loop(State) ->
+  receive
+    <b>{Mod, Fun, Args}</b> ->
+      NewState = apply(Mod, Fun,
+                       Args),
+      loop(NewState)
+  end.
+
+loop(State) ->
+  receive
+    <b>{apply, Mod, Fun, Args}</b> ->
+      NewState = apply(Mod, Fun,
+                       Args),
+      loop(NewState)
+  end.
+
+</div></div>
+<div class="ulist right"><ul><li><p>Matching only on unbound variables can be problematic</p><div class="ulist"><ul><li><p>The pattern <strong>{Mod, Fun, Arg}</strong> can also match <strong>{system, From, Req}</strong> and break the server that expects other values</p></li></ul></div></li><li><p>Tag the messages to be sent and received</p><div class="ulist"><ul><li><p>By tagging all messages and maintaining a functional interface, the matching is generally safer</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>the {system, From, Req} example has been chosen because it shows a real OTP standard message that could break the system there.</p></div></aside></section>
+<section id="_concurrency_strong_using_references_strong"><h2>Concurrency: <strong>using references</strong></h2><div class="left w_600">
+<div class="pre">call(Pid, Message) ->
+  <b>Ref = make_ref(),</b>
+  Pid ! {request, {<b>Ref</b>, self()},
+         Message},
+  receive
+    {reply, <b>Ref</b>, Reply} ->        Reply
+  end.
+
+reply({<b>Ref</b>, Pid}, Reply) ->
+  Pid ! {reply, <b>Ref</b>, Reply}.
+
+
+
+</div></div>
+<div class="ulist right"><ul><li><p>Similar requests and responses might come from different processes</p></li><li><p>Multiple communications with replies can become confusing</p></li><li><p>References help uniquely tag a set of messages to identify them</p></li></ul></div></section>
+<section id="_concurrency_strong_using_references_strong_2"><h2>Concurrency: <strong>using references</strong></h2><div class="pre">call(Pid, Message) ->
+  <b>Ref = erlang:monitor(process, Pid),</b>
+  Pid ! {request, {<b>Ref</b>, self()}, Message},
+  receive
+    {reply, <b>Ref</b>, Reply} ->
+       erlang:demonitor(<b>Ref</b>, [flush]),  Reply
+    {'DOWN', Ref, process, Pid, _} -> error(noproc)
+  end.
+
+reply({<b>Ref</b>, Pid}, Reply) -> Pid ! {reply, <b>Ref</b>, Reply}.
+</div>
+<div class="ulist"><ul><li><p>Monitors allow the same properties than using <strong>make_ref/0</strong></p></li><li><p>They allow to find failures or missing processes earlier</p></li><li><p>They must be taken down after a successful call</p></li></ul></div></section>
+<section id="_conventions_strong_nesting_strong"><h2>Conventions: <strong>nesting</strong></h2><div class="ulist"><ul><li><p>Avoid deeply nested code</p></li><li><p>Keep only two levels of indentation for:</p><div class="ulist"><ul><li><p>case</p></li><li><p>if</p></li><li><p>receive</p></li><li><p>funs</p></li></ul></div></li><li><p>Reduce indentation by</p><div class="ulist"><ul><li><p>Pattern matching</p></li><li><p>creating temporary composite data types</p></li><li><p>Adding more functions</p></li></ul></div></li></ul></div></section>
+<section id="_conventions_strong_nesting_example_strong"><h2>Conventions: <strong>nesting example</strong></h2><div class="literalblock"><div class="content"><pre>Case Oper of
+  enabled -&gt;
+      case Admin of -&gt;
+          enabled -&gt; restart(Board);
+          disabled -&gt; ok
+      end;
+  disabled -&gt;
+      ok
+end.
+
+case {Oper, Admin} of
+   {enabled, enabled} -&gt; restart(Board);
+   {_,_}              -&gt; ok
+end.
+ </pre></div></div></section>
+<section id="_conventions_strong_code_size_strong"><h2>Conventions: <strong>code size</strong></h2><div class="ulist"><ul><li><p>Avoid long lines</p><div class="ulist"><ul><li><p>Line should not be longer than 80 characters by convention</p></li><li><p>People who review the code by printing it have it easier</p></li><li><p>Can read more files with a split screen</p></li></ul></div></li><li><p>Avoid large modules</p><div class="ulist"><ul><li><p>A module should usually not contain more than 500 lines of code, plus comments.</p></li><li><p>Not a strict metric, can be broken, but usually helps restricting each module to one responsibility</p></li></ul></div></li></ul></div></section>
+<section id="_conventions_strong_code_size_strong_2"><h2>Conventions: <strong>code size</strong></h2><div class="ulist"><ul><li><p>Make your functions short</p><div class="ulist"><ul><li><p>A function should rarely be above 50 lines and it should not span many pages</p></li><li><p>Versions of Erlang prior to R15 do not give line numbers in stack traces, makes it easier to debug</p></li><li><p>debugging trace flags can be enabled on specific functions only</p></li></ul></div></li></ul></div></section>
+<section id="_conventions_strong_strategies_strong"><h2>Conventions: <strong>strategies</strong></h2><div class="ulist"><ul><li><p>Minimise the number of functions with side effects</p></li><li><p>Abstract out common design patterns</p></li><li><p>Avoid defensive programming</p><div class="ulist"><ul><li><p>When you do not know how to handle a specific error, <strong>let it crash</strong>.</p></li></ul></div></li><li><p>Avoid copy-and-paste programming</p></li><li><p>Don&#8217;t comment out dead code, just delete it</p><div class="ulist"><ul><li><p>Get it back from your repository if you need it again in the future</p></li></ul></div></li></ul></div></section>
+<section id="_style_and_efficiency_2"><h2>Style and Efficiency</h2><div class="ulist"><ul><li><p>Style</p></li><li><p>Efficiency</p><div class="ulist"><ul><li><p>Pattern Matching</p></li><li><p>Recursion</p></li><li><p>IO Lists, Strings and Binaries</p></li><li><p>Garbage Collection</p></li><li><p>Concurrency</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Note: most of the advice here is given for the BEAM implementation of the language and ignores other ones such as Erjang.</p></div></aside></section>
+<section id="_pattern_matching_strong_rearranging_clauses_strong"><h2>Pattern Matching: <strong>rearranging clauses</strong></h2><div class="literalblock"><div class="content"><pre>day(monday)    -&gt; weekday;
+day(tuesday)   -&gt; weekday;
+day(wednesday) -&gt; weekday;
+day(thursday)  -&gt; weekday;
+day(friday)    -&gt; weekday;
+day(Name) when Name==saturday; Name==sunday -&gt; weekend.
+ </pre></div></div>
+<div class="ulist"><ul><li><p>There is nothing to gain by rearranging most of the clauses</p></li><li><p>if the function is called more often with <strong>friday</strong>, it is not worth it to put <strong>day(friday)</strong> first before all other clauses.</p></li><li><p>The compiler knows how to read clauses in the most efficient way possible without losing the semantics of the code:</p><div class="ulist"><ul><li><p>A single instruction tries the first five clauses with a binary search</p></li><li><p>The last clause is tried if none of the first did match</p></li></ul></div></li></ul></div></section>
+<section id="_pattern_matching_strong_exceptions_strong"><h2>Pattern Matching: <strong>exceptions</strong></h2><div class="literalblock"><div class="content"><pre>day(monday)    -&gt; weekday;
+day(tuesday)   -&gt; weekday;
+day(wednesday) -&gt; weekday;
+day(Name) when Name==saturday; Name==sunday -&gt; weekend;
+day(thursday)  -&gt; weekday;
+day(friday)    -&gt; weekday.
+ </pre></div></div>
+<div class="ulist"><ul><li><p>The compiler does a fast search to know if the value matches <strong>monday</strong>, <strong>tuesday</strong>, or <strong>wednesday</strong>.</p></li><li><p>If they do not match, the clause with <strong>Name</strong> then always matches</p><div class="ulist"><ul><li><p>The guard test is executed</p></li></ul></div></li><li><p>If the guard test fails, the two last clauses are searched</p></li></ul></div></section>
+<section id="_pattern_matching_strong_exceptions_strong_2"><h2>Pattern Matching: <strong>exceptions</strong></h2><div class="ulist"><ul><li><p>Functions pattern matching with binaries are never rearranged</p><div class="ulist"><ul><li><p>usually, placing the clause with the empty binary (<strong>&lt;&lt;&gt;&gt;</strong>) last is faster</p></li><li><p>This is version-specific and could change with newer releases</p></li></ul></div></li><li><p>Complex patterns and guards can make things harder for the compiler and lead for more manual adjustments and rearranging</p></li></ul></div></section>
+<section id="_recursion"><h2>Recursion</h2><div class="ulist"><ul><li><p>Tail-recursive functions are not necessarily faster than non-tail-recursive functions</p><div class="ulist"><ul><li><p>If the function generates a single value (ex.: factorial), tail-recursive functions are generally faster</p></li><li><p>If the function takes a list and returns a list of the same size, non-tail-recursive functions might be faster. ex.: <strong>lists:map/2</strong> is implemented in a non-tail-recursive manner</p></li><li><p>If the function is a server loop that never returns, you <strong>must</strong> use tail-recursive calls</p></li></ul></div></li><li><p>Measure and profile your code</p></li></ul></div></section>
+<section id="_io_lists_strings_and_binaries"><h2>IO Lists, Strings and Binaries</h2><div class="ulist"><ul><li><p>Strings are implemented as lists of integers</p><div class="ulist"><ul><li><p>They take more space</p></li><li><p>Useful if the string needs to be transformed and manipulated</p></li></ul></div></li><li><p>Binary strings are implemented as binaries</p><div class="ulist"><ul><li><p>Compact with O(1) read access</p></li><li><p>Useful for storage, transport and limiting the size in memory</p></li></ul></div></li></ul></div></section>
+<section id="_io_lists_strings_and_binaries_2"><h2>IO Lists, Strings and Binaries</h2><div class="pre"><b>1> IoList = [$", "hello", " ", <<"hello",65>>, [<<$.,$ ,$W>>, [$o]] | "rld"].</b>
+[34,"hello"," ",<<"helloA">>,[<<". W">>,"o"],114,108,100]
+<b>2> io:format("~s~n",[IoList]).</b>
+"hello helloA. World
+ok
+</div>
+<div class="ulist"><ul><li><p>IO lists are lists of binaries, strings, or characters used for input/output operations</p><div class="ulist"><ul><li><p>Automatically flattened by any <strong>io</strong> function, socket or port. No need to flatten it yourself.</p></li><li><p>They allow to append data in constant time by just wrapping the elements in a list: <strong>[OldString | NewEndOfString]</strong>.</p></li><li><p>Allows to mix the use of any string representation for a single element</p></li></ul></div></li></ul></div></section>
+<section id="_io_lists_strings_and_binaries_3"><h2>IO Lists, Strings and Binaries</h2><div class="ulist"><ul><li><p>For general string manipulation, use the <strong>re</strong> module</p><div class="ulist"><ul><li><p>PCRE engine in C, faster than the obsolete <strong>regexp</strong> module</p></li><li><p>Works with all types of strings and can give the output format of your choice (index, list or binary)</p></li></ul></div></li><li><p>Use the <strong>binary</strong> module for binary string manipulation</p></li><li><p>Use the <strong>string</strong> module for lists-based string manipulation</p></li></ul></div></section>
+<section id="_garbage_collection"><h2>Garbage Collection</h2><div class="ulist"><ul><li><p>Garbage Collection costs are largely proportional to the amount of live data on the heap</p><div class="ulist"><ul><li><p>Large heaps for selected processes can give significant performance gains</p></li></ul></div></li><li><p>Try to avoid building large heap structures</p><div class="ulist"><ul><li><p><strong>ets:foldl/3</strong>, <strong>ets:foldr/3</strong>, <strong>ets:tab2list/1</strong>, etc.</p></li><li><p>Copying and rewriting lists</p></li><li><p>Use iolists rather than flattening strings when possible</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Advice from Robert: everything is quite esoteric and the options don&#8217;t really make sense unless you know how the garbage collector works, that it is a generational collector. Also using spawn_opt in a significant way entails having a good understanding of how your process uses memory and how the collector works. Again too esoteric.</p></div></aside></section>
+<section id="_garbage_collection_strong_heap_size_strong"><h2>Garbage Collection: <strong>heap size</strong></h2><div class="ulist"><ul><li><p>Set each process' heap size with</p><div class="ulist"><ul><li><p><strong>spawn_opt(Module, Function, Args, OptionList)</strong></p></li><li><p>where <strong>OptionList</strong> includes <strong>{min_heap_size, Size}</strong>.</p></li></ul></div></li><li><p>Erlang heap memory is divided into the <strong>old heap</strong> and the <strong>new heap</strong></p><div class="ulist"><ul><li><p>Data in the new heap that survives a garbage collection sweep is moved to the old heap.</p></li><li><p>The option <strong>{fullsweep_after, Number}</strong> makes it possible to specify the number of garbage collections which should occur before the old heap is swept</p></li></ul></div></li></ul></div></section>
+<section id="_garbage_collection_strong_heap_size_strong_2"><h2>Garbage Collection: <strong>heap size</strong></h2><div class="ulist"><ul><li><p>The <strong>fullsweep_after</strong> and <strong>min_heap_size</strong> options can be set globally for new processes by calling <strong>erlang:system_flag(Flag, Value)</strong>.</p><div class="ulist"><ul><li><p>Use <strong>fullsweep_after</strong> only if you know there are problems with the memory consumption of your processes</p></li><li><p>the <strong>min_heap_size</strong> can be set when starting the VM with the <strong>+h Size</strong> flag</p></li></ul></div></li><li><p>You can force a garbage collection with <strong>garbage_collect()</strong> for the current calling process or <strong>garbage_collect(Pid)</strong> for a particular one</p></li></ul></div></section>
+<section id="_concurrency_strong_hibernation_strong"><h2>Concurrency: <strong>hibernation</strong></h2><div class="literalblock centered"><div class="content"><pre>erlang:hibernate(Module, Function, Arguments)</pre></div></div>
+<div class="ulist"><ul><li><p>If a particular process has to wait for a message for a while doing nothing, it can be compacted by calling
+<strong>erlang:hibernate/3</strong>. The process wakes up when receiving a message and keeps running with <strong>Module:Function(Arg1, &#8230;&#8203;)</strong>.</p><div class="ulist"><ul><li><p>Discards the call stack for the process</p></li><li><p>The process is garbage collected</p></li><li><p>All of the data is stored in one continuous heap, which is then shrunken to the exact same size as the data it holds.</p></li></ul></div></li><li><p>Hibernation is a tradeoff between processor use and memory use. Mostly useful for processes that are mostly inactive.</p></li></ul></div></section>
+<section id="_concurrency_strong_message_passing_strong"><h2>Concurrency: <strong>message passing</strong></h2><div class="ulist"><ul><li><p>Data is fully copied between processes</p></li><li><p>Send messages about what happened, not the new state to carry</p><div class="ulist"><ul><li><p>This tends to reduce message size, although this is generally a minor efficiency issue.</p></li></ul></div></li><li><p>Binaries larger than 64 bytes are passed around as pointers and are not copied between processes on a single node</p><div class="ulist"><ul><li><p>Storing text or data that needs to be forwarded between many processes could be planned as binaries if required</p></li></ul></div></li></ul></div></section>
+<section id="_coding_strategies"><h2>Coding Strategies</h2><svg id="coding_strategies_1" style="width:1100; height:650;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#coding_strategies_1");
+
+s3_g1 = s3.text(10,50,"First, make it work").addClass("darkred pt30").addClass("hide");
+s3_g2 = s3.text(210,250,"Then, make it beautiful").addClass("darkred pt30").addClass("hide");
+s3_g3 = s3.g(s3.text(410,450,"Then, if you really have to").addClass("darkred pt30"),
+       s3.text(550,500,"make it fast").addClass("darkred pt30")
+      ).addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 750, mina.linear, s3_anim2) };
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 750, mina.linear, s3_anim3) };
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 750, mina.linear) };
+
+s3.click( function() { s3_anim1() } );
+
+</script>
+</svg></section>
+<section id="_style_and_efficiency_3"><h2>Style and Efficiency</h2><div class="ulist"><ul><li><p>Style</p></li><li><p>Efficiency</p><div class="ulist"><ul><li><p>Pattern Matching</p></li><li><p>Recursion</p></li><li><p>IO Lists, Strings and Binaries</p></li><li><p>Garbage Collection</p></li><li><p>Concurrency</p></li></ul></div></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'none',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

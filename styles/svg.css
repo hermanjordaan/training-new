@@ -12,6 +12,11 @@ svg {
   color: #860404; /* Not sure this is OK? */
 }
 
+.white {
+	fill: #fff;
+	color: #fff;
+}
+
 .bold {
   font-weight: bold;
 }
@@ -64,6 +69,7 @@ svg {
 .pt18 {font-size: 18pt;}
 .pt19 {font-size: 19pt;}
 .pt20 {font-size: 20pt;}
+.pt30 {font-size: 30pt;}
 
 .rect_lightgray {
 	fill: #e7e7e7;
@@ -76,7 +82,7 @@ svg {
 }
 
 .hide {
-  opacity: 0.0;
+  opacity: 0;
 }
 
 .show {

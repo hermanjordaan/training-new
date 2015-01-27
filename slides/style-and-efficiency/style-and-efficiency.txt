@@ -1,0 +1,600 @@
+Style and Efficiency
+====================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: none
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+Style and Efficiency
+--------------------
+* Style
+** Applications and Modules
+** Libraries
+** Return Values
+** Internal Data Structures
+** Concurrency
+** Conventions
+* Efficiency
+
+
+Applications and Modules
+------------------------
+* Prefix module names part of a given application or library with the name of the application/library
+* If many submodules exist for the same application, create an interface module acting as a single point of entry
+** Allows more flexibility to refactor internal code.
+* For the user, the complexity of a module is proportional to the number of exported functions
+** Try to write modules with fewer responsibilities and exported functions
+
+[NOTE.speaker]
+[role="speaker"]
+--
+The application part might be too complex for EbE
+--
+
+
+Applications and Modules
+------------------------
+++++
+<svg id="applications_and_modules_1" style="width:1000; height:400;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#applications_and_modules_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+var arrow_darkred = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_darkred = arrow_darkred.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s1.rect(360,30,100,100).addClass("shape darkred"); s1.text(368,88,"files.erl").addClass("white pt17");
+s1.rect(10,150,100,100).addClass("shape darkred"); s1.text(25,208,"api.erl").addClass("white pt17");
+s1.rect(660,100,100,100).addClass("shape darkred"); s1.text(668,158,"utils.erl").addClass("white pt17");
+s1.rect(360,270,100,100).addClass("shape darkred"); s1.text(377,328,"db.erl").addClass("white pt17");
+
+s1.path("M110,175 c100,0 152,-95 242,-95").addClass("line").attr({"marker-end":marker});
+s1_g2_1 = s1.text(125,108,"get_access").addClass("darkred pt19");
+s1.path("M110,200 c90,20 442,-50 542,-50").addClass("line").attr({"marker-end":marker});
+s1_g2_2 = s1.text(210,220,"get_config").addClass("darkred pt19");
+s1.path("M110,225 c100,0 152,95 242,95").addClass("line").attr({"marker-end":marker});
+s1_g2_3 = s1.text(150,310,"start_db").addClass("darkred pt19");
+
+s1_g3 = s1.text(40,40,"Reorganise code!").addClass("darkred").addClass("hide");
+
+s1.path("M660,125 c-100,0 -102,-45 -192,-45").addClass("line").attr({"marker-end":marker});
+s1_g1_1 = s1.path("M660,125 c-100,0 -102,-45 -188,-45").addClass("line_darkred").attr({"stroke-width":"5", "marker-end":marker_darkred});
+s1_g4_1 = s1.text(510,75,"lock_db_file").addClass("darkred pt19");
+
+s1_g5 = s1.path("M405,130 L410,262").addClass("line").attr({"marker-end":marker});
+s1_g1_2 = s1.path("M405,130 L410,258").addClass("line_darkred").attr({"stroke-width":"5", "marker-end":marker_darkred});
+s1_g4_2 = s1.text(420,230,"db_config").addClass("darkred pt19");
+
+s1.path("M460,320 c125,0 205,-60 235,-113").addClass("line").attr({"marker-end":marker});
+s1_g1_3 = s1.path("M460,320 c125,0 205,-60 233,-110").addClass("line_darkred").attr({"stroke-width":"5", "marker-end":marker_darkred});
+s1_g4_3 = s1.text(540,340,"get_db_file").addClass("darkred pt19");
+
+s1_g1 = s1.g(s1_g1_1, s1_g1_2, s1_g1_3).addClass("hide");
+s1_g2 = s1.g(s1_g2_1, s1_g2_2, s1_g2_3);
+s1_g4 = s1.g(s1_g4_1, s1_g4_2, s1_g4_3);
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 250, mina.linear) };
+s1_anim2 = function() { s1_g2.animate({"opacity":"0"}, 250, mina.linear, s1_anim3) };
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear, s1_anim4) };
+s1_anim4 = function() { s1_g4.animate({"opacity":"0"}, 250, mina.linear); s1_g5.animate({"opacity":"0"}, 250, mina.linear); s1_g1.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim2(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+
+++++
+
+* Try to reduce inter-module dependencies
+** Makes it easier to refactor
+* The call graph should be an acyclic graph
+
+Applications and Modules
+------------------------
+++++
+<svg id="applications_and_modules_2" style="width:1000; height:400;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#applications_and_modules_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+var arrow_darkred = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_darkred = arrow_darkred.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2.rect(360,30,100,100).addClass("shape darkred"); s2.text(368,88,"files.erl").addClass("white pt17");
+s2.rect(10,150,100,100).addClass("shape darkred"); s2.text(25,208,"api.erl").addClass("white pt17");
+s2.rect(660,100,100,100).addClass("shape darkred"); s2.text(668,158,"utils.erl").addClass("white pt17");
+s2.rect(360,270,100,100).addClass("shape darkred"); s2.text(377,328,"db.erl").addClass("white pt17");
+
+s2.path("M110,175 c100,0 152,-95 242,-95").addClass("line").attr({"marker-end":marker});
+s2_g3_1 = s2.text(125,108,"get_access").addClass("darkred pt19");
+s2.path("M110,200 c90,20 442,-50 542,-50").addClass("line").attr({"marker-end":marker});
+s2_g3_2 = s2.text(210,220,"get_config").addClass("darkred pt19");
+s2.path("M110,225 c100,0 152,95 242,95").addClass("line").attr({"marker-end":marker});
+s2_g3_3 = s2.text(150,310,"start_db").addClass("darkred pt19");
+
+s2.path("M660,125 c-100,0 -102,-45 -192,-45").addClass("line").attr({"marker-end":marker});
+s2_g2 = s2.text(510,75,"lock_file(File)").addClass("darkred pt19 hide");
+
+s2.path("M460,320 c125,0 205,-60 235,-113").addClass("line").attr({"marker-end":marker});
+s2_g1 = s2.text(540,340,"get_db_file(DbConf)").addClass("darkred pt19 hide");
+
+s2_g3 = s2.g(s2_g3_1, s2_g3_2, s2_g3_3).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 250, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Try to reduce inter-module dependencies
+** Makes it easier to refactor
+* The call graph should be an acyclic graph
+
+
+Libraries
+---------
+* Collections of related functions should be regrouped into libraries
+* The functions should be free of side effects
+* If they have side effects, make sure they are related together
+** Functions manipulating a given ETS table, for example
+* Document the exported functions!
+
+
+Return Values
+-------------
+* The return value of a failing function call should be distinct from a successful one
+** it is sometimes impossible to know if there is an error or a value that is the same as the error case
+** tag tuples: *{ok, undefined}* vs. *{error, undefined}*.
+** If the function call always returns a value of a different type when it successful than when it fails, tagging tuples is not necessary
+* Pick values that will simplify the caller's task
+** Do not tag values if the call should always succeed, let it crash when it fails
+
+
+Internal Data Structures
+------------------------
+++++
+<div class="left w_600">
+<div class="pre">-module(q).
+-export([add/2, fetch/1]).
+
+add(Item, Q) ->
+   lists:append(Q, [Item]).
+
+fetch([])    -> {error, empty}.
+fetch([H|T]) -> {ok, H, T};
+
+<span class="comment">%% Used as follows</span>
+main() ->
+   <b>NewQ = [],</b>
+   Queue1 = q:add(joe, NewQ),
+   Queue2 = q:add(mike, Queue1).
+
+
+</div></div>
+++++
+
+[role="right"]
+* Do not allow private data to leak out
+** All details about the data structure should be abstracted away by the interface
+* In the example, *NewQ = []* exposes information about the structure of the queue
+** It is impossible to change the representation without changing all the callers
+
+
+Internal Data Structures
+------------------------
+++++
+<div class="left">
+<div class="pre">-module(q).
+-export([add/2, fetch/1,
+          <b>empty/0</b>]).
+
+<b>empty() -> [].</b>
+
+...
+
+<span class="comment">%% Used as follows</span>
+main() ->
+   <b>NewQ = q:empty(),</b>
+   Queue1 = q:add(joe, NewQ),
+   Queue2 = q:add(mike, Queue1).
+
+
+</div></div>
+++++
+
+[role="right"]
+* The new representation is equivalent in functionality
+* Allows to change the queue representation without modifying the callers
+
+
+Concurrency: *hiding information*
+---------------------------------
+++++
+<div class="pre">
+resource_server ! {free, Resource}
+<span class="comment">%% becomes</span>
+resource_server:free(Resource)
+
+</div>
+++++
+
+* Hide all message passing in a *functional interface* for greater flexibility, debugging capabilities and information hiding
+* Place the client functions in the same module as the process
+** Makes it easier to follow the message flow without jumping between modules
+* Create a mapping between each process and a concurrent activity in the system you are modelling.
+
+
+Concurrency: *tagging messages*
+-------------------------------
+++++
+<div class="left w_600">
+<div class="pre">loop(State) ->
+  receive
+    <b>{Mod, Fun, Args}</b> ->
+      NewState = apply(Mod, Fun,
+                       Args),
+      loop(NewState)
+  end.
+
+loop(State) ->
+  receive
+    <b>{apply, Mod, Fun, Args}</b> ->
+      NewState = apply(Mod, Fun,
+                       Args),
+      loop(NewState)
+  end.
+
+</div></div>
+++++
+
+[role="right"]
+* Matching only on unbound variables can be problematic
+** The pattern *{Mod, Fun, Arg}* can also match *{system, From, Req}* and break the server that expects other values
+* Tag the messages to be sent and received
+** By tagging all messages and maintaining a functional interface, the matching is generally safer
+
+[NOTE.speaker]
+[role="speaker"]
+--
+the {system, From, Req} example has been chosen because it shows a real OTP standard message that could break the system there.
+--
+
+
+Concurrency: *using references*
+-------------------------------
+++++
+<div class="left w_600">
+<div class="pre">call(Pid, Message) ->
+  <b>Ref = make_ref(),</b>
+  Pid ! {request, {<b>Ref</b>, self()},
+         Message},
+  receive
+    {reply, <b>Ref</b>, Reply} ->        Reply
+  end.
+
+reply({<b>Ref</b>, Pid}, Reply) ->
+  Pid ! {reply, <b>Ref</b>, Reply}.
+
+
+
+</div></div>
+++++
+
+[role="right"]
+* Similar requests and responses might come from different processes
+* Multiple communications with replies can become confusing
+* References help uniquely tag a set of messages to identify them
+
+
+Concurrency: *using references*
+-------------------------------
+++++
+<div class="pre">call(Pid, Message) ->
+  <b>Ref = erlang:monitor(process, Pid),</b>
+  Pid ! {request, {<b>Ref</b>, self()}, Message},
+  receive
+    {reply, <b>Ref</b>, Reply} ->
+       erlang:demonitor(<b>Ref</b>, [flush]),  Reply
+    {'DOWN', Ref, process, Pid, _} -> error(noproc)
+  end.
+
+reply({<b>Ref</b>, Pid}, Reply) -> Pid ! {reply, <b>Ref</b>, Reply}.
+</div>
+++++
+
+* Monitors allow the same properties than using *make_ref/0*
+* They allow to find failures or missing processes earlier
+* They must be taken down after a successful call
+
+
+Conventions: *nesting*
+----------------------
+* Avoid deeply nested code
+* Keep only two levels of indentation for:
+** case
+** if
+** receive
+** funs
+* Reduce indentation by
+** Pattern matching
+** creating temporary composite data types
+** Adding more functions
+
+
+Conventions: *nesting example*
+------------------------------
+....
+Case Oper of
+  enabled ->
+      case Admin of ->
+          enabled -> restart(Board);
+          disabled -> ok
+      end;
+  disabled ->
+      ok
+end.
+
+case {Oper, Admin} of
+   {enabled, enabled} -> restart(Board);
+   {_,_}              -> ok
+end.
+ 
+....
+
+
+Conventions: *code size*
+------------------------
+* Avoid long lines
+** Line should not be longer than 80 characters by convention
+** People who review the code by printing it have it easier
+** Can read more files with a split screen
+* Avoid large modules
+** A module should usually not contain more than 500 lines of code, plus comments.
+** Not a strict metric, can be broken, but usually helps restricting each module to one responsibility
+
+
+Conventions: *code size*
+------------------------
+* Make your functions short
+** A function should rarely be above 50 lines and it should not span many pages
+** Versions of Erlang prior to R15 do not give line numbers in stack traces, makes it easier to debug
+** debugging trace flags can be enabled on specific functions only
+
+
+Conventions: *strategies*
+-------------------------
+* Minimise the number of functions with side effects
+* Abstract out common design patterns
+* Avoid defensive programming
+** When you do not know how to handle a specific error, *let it crash*.
+* Avoid copy-and-paste programming
+* Don't comment out dead code, just delete it
+** Get it back from your repository if you need it again in the future
+
+
+Style and Efficiency
+--------------------
+* Style
+* Efficiency
+** Pattern Matching
+** Recursion
+** IO Lists, Strings and Binaries
+** Garbage Collection
+** Concurrency
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Note: most of the advice here is given for the BEAM implementation of the language and ignores other ones such as Erjang.
+--
+
+
+Pattern Matching: *rearranging clauses*
+---------------------------------------
+....
+day(monday)    -> weekday;
+day(tuesday)   -> weekday;
+day(wednesday) -> weekday;
+day(thursday)  -> weekday;
+day(friday)    -> weekday;
+day(Name) when Name==saturday; Name==sunday -> weekend.
+ 
+....
+
+* There is nothing to gain by rearranging most of the clauses
+* if the function is called more often with *friday*, it is not worth it to put *day(friday)* first before all other clauses.
+* The compiler knows how to read clauses in the most efficient way possible without losing the semantics of the code:
+** A single instruction tries the first five clauses with a binary search
+** The last clause is tried if none of the first did match
+
+
+Pattern Matching: *exceptions*
+------------------------------
+....
+day(monday)    -> weekday;
+day(tuesday)   -> weekday;
+day(wednesday) -> weekday;
+day(Name) when Name==saturday; Name==sunday -> weekend;
+day(thursday)  -> weekday;
+day(friday)    -> weekday.
+ 
+....
+
+* The compiler does a fast search to know if the value matches *monday*, *tuesday*, or *wednesday*.
+* If they do not match, the clause with *Name* then always matches
+** The guard test is executed
+* If the guard test fails, the two last clauses are searched
+
+
+Pattern Matching: *exceptions*
+------------------------------
+* Functions pattern matching with binaries are never rearranged
+** usually, placing the clause with the empty binary (*<<>>*) last is faster
+** This is version-specific and could change with newer releases
+* Complex patterns and guards can make things harder for the compiler and lead for more manual adjustments and rearranging
+
+
+Recursion
+---------
+* Tail-recursive functions are not necessarily faster than non-tail-recursive functions
+** If the function generates a single value (ex.: factorial), tail-recursive functions are generally faster
+** If the function takes a list and returns a list of the same size, non-tail-recursive functions might be faster. ex.: *lists:map/2* is implemented in a non-tail-recursive manner
+** If the function is a server loop that never returns, you *must* use tail-recursive calls
+* Measure and profile your code
+
+
+IO Lists, Strings and Binaries
+------------------------------
+* Strings are implemented as lists of integers
+** They take more space
+** Useful if the string needs to be transformed and manipulated
+* Binary strings are implemented as binaries
+** Compact with O(1) read access
+** Useful for storage, transport and limiting the size in memory
+
+
+IO Lists, Strings and Binaries
+------------------------------
+++++
+<div class="pre"><b>1> IoList = [$", "hello", " ", <<"hello",65>>, [<<$.,$ ,$W>>, [$o]] | "rld"].</b>
+[34,"hello"," ",<<"helloA">>,[<<". W">>,"o"],114,108,100]
+<b>2> io:format("~s~n",[IoList]).</b>
+"hello helloA. World
+ok
+</div>
+++++
+
+* IO lists are lists of binaries, strings, or characters used for input/output operations
+** Automatically flattened by any *io* function, socket or port. No need to flatten it yourself.
+** They allow to append data in constant time by just wrapping the elements in a list: *[OldString | NewEndOfString]*.
+** Allows to mix the use of any string representation for a single element
+
+
+IO Lists, Strings and Binaries
+------------------------------
+* For general string manipulation, use the *re* module
+** PCRE engine in C, faster than the obsolete *regexp* module 
+** Works with all types of strings and can give the output format of your choice (index, list or binary)
+* Use the *binary* module for binary string manipulation
+* Use the *string* module for lists-based string manipulation
+
+
+Garbage Collection
+------------------
+* Garbage Collection costs are largely proportional to the amount of live data on the heap
+** Large heaps for selected processes can give significant performance gains
+* Try to avoid building large heap structures
+** *ets:foldl/3*, *ets:foldr/3*, *ets:tab2list/1*, etc.
+** Copying and rewriting lists
+** Use iolists rather than flattening strings when possible
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Advice from Robert: everything is quite esoteric and the options don't really make sense unless you know how the garbage collector works, that it is a generational collector. Also using spawn_opt in a significant way entails having a good understanding of how your process uses memory and how the collector works. Again too esoteric.
+--
+
+
+Garbage Collection: *heap size*
+-------------------------------
+* Set each process' heap size with 
+** *spawn_opt(Module, Function, Args, OptionList)*
+** where *OptionList* includes *{min_heap_size, Size}*.
+* Erlang heap memory is divided into the *old heap* and the *new heap*
+** Data in the new heap that survives a garbage collection sweep is moved to the old heap.
+** The option *{fullsweep_after, Number}* makes it possible to specify the number of garbage collections which should occur before the old heap is swept
+
+
+Garbage Collection: *heap size*
+-------------------------------
+* The *fullsweep_after* and *min_heap_size* options can be set globally for new processes by calling *erlang:system_flag(Flag, Value)*.
+** Use *fullsweep_after* only if you know there are problems with the memory consumption of your processes
+** the *min_heap_size* can be set when starting the VM with the *+h Size* flag
+* You can force a garbage collection with *garbage_collect()* for the current calling process or *garbage_collect(Pid)* for a particular one
+
+
+Concurrency: *hibernation*
+--------------------------
+[role="centered"]
+....
+erlang:hibernate(Module, Function, Arguments)
+....
+
+* If a particular process has to wait for a message for a while doing nothing, it can be compacted by calling
+*erlang:hibernate/3*. The process wakes up when receiving a message and keeps running with *Module:Function(Arg1, ...)*.
+** Discards the call stack for the process
+** The process is garbage collected
+** All of the data is stored in one continuous heap, which is then shrunken to the exact same size as the data it holds.
+* Hibernation is a tradeoff between processor use and memory use. Mostly useful for processes that are mostly inactive.
+
+
+Concurrency: *message passing*
+------------------------------
+* Data is fully copied between processes
+* Send messages about what happened, not the new state to carry
+** This tends to reduce message size, although this is generally a minor efficiency issue.
+* Binaries larger than 64 bytes are passed around as pointers and are not copied between processes on a single node
+** Storing text or data that needs to be forwarded between many processes could be planned as binaries if required
+
+
+Coding Strategies
+-----------------
+++++
+<svg id="coding_strategies_1" style="width:1100; height:650;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#coding_strategies_1");
+
+s3_g1 = s3.text(10,50,"First, make it work").addClass("darkred pt30").addClass("hide");
+s3_g2 = s3.text(210,250,"Then, make it beautiful").addClass("darkred pt30").addClass("hide");
+s3_g3 = s3.g(s3.text(410,450,"Then, if you really have to").addClass("darkred pt30"),
+       s3.text(550,500,"make it fast").addClass("darkred pt30")
+      ).addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 750, mina.linear, s3_anim2) };
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 750, mina.linear, s3_anim3) };
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 750, mina.linear) };
+
+s3.click( function() { s3_anim1() } );
+
+</script>
+</svg>
+++++
+
+
+Style and Efficiency
+--------------------
+* Style
+* Efficiency
+** Pattern Matching
+** Recursion
+** IO Lists, Strings and Binaries
+** Garbage Collection
+** Concurrency
