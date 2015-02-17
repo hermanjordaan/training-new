@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>Snap Library</title>
+<script src="snap.svg-min.js"></script>
+<link rel="stylesheet" type="text/css" href="svg.css"></link>
+</head>
+<body>
+
+
+<svg id="template" style="height:600px; width:600px;" viewBox="0 0 600 600" class="left">
+<style type="text/css">
+	.lightgrey {fill:#e7e7e7;}
+</style>
+<script>
+
+var s1 = Snap("#template");
+
+// Arrowhead
+var arrow = s1.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+s1.text(40,40,"code").addClass("code");
+
+// Circles
+s1.circle(250,100,40).addClass("shape grey");
+s1.circle(250,450,40).addClass("shape darkred");
+
+// Dashed line, curved, with arrowhead
+s1.path("M210,100 A90,90 0 1,0 205,450").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+// Line with arrowhead
+s1.path("M140,200 l215,0").attr({"marker-end":marker}).addClass("line");
+
+// Group
+var shape1 = s1.g(shape1_1, shape1_2, shape1_3);
+
+// Hide elements
+line1.addClass("hide");
+shape1.addClass("hide");
+
+// Animation, one thing then the next thing
+s1_anim1 = function() { shape1.animate({"opacity":"1"}, 250, mina.linear, s1_anim2); }
+s1_anim2 = function() { line1.animate({"opacity":"1"}, 500, mina.linear); }
+s1.click(function() { s1_anim1() });
+
+// Animation, separate clicks, with counter
+var i=1
+s1.click( function() {
+  switch(i) {
+    case 1: {s1_group1.animate({"opacity":"1"}, 250, mina.linear); i++; break};
+    case 2: {s1_group2.animate({"opacity":"1"}, 250, mina.linear); i++; break};
+    }
+} );
+
+</script>
+</svg>
+
+
+</body>
+</html>

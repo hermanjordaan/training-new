@@ -1,0 +1,89 @@
+<html><meta charset="utf-8">
+<head>
+<title>Snap</title>
+<script src="snap.svg-min.js"></script>
+<link rel="stylesheet" type="text/css" href="/Users/hj/esl/training-new/styles/svg.css"></link>
+<link rel="stylesheet" type="text/css" href="/Users/hj/esl/training-new/tools/reveal.js/css/theme/esl.css"></link>
+</head>
+<body>
+
+<svg style="height:8px; width:1200px; border-bottom: 1px solid #999;">
+	<text x="0px"    y="6" fill="#999" font-size="6pt">0</text>
+	<text x="100px"  y="6" fill="#999" font-size="6pt">100</text>
+	<text x="200px"  y="6" fill="#999" font-size="6pt">200</text>
+	<text x="300px"  y="6" fill="#999" font-size="6pt">300</text>
+	<text x="400px"  y="6" fill="#999" font-size="6pt">400</text>
+	<text x="500px"  y="6" fill="#999" font-size="6pt">500</text>
+	<text x="600px"  y="6" fill="#999" font-size="6pt">600</text>
+	<text x="700px"  y="6" fill="#999" font-size="6pt">700</text>
+	<text x="800px"  y="6" fill="#999" font-size="6pt">800</text>
+	<text x="900px"  y="6" fill="#999" font-size="6pt">900</text>
+	<text x="1000px" y="6" fill="#999" font-size="6pt">1000</text>
+	<text x="1100px" y="6" fill="#999" font-size="6pt">1100</text>
+	<text x="1200px" y="6" fill="#999" font-size="6pt">1200</text>
+</svg>
+
+<div style="position:absolute; top:8px; left:1200px;" border-left: 1px solid #999"">
+	<svg style="height:800px; width:20px; border-left: 1px solid #999;">
+		<text x="0" y="0"    fill="#999" font-size="6pt">0</text>
+		<text x="0" y="100"  fill="#999" font-size="6pt">100</text>
+		<text x="0" y="200"  fill="#999" font-size="6pt">200</text>
+		<text x="0" y="300"  fill="#999" font-size="6pt">300</text>
+		<text x="0" y="400"  fill="#999" font-size="6pt">400</text>
+		<text x="0" y="500"  fill="#999" font-size="6pt">500</text>
+		<text x="0" y="600"  fill="#999" font-size="6pt">600</text>
+		<text x="0" y="700"  fill="#999" font-size="6pt">700</text>
+		<text x="0" y="800"  fill="#999" font-size="6pt">800</text>
+	</svg>
+</div>
+
+<svg id="fsm_example_3" style="width:480px; height:280px; background-color:#eee" viewBox="0 0 480 280" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">text {font-size: 18pt;} text.code {font-size: 16pt;} .line {stroke-width:2;}</style>
+<script>
+
+var s7 = Snap("#fsm_example_3");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
+s7.circle(130,70,30).addClass("shape grey")
+s7.path("M140,98 C135,140 65,90 95,70").addClass("line").attr({"marker-end":marker});
+s7.path("M155,88 C185,220 330,180 340,240").addClass("line").attr({"marker-end":marker});
+s7.text(170,170,"").addClass("code");
+
+s7.text(220,50,"{pay, Coin}").addClass("code darkred bold");
+s7.text(220,80,"Total &gt;= Price").addClass("code darkred");
+s7.text(220,110,"&lt;Give Change&gt;").addClass("code");
+s7.text(220,140,"&lt;Make Drink&gt;").addClass("code");
+s7.text(220,170,"&lt;Display Pick Drink&gt;").addClass("code");
+
+s7.text(20,160,"{pay, Coin}").addClass("code darkred bold");
+s7.text(20,190,"Total &lt; Price").addClass("code darkred");
+s7.text(20,220,"&lt;Display New Amount&gt;").addClass("code");
+
+s7.text(320,270,"Remove").addClass("bold green");
+
+</script>
+</svg>
+
+
+
+<svg style="height:10px; width:1200px; border-top: 1px solid #999;">
+	<text x="0px"    y="10" fill="#999" font-size="6pt">0</text>
+	<text x="100px"  y="10" fill="#999" font-size="6pt">100</text>
+	<text x="200px"  y="10" fill="#999" font-size="6pt">200</text>
+	<text x="300px"  y="10" fill="#999" font-size="6pt">300</text>
+	<text x="400px"  y="10" fill="#999" font-size="6pt">400</text>
+	<text x="500px"  y="10" fill="#999" font-size="6pt">500</text>
+	<text x="600px"  y="10" fill="#999" font-size="6pt">600</text>
+	<text x="700px"  y="10" fill="#999" font-size="6pt">700</text>
+	<text x="800px"  y="10" fill="#999" font-size="6pt">800</text>
+	<text x="900px"  y="10" fill="#999" font-size="6pt">900</text>
+	<text x="1000px" y="10" fill="#999" font-size="6pt">1000</text>
+	<text x="1100px" y="10" fill="#999" font-size="6pt">1100</text>
+	<text x="1200px" y="10" fill="#999" font-size="6pt">1200</text>
+</svg>
+
+</body>
+</html>
