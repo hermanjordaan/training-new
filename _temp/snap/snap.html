@@ -37,32 +37,25 @@
 	</svg>
 </div>
 
-<svg id="fsm_example_3" style="width:480px; height:280px; background-color:#eee" viewBox="0 0 480 280" preserveAspectRatio="xMinYMin meet">
+
+<!--img src="Untitled.png" style="width:400px; height:auto; position:absolute; top:10px; left:5px; z-index:-1; opacity:0.5" /-->
+
+<svg id="fsm_example_4" style="width:410px; height:210px; background-color:#eee;" viewBox="0 0 410 210" preserveAspectRatio="xMinYMin meet">
 <style type="text/css">text {font-size: 18pt;} text.code {font-size: 16pt;} .line {stroke-width:2;}</style>
 <script>
 
-var s7 = Snap("#fsm_example_3");
+var s8 = Snap("#fsm_example_4");
 
-var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s7.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
-s7.circle(130,70,30).addClass("shape grey")
-s7.path("M140,98 C135,140 65,90 95,70").addClass("line").attr({"marker-end":marker});
-s7.path("M155,88 C185,220 330,180 340,240").addClass("line").attr({"marker-end":marker});
-s7.text(170,170,"").addClass("code");
-
-s7.text(220,50,"{pay, Coin}").addClass("code darkred bold");
-s7.text(220,80,"Total &gt;= Price").addClass("code darkred");
-s7.text(220,110,"&lt;Give Change&gt;").addClass("code");
-s7.text(220,140,"&lt;Make Drink&gt;").addClass("code");
-s7.text(220,170,"&lt;Display Pick Drink&gt;").addClass("code");
-
-s7.text(20,160,"{pay, Coin}").addClass("code darkred bold");
-s7.text(20,190,"Total &lt; Price").addClass("code darkred");
-s7.text(20,220,"&lt;Display New Amount&gt;").addClass("code");
-
-s7.text(320,270,"Remove").addClass("bold green");
+s8.circle(130,65,30).addClass("shape grey")
+s8.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
+s8.text(270,40,"Select").addClass("darkred bold");
+s8.text(95,145,"cancel").addClass("code darkred bold");
+s8.text(95,170,"&lt;Give Change&gt;").addClass("code");
+s8.text(95,195,"&lt;Display Make Selection&gt;").addClass("code");
+s8.path("M130,95 C140,130 220,130 290,55").addClass("line").attr({"marker-end":marker});
 
 </script>
 </svg>
