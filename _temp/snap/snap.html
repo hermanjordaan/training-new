@@ -38,24 +38,49 @@
 </div>
 
 
-<!--img src="Untitled.png" style="width:400px; height:auto; position:absolute; top:10px; left:5px; z-index:-1; opacity:0.5" /-->
-
-<svg id="fsm_example_4" style="width:410px; height:210px; background-color:#eee;" viewBox="0 0 410 210" preserveAspectRatio="xMinYMin meet">
+<!--
+img src="Untitled.png" style="width:400px; height:auto; position:absolute; top:10px; left:5px; z-index:-1; opacity:0.5" />
 <style type="text/css">text {font-size: 18pt;} text.code {font-size: 16pt;} .line {stroke-width:2;}</style>
+-->
+
+
+<svg id="sending_events_asynchronous_1" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s8 = Snap("#fsm_example_4");
+var s12 = Snap("#sending_events_asynchronous_1");
 
-var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var arrow = s12.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s8.circle(130,65,30).addClass("shape grey")
-s8.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
-s8.text(270,40,"Select").addClass("darkred bold");
-s8.text(95,145,"cancel").addClass("code darkred bold");
-s8.text(95,170,"&lt;Give Change&gt;").addClass("code");
-s8.text(95,195,"&lt;Display Make Selection&gt;").addClass("code");
-s8.path("M130,95 C140,130 220,130 290,55").addClass("line").attr({"marker-end":marker});
+s12.text(40,40,"gen_fsm:send_event(Name, Event)").addClass("code");
+s12.circle(300,120,40).addClass("shape grey");
+s12.text(740,115,"Name");
+s12.circle(680,120,40).addClass("shape darkred");
+
+s12_g1 = s12.g(s12.path("M595,30 l50,0").addClass("line").attr({"marker-end":marker}),
+               s12.text(670,40,"ok").addClass("code"),
+               s12.text(450,110,"Event"),
+               s12.path("M357,120 l263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s12_g2 = s12.text(460,200,"Mod:State(Event, LoopData)").addClass("code hide");
+
+s12_g3 = s12.path("M680,210 l0,40").attr({"marker-end":marker}).addClass("line hide");
+
+s12_g4 = s12.g(s12.text(365,290,"{next_state, NextState, NewLoopData}").addClass("code"),
+               s12.text(365,325,"{stop, Reason, NewLoopData}").addClass("code")).addClass("hide");
+
+s12_anim1 = function() { s12_g1.animate({"opacity":"1"}, 500, mina.linear, s12_anim2) };
+s12_anim2 = function() { s12_g2.animate({"opacity":"1"}, 500, mina.linear) };
+s12_anim3 = function() { s12_g3.animate({"opacity":"1"}, 500, mina.linear, s12_anim4) };
+s12_anim4 = function() { s12_g4.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s12_counter=1
+s12.click( function() {
+  switch(s12_counter) {
+    case 1: {s12_anim1(); s12_counter++; break};
+    case 2: {s12_anim3(); s12_counter++; break};
+    }
+} );
 
 </script>
 </svg>
