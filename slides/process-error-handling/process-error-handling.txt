@@ -678,7 +678,6 @@ A Server Example
 
 ++++
 <svg id="server_example_2" style="width:1100px; height:600px;" viewBox="0 0 1100 570" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">.draw {stroke:#fff; stroke-width:15;}</style>
 <script>
 
 var s9 = Snap("#server_example_2");

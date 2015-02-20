@@ -1,0 +1,598 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Behaviours</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Behaviours</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_behaviours"><h2>Behaviours</h2><div class="ulist"><ul><li><p>Design Patterns</p></li><li><p>Behaviours</p></li><li><p>A Server Example</p></li></ul></div></section>
+<section id="_design_patterns"><h2>Design Patterns</h2><div class="ulist"><ul><li><p>OTP Behaviours are a formalisation of design patterns</p></li><li><p>Processes share similar structures and life cycles</p><div class="ulist"><ul><li><p>They are started</p></li><li><p>They receive messages and send replies</p></li><li><p>They are terminated (or crash)</p></li></ul></div></li><li><p>Even if they perform different tasks, they will perform them following a set of patterns</p></li><li><p>Each design pattern solves a specific problem</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Erlang doesn&#8217;t have strict design patterns, but they&#8217;re similar and have instead been implemented directly in the language. They are, according to <em>design pattern</em> speech, implementation libraries of design patterns</p></div>
+<div class="paragraph"><p>Stress <em>similar structures</em>, because that&#8217;s what the pattern is.</p></div></aside></section>
+<section id="_more_on_processes_strong_process_skeleton_strong"><h2>More on Processes: <strong>process skeleton</strong></h2><svg id="process_skeleton" style="width:1020px; height:620px;" viewBox="0 0 1020 620" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">
+    .text {fill:#fff; font-size:20pt;}
+    .grey {fill:#959595;}
+    .code {font-size: 20pt;}
+</style>
+<script>
+
+var s1 = Snap("#process_skeleton");
+
+var arrow = s1.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s1.rect(10,35,965,580).addClass("rect_code");
+
+s1.ellipse(900,50,80,35).addClass("shape darkred");
+s1.text(870,60,"Start").addClass("text");
+
+s1.rect(820,140,160,80).addClass("shape grey");
+s1.text(845,190,"Initialise").addClass("text");
+
+s1.ellipse(650,280,80,35).addClass("shape darkred");
+s1.text(625,290,"Stop").addClass("text");
+
+s1.rect(850,265,100,100,20,20).addClass("shape").attr({"fill":"#E1E1E1"});
+s1.text(870,325,"loop");
+
+s1.rect(820,410,160,80).addClass("shape grey");
+s1.text(838,460,"terminate").addClass("text");
+
+s1.path("M900,85 l0,57").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M900,220 l0,47").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M950,300 C1020,250 1020,380 953,330").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M730,280 l120,35").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M900,365 l0,47").attr({"marker-end":marker}).addClass("line_darkred");
+
+s1.text(20,70,"start(Args) -> spawn(server, init, [Args])").addClass("code");
+s1.text(20,108,"").addClass("code");
+s1.text(20,146,"init(Args) ->").addClass("code");
+s1.text(20,184,"  State = initialize_state(Args),").addClass("code");
+s1.text(20,222,"  loop(State).").addClass("code");
+s1.text(20,260,"").addClass("code");
+s1.text(20,298,"loop(State) ->").addClass("code");
+s1.text(20,336,"   receive").addClass("code");
+s1.text(20,374,"      {handle, Msg} -> ").addClass("code");
+s1.text(20,412,"         NewState = handle(Msg, State),").addClass("code");
+s1.text(20,450,"         loop(NewState);").addClass("code");
+s1.text(20,488,"      stop -> terminate(State)").addClass("code");
+s1.text(20,526,"   end.").addClass("code");
+s1.text(20,564,"").addClass("code");
+s1.text(20,602,"terminate(State) -> clean_up(State).").addClass("code");
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>The pattern behind all the patterns.
+It&#8217;s so common even the functions get the same name in nearly any module.
+Likely used even in code not written with OTP.</p></div>
+<div class="paragraph"><p>In the terminate, you clean up resources: files, databases, etc. while init is the opposite.</p></div></aside></section>
+<section id="_design_patterns_2"><h2>Design Patterns</h2><div class="centre">
+<svg id="design_patterns" style="width:600; height:460px;" viewBox="0 0 600 460" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#design_patterns");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(42,30,"Clients").addClass("code darkred bold");
+s2.circle(100,110,40).addClass("shape grey");
+s2.circle(100,250,40).addClass("shape grey");
+s2.circle(100,390,40).addClass("shape grey");
+
+s2.path("M200,25 l0,400").attr({"stroke-dasharray":"4,8"}).addClass("line");
+
+s2.text(450,30,"Server").addClass("code darkred bold");
+s2.circle(500,110,40).addClass("shape darkred");
+
+s2_g1 = s2.g(s2.text(220,80,"request").addClass("code darkred"),
+             s2.path("M155,90 l280,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide")
+s2_g2 = s2.g(s2.text(235,145,"reply").addClass("code darkred"),
+             s2.path("M440,115 l-280,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide")
+
+s2_g3 = s2.g(s2.text(220,240,"request").addClass("code darkred").transform("rotate(-37,275,205)"),
+             s2.path("M150,355 L440,140").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+s2_g4 = s2.g(s2.text(270,305,"reply").addClass("code darkred").transform("rotate(-37,305,270)"),
+             s2.path("M460,160 L160,385").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 500, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 500, mina.linear, s2_anim3); }
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 500, mina.linear, s2_anim4); }
+s2_anim4 = function() { s2_g4.animate({"opacity":"1"}, 500, mina.linear); }
+s2.click(function() { s2_anim1() });
+
+</script>
+</svg>
+</div>
+<div class="ulist"><ul><li><p>Take a Client-Server architecture</p></li><li><p>What behaviours will differ between systems?</p></li><li><p>What similarities will there be between systems?</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>mention that this is erlang, the server is a process, the client is a process, communication is message passing</p></div></aside></section>
+<section id="_design_patterns_3"><h2>Design Patterns</h2><div class="paragraph"><p><br>
+<br></p></div>
+<div class="dlist left comparison green"><dl><dt class="hdlist1">Generic</dt><dd><div class="ulist"><ul><li><p>Spawning the server</p></li><li><p>Storing the loop data</p></li><li><p>Sending requests to the server</p></li><li><p>Sending replies to the client</p></li><li><p>Receiving server replies</p></li><li><p>Stopping the server</p></li></ul></div></dd></dl></div>
+<div class="dlist right comparison red"><dl><dt class="hdlist1">Specific</dt><dd><div class="ulist"><ul><li><p>Initialising the server state</p></li><li><p>The loop data</p></li><li><p>The client requests</p></li><li><p>Handling client requests</p></li><li><p>Contents of server reply</p></li><li><p>Cleaning up</p></li></ul></div></dd></dl></div>
+<aside class="notes"><div class="paragraph"><p>Go through every single one of these and compare them one to each other.</p></div></aside></section>
+<section id="_behaviours_2"><h2>Behaviours</h2><div class="imageblock" style=""><div class="content"><img src="images/behaviours_1.png" alt="Behaviours" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>The idea is to split the code in two parts</p></li><li><p>The generic part is called the <strong>generic behaviour</strong></p><div class="ulist"><ul><li><p>They are provided by OTP as library modules</p></li></ul></div></li><li><p>The specific part is called the <strong>callback module</strong></p><div class="ulist"><ul><li><p>They are implemented by the programmer</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Behaviours split generic and specific in two separate modules: one for generics and one for specifics. The generics are in the driving seat. The specifics know nothing of the generics.</p></div></aside></section>
+<section id="_behaviours_3"><h2>Behaviours</h2><div class="dlist"><dl><dt class="hdlist1"><strong>Generic Servers</strong></dt><dd><p>Used to model client-server behaviours</p></dd><dt class="hdlist1"><strong>Generic Finite-State Machines</strong></dt><dd><p>Used for finite-state machine programming</p></dd><dt class="hdlist1"><strong>Generic Event Handler/Manager</strong></dt><dd><p>Used for writing event handlers</p></dd><dt class="hdlist1"><strong>Supervisors</strong></dt><dd><p>Used for fault-tolerant supervision trees</p></dd><dt class="hdlist1"><strong>Application</strong></dt><dd><p>Used to encapsulate resources and functionality</p></dd></dl></div>
+<aside class="notes"><div class="paragraph"><p>Mention and give examples for FSM for protocols, or event handlers having a pub-sub way of communicating</p></div></aside></section>
+<section id="_behaviours_4"><h2>Behaviours</h2><div class="dlist left comparison green"><dl><dt class="hdlist1">Pros</dt><dd><div class="ulist"><ul><li><p>Less code to develop</p></li><li><p>Less bugs</p></li><li><p>Solid well tested base</p></li><li><p>Free built-in functionality</p><div class="ulist"><ul><li><p>Log, Trace, Statistics, Extensible</p></li></ul></div></li><li><p>Common Programming Style</p></li><li><p>Component-based terminology</p></li></ul></div></dd></dl></div>
+<div class="dlist right comparison red"><dl><dt class="hdlist1">Cons</dt><dd><div class="ulist"><ul><li><p>Steep learning curve</p></li><li><p>Affects performance</p></li></ul></div></dd></dl></div>
+<aside class="notes"><div class="paragraph"><p>Pros: Less bugs and Less code need to be emphasized. Then equally important is sharing a common programming style when programming in the large. You read code more than you write it.</p></div>
+<div class="paragraph"><p>Cons: The steep learning curve is not that steep if you attend the course.
+-About performance: always start with the behaviours, and if the bottleneck really is there, you optimize. Rarely needed.</p></div></aside></section>
+<section id="_a_server_example"><h2>A server Example</h2><div class="centre">
+<svg id="server_example_1" style="width:720; height:460px;" viewBox="0 0 720 460" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#server_example_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(42,30,"Clients").addClass("code darkred bold");
+s3.image("images/phone1.png",60,50,210/2,229/2);
+s3.image("images/phone2.png",50,200,201/2,201/2);
+s3.image("images/phone3.png",40,315,240/2,246/2).transform("r-60");
+
+s3.path("M200,45 l0,400").attr({"stroke-dasharray":"4,8"}).addClass("line");
+
+s3.text(500,30,"Server").addClass("code darkred bold");
+s3.circle(550,130,40).addClass("shape darkred");
+s3.image("images/server.png",610,95,175/1.75,133/1.75);
+
+s3_g1 = s3.g(s3.text(250,110,"allocate").addClass("code darkred"),
+             s3.path("M155,120 l330,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+s3_g2 = s3.g(s3.text(205,175,"{ok, Frequency}").addClass("code darkred"),
+             s3.path("M490,145 l-330,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+
+s3_g3 = s3.g(s3.text(110,268,"{deallocate, Freq}").addClass("code darkred").transform("rotate(-32,305,235)"),
+             s3.path("M150,385 L490,170").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+s3_g4 = s3.g(s3.text(310,350,"ok").addClass("code darkred").transform("rotate(-37,305,300)"),
+             s3.path("M510,190 L170,405").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 500, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 500, mina.linear, s3_anim3); }
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 500, mina.linear, s3_anim4); }
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 500, mina.linear); }
+s3.click(function() { s3_anim1() });
+
+</script>
+</svg>
+</div>
+<div class="ulist"><ul><li><p>The following server is responsible for allocating and deallocating frequencies on behalf of mobile phones</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>This is a <strong>simplified</strong> example</p></div></aside></section>
+<section id="_a_server_example_2"><h2>A Server Example</h2><svg id="server_example_2" style="width:1070px; height:570px;" viewBox="0 0 1070 570" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#server_example_2");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s4.text(20,80,"Client");
+s4.path("M60,100 l0,440").attr({"marker-end":marker}).addClass("line").attr({"stroke-width":"5px"});
+
+s4.text(955,80,"Server").addClass("darkred");
+s4.path("M1000,100 l0,440").attr({"marker-end":marker_red}).addClass("line_darkred").attr({"stroke-width":"5px"});
+
+s4_g1 = s4.text(150,150,"{request, Pid, allocate}").addClass("code hide");
+s4.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line");
+s4_g2 = s4.path("M980,170 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s4_g3 = s4.text(110,230,"{reply,{error,no_frequencies}} or {ok,Frequency}").addClass("code hide");
+s4.path("M970,250 l-875,0").attr({"marker-end":marker}).addClass("line");
+s4_g4 = s4.path("M80,250 l900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s4_g5 = s4.text(120,360,"{request, Pid, {deallocate, Frequency}}").addClass("code hide");
+s4.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line");
+s4_g6 = s4.path("M980,380 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s4_g7 = s4.text(750,440,"{reply, ok}").addClass("code hide");
+s4.path("M970,460 l-875,0").attr({"marker-end":marker}).addClass("line");
+s4_g8 = s4.path("M80,460 l900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 400, mina.linear, s4_anim2); }
+s4_anim2 = function() { s4_g2.animate({"strokeDashoffset":"900"}, 600, mina.linear, s4_anim3); }
+s4_anim3 = function() { s4_g3.animate({"opacity":"1"}, 400, mina.linear, s4_anim4); }
+s4_anim4 = function() { s4_g4.animate({"strokeDashoffset":"900"}, 600, mina.linear, s4_anim5); }
+s4_anim5 = function() { s4_g5.animate({"opacity":"1"}, 400, mina.linear, s4_anim6); }
+s4_anim6 = function() { s4_g6.animate({"strokeDashoffset":"900"}, 600, mina.linear, s4_anim7); }
+s4_anim7 = function() { s4_g7.animate({"opacity":"1"}, 400, mina.linear, s4_anim8); }
+s4_anim8 = function() { s4_g8.animate({"strokeDashoffset":"900"}, 600, mina.linear); }
+s4.click(function() { s4_anim1() });
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>the <em>or</em> is not a programmable <em>or</em>, just a conceptual one, if the question arises.</p></div></aside></section>
+<section id="_a_server_example_3"><h2>A Server Example</h2><svg id="server_example_3" style="width:1000px; height:500px;" viewBox="0 0 1000 500" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#server_example_3");
+
+s5.text(10,40,"-module(frequency).").addClass("code");
+s5.text(10,80,"-export([start/0, stop/0,  allocate/0, deallocate/1]).").addClass("code");
+s5_g1_1 = s5.text(10,80,"         start    stop").addClass("code green bold");
+s5.text(10,120,"-export([init/0]).").addClass("code");
+s5_g1_2 = s5.text(10,120,"         init").addClass("code green bold");
+s5.text(10,160,"").addClass("code");
+s5.text(10,200,"start() ->").addClass("code");
+s5_g1_3 = s5.text(10,200,"start").addClass("code green bold");
+s5.text(10,240,"    register(frequency, spawn(frequency, init, [])).").addClass("code");
+s5_g1_4 = s5.text(10,240,"    register            spawn            init").addClass("code green bold");
+s5.text(10,280,"").addClass("code");
+s5.text(10,320,"init() ->").addClass("code");
+s5_g1_5 = s5.text(10,320,"init").addClass("code green bold");
+s5.text(10,360,"    Frequencies = {get_frequencies(), []},").addClass("code");
+s5.text(10,400,"    loop(Frequencies).").addClass("code");
+s5_g1_6 = s5.text(10,400,"    loop").addClass("code green bold");
+s5.text(10,440,"").addClass("code");
+s5.text(10,480,"get_frequencies() -> [10,11,12,13,14,15].").addClass("code");
+
+s5.text(770,370,"Generic").addClass("green bold").attr({"font-size":"36pt"}).transform("rotate(-24,820,320)");
+
+s5_g1 = s5.g(s5_g1_1, s5_g1_2, s5_g1_3, s5_g1_4, s5_g1_5, s5_g1_6).addClass("hide");
+
+s5.click(function() { s5_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>be meticulous in going through the example, so people who are less familiar with the language have an easier time getting started.</p></div>
+<div class="paragraph"><p>reconnect which what has been generic in the previous slides</p></div>
+<div class="paragraph"><p>The generic stuff is written in red (after animations).</p></div></aside></section>
+<section id="_a_server_example_4"><h2>A Server Example</h2><svg id="server_example_4" style="width:1000px; height:500px;" viewBox="0 0 1000 500" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#server_example_4");
+
+s6.text(10,40,"-module(frequency).").addClass("code");
+s6_g1_1 = s6.text(10,40,"        frequency").addClass("code darkred bold");
+s6.text(10,80,"-export([start/0, stop/0,  allocate/0, deallocate/1]).").addClass("code");
+s6_g1_2 = s6.text(10,80,"                           allocate    deallocate").addClass("code darkred bold");
+s6.text(10,120,"-export([init/0]).").addClass("code");
+s6.text(10,160,"").addClass("code");
+s6.text(10,200,"start() ->").addClass("code");
+s6.text(10,240,"    register(frequency, spawn(frequency, init, [])).").addClass("code");
+s6_g1_3 = s6.text(10,240,"             frequency        frequency        []").addClass("code darkred bold");
+s6.text(10,280,"").addClass("code");
+s6.text(10,320,"init() ->").addClass("code");
+s6.text(10,360,"    Frequencies = {get_frequencies(), []},").addClass("code");
+s6_g1_4 = s6.text(10,360,"    Frequencies   {get_frequencies(), []},").addClass("code darkred bold");
+s6.text(10,400,"    loop(Frequencies).").addClass("code");
+s6_g1_5 = s6.text(10,400,"         Frequencies").addClass("code darkred bold");
+s6.text(10,440,"").addClass("code");
+s6.text(10,480,"get_frequencies() -> [10,11,12,13,14,15].").addClass("code");
+s6_g1_6 = s6.text(10,480,"get_frequencies() -> [10,11,12,13,14,15].").addClass("code darkred bold");
+
+s6.text(770,370,"Specific").addClass("bold darkred").attr({"font-size":"36pt"}).transform("rotate(-24,820,320)");
+
+s6_g1 = s6.g(s6_g1_1, s6_g1_2, s6_g1_3, s6_g1_4, s6_g1_5, s6_g1_6).addClass("hide");
+
+s6.click(function() { s6_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg></section>
+<section id="_a_server_example_5"><h2>A Server Example</h2><svg id="server_example_5" style="width:1000px; height:540px;" viewBox="0 0 1000 540" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#server_example_5");
+
+s7.text(10,40, "%%  The client Functions").addClass("code")
+s7.text(10,80, "stop()           -> call(stop).").addClass("code")
+s7_g1_1 = s7.text(10,80, "stop()           -> call(stop).").addClass("code green bold")
+s7.text(10,120,"allocate()       -> call(allocate).").addClass("code")
+s7_g1_2 = s7.text(10,120,"                    call(        ).").addClass("code green bold")
+s7.text(10,160,"deallocate(Freq) -> call({deallocate, Freq}).").addClass("code")
+s7_g1_3 = s7.text(10,160,"                    call(                  ).").addClass("code green bold")
+s7.text(10,200,"").addClass("code")
+s7.text(10,240,"%% We hide all message passing and the message protocol in").addClass("code")
+s7.text(10,280,"%% a functional interface.").addClass("code")
+s7.text(10,320,"").addClass("code")
+s7.text(10,360,"call(Message) ->").addClass("code")
+s7_g1_4 = s7.text(10,360,"call(Message) ->").addClass("code green bold")
+s7.text(10,400,"    frequency ! {request, self(), Message},").addClass("code")
+s7_g1_5 = s7.text(10,400,"              ! {request, self(), Message},").addClass("code green bold")
+s7.text(10,440,"    receive ").addClass("code")
+s7_g1_6 = s7.text(10,440,"    receive ").addClass("code green bold")
+s7.text(10,480,"        {reply, Reply} -> Reply").addClass("code")
+s7_g1_7 = s7.text(10,480,"        {reply, Reply} -> Reply").addClass("code green bold")
+s7.text(10,520,"    end.").addClass("code")
+s7_g1_8 = s7.text(10,520,"    end.").addClass("code green bold")
+
+s7.text(770,370,"Generic").addClass("bold green").attr({"font-size":"36pt"}).transform("rotate(-24,820,320)");
+
+s7_g1 = s7.g(s7_g1_1, s7_g1_2, s7_g1_3, s7_g1_4, s7_g1_5, s7_g1_6, s7_g1_7, s7_g1_8).addClass("hide");
+
+s7.click(function() { s7_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg></section>
+<section id="_a_server_example_6"><h2>A Server Example</h2><svg id="server_example_6" style="width:1000px; height:540px;" viewBox="0 0 1000 540" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#server_example_6");
+
+s8.text(10,40, "%%  The client Functions").addClass("code");
+s8.text(10,80, "stop()           -> call(stop).").addClass("code");
+s8.text(10,120,"allocate()       -> call(allocate).").addClass("code");
+s8_g1_1 = s8.text(10,120,"allocate()       ->      allocate").addClass("code darkred bold");
+s8.text(10,160,"deallocate(Freq) -> call({deallocate, Freq}).").addClass("code");
+s8_g1_2 = s8.text(10,160,"deallocate(Freq) ->      {deallocate, Freq}").addClass("code darkred bold");
+s8.text(10,200,"").addClass("code");
+s8.text(10,240,"%% We hide all message passing and the message protocol in").addClass("code");
+s8.text(10,280,"%% a functional interface.").addClass("code");
+s8.text(10,320,"").addClass("code");
+s8.text(10,360,"call(Message) ->").addClass("code");
+s8.text(10,400,"    frequency ! {request, self(), Message},").addClass("code");
+s8_g1_3 = s8.text(10,400,"    frequency").addClass("code darkred bold");
+s8.text(10,440,"    receive ").addClass("code");
+s8.text(10,480,"        {reply, Reply} -> Reply").addClass("code");
+s8.text(10,520,"    end.").addClass("code");
+
+s8.text(770,370,"Specific").addClass("bold darkred").attr({"font-size":"36pt"}).transform("rotate(-24,820,320)");
+
+s8_g1 = s8.g(s8_g1_1, s8_g1_2, s8_g1_3).addClass("hide");
+
+s8.click(function() { s8_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg></section>
+<section id="_a_server_example_7"><h2>A Server Example</h2><svg id="server_example_7" style="width:1000px; height:540px;" viewBox="0 0 1000 540" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#server_example_7");
+
+s9.text(10,40,"loop(Frequencies) ->").addClass("code");
+s9.text(10,80,"  receive").addClass("code");
+s9.text(10,120,"   {request, Pid, allocate} ->").addClass("code");
+s9.text(10,160,"     {NewFrequencies, Reply} = allocate(Frequencies, Pid),").addClass("code");
+s9.text(10,200,"     reply(Pid, Reply),").addClass("code");
+s9.text(10,240,"     loop(NewFrequencies);").addClass("code");
+s9.text(10,280,"   {request, Pid , {deallocate, Freq}} ->").addClass("code");
+s9.text(10,320,"      NewFrequencies = deallocate(Frequencies, Freq),").addClass("code");
+s9.text(10,360,"      reply(Pid, ok),").addClass("code");
+s9.text(10,400,"      loop(NewFrequencies);").addClass("code");
+s9.text(10,440,"   {request, Pid, stop} ->").addClass("code");
+s9.text(10,480,"      reply(Pid, ok)         reply(Pid, Message) ->").addClass("code");
+s9.text(10,520,"  end.                          Pid ! {reply, Message}.").addClass("code");
+
+s9_g1_1 = s9.text(10,40,"loop(           ) ->").addClass("code green bold");
+s9_g1_2 = s9.text(10,80,"  receive").addClass("code green bold");
+s9_g1_3 = s9.text(10,120,"   {request  Pid,         } ->").addClass("code green bold");
+s9_g1_4 = s9.text(10,160,"").addClass("code green bold");
+s9_g1_5 = s9.text(10,200,"     reply(Pid,      ),").addClass("code green bold");
+s9_g1_6 = s9.text(10,240,"     loop(              );").addClass("code green bold");
+s9_g1_7 = s9.text(10,280,"   {request  Pid                     } ->").addClass("code green bold");
+s9_g1_8 = s9.text(10,320,"").addClass("code green bold");
+s9_g1_9 = s9.text(10,360,"      reply(Pid,   ),").addClass("code green bold");
+s9_g1_10 = s9.text(10,400,"      loop(              );").addClass("code green bold");
+s9_g1_11 = s9.text(10,440,"   {request, Pid  stop} ->").addClass("code green bold");
+s9_g1_12 = s9.text(10,480,"      reply(Pid  ok)         reply(Pid, Message) ->").addClass("code green bold");
+s9_g1_13 = s9.text(10,520,"  end.                          Pid ! {reply, Message}.").addClass("code green bold");
+
+s9.text(720,70,"Generic").addClass("bold green").attr({"font-size":"36pt"}).transform("rotate(-24,800,200)");
+
+s9_g1 = s9.g(s9_g1_1, s9_g1_2, s9_g1_3, s9_g1_4, s9_g1_5, s9_g1_6, s9_g1_7, s9_g1_8, s9_g1_9, s9_g1_10, s9_g1_11, s9_g1_12, s9_g1_13).addClass("hide");
+
+s9.click(function() { s9_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg></section>
+<section id="_a_server_example_8"><h2>A Server Example</h2><svg id="server_example_8" style="width:1000px; height:540px;" viewBox="0 0 1000 540" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#server_example_8");
+
+s10.text(10,40,"loop(Frequencies) ->").addClass("code");
+s10.text(10,80,"  receive").addClass("code");
+s10.text(10,120,"   {request, Pid, allocate} ->").addClass("code");
+s10.text(10,160,"     {NewFrequencies, Reply} = allocate(Frequencies, Pid),").addClass("code");
+s10.text(10,200,"     reply(Pid, Reply),").addClass("code");
+s10.text(10,240,"     loop(NewFrequencies);").addClass("code");
+s10.text(10,280,"   {request, Pid , {deallocate, Freq}} ->").addClass("code");
+s10.text(10,320,"      NewFrequencies = deallocate(Frequencies, Freq),").addClass("code");
+s10.text(10,360,"      reply(Pid, ok),").addClass("code");
+s10.text(10,400,"      loop(NewFrequencies);").addClass("code");
+s10.text(10,440,"   {request, Pid, stop} ->").addClass("code");
+s10.text(10,480,"      reply(Pid, ok)         reply(Pid, Message) ->").addClass("code");
+s10.text(10,520,"  end.                          Pid ! {reply, Message}.").addClass("code");
+
+s10_g1_1 = s10.text(10,40,"     Frequencies").addClass("code darkred bold");
+s10_g1_2 = s10.text(10,80,"").addClass("code darkred bold");
+s10_g1_3 = s10.text(10,120,"                  allocate").addClass("code darkred bold");
+s10_g1_4 = s10.text(10,160,"     {NewFrequencies, Reply} = allocate(Frequencies, Pid)").addClass("code darkred bold");
+s10_g1_5 = s10.text(10,200,"                Reply").addClass("code darkred bold");
+s10_g1_6 = s10.text(10,240,"          NewFrequencies").addClass("code darkred bold");
+s10_g1_7 = s10.text(10,280,"                   {deallocate, Freq}").addClass("code darkred bold");
+s10_g1_8 = s10.text(10,320,"      NewFrequencies = deallocate(Frequencies, Freq),").addClass("code darkred bold");
+s10_g1_9 = s10.text(10,360,"                 ok").addClass("code darkred bold");
+s10_g1_10 = s10.text(10,400,"           NewFrequencies").addClass("code darkred bold");
+
+s10.text(720,70,"Specific").addClass("bold darkred").attr({"font-size":"36pt"}).transform("rotate(-24,800,200)");
+
+s10_g1 = s10.g(s10_g1_1, s10_g1_2, s10_g1_3, s10_g1_4, s10_g1_5, s10_g1_6, s10_g1_7, s10_g1_8, s10_g1_9, s10_g1_10).addClass("hide");
+
+s10.click(function() { s10_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg></section>
+<section id="_a_server_example_9"><h2>A Server Example</h2><svg id="server_example_9" style="width:1000px; height:560px;" viewBox="0 0 1000 560" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s11 = Snap("#server_example_9");
+
+s11.text(10,100,"%% The Internal Functions").addClass("code");
+s11.text(10,140,"%% Help functions used to allocate and deallocate.").addClass("code");
+s11.text(10,180,"%%frequencies.").addClass("code");
+s11.text(10,220,"").addClass("code");
+s11.text(10,260,"allocate({[], Allocated}, Pid) ->").addClass("code");
+s11.text(10,300,"    {{[], Allocated}, {error, no_frequencies}};").addClass("code");
+s11.text(10,340,"allocate({[Freq|Free], Allocated}, Pid) ->").addClass("code");
+s11.text(10,380,"    {{Free, [{Freq, Pid}|Allocated]}, {ok, Freq}}.").addClass("code");
+s11.text(10,420,"").addClass("code");
+s11.text(10,460,"deallocate({Free, Allocated}, Freq) ->").addClass("code");
+s11.text(10,500,"    NewAllocated = lists:keydelete(Freq, 1, Allocated),").addClass("code");
+s11.text(10,540,"    {[Freq|Free],  NewAllocated}.").addClass("code");
+
+s11_g1_1 = s11.text(10,260,"allocate({[], Allocated}, Pid) ->").addClass("code darkred bold");
+s11_g1_2 = s11.text(10,300,"    {{[], Allocated}, {error, no_frequencies}};").addClass("code darkred bold");
+s11_g1_3 = s11.text(10,340,"allocate({[Freq|Free], Allocated}, Pid) ->").addClass("code darkred bold");
+s11_g1_4 = s11.text(10,380,"    {{Free, [{Freq, Pid}|Allocated]}, {ok, Freq}}.").addClass("code darkred bold");
+s11_g1_5 = s11.text(10,420,"").addClass("code darkred bold");
+s11_g1_6 = s11.text(10,460,"deallocate({Free, Allocated}, Freq) ->").addClass("code darkred bold");
+s11_g1_7 = s11.text(10,500,"    NewAllocated = lists:keydelete(Freq, 1, Allocated),").addClass("code darkred bold");
+s11_g1_8 = s11.text(10,540,"    {[Freq|Free],  NewAllocated}.").addClass("code darkred bold");
+
+s11.text(720,70,"Specific").addClass("bold darkred").attr({"font-size":"36pt"}).transform("rotate(-24,770,200)");
+
+s11_g1 = s11.g(s11_g1_1, s11_g1_2, s11_g1_3, s11_g1_4, s11_g1_5, s11_g1_6, s11_g1_7, s11_g1_8).addClass("hide");
+
+s11.click(function() { s11_g1.animate({"opacity":"1"}, 400, mina.linear); });
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Note: for the internal functions, they&#8217;re all specific; that&#8217;s the meat of the implementation module.</p></div></aside></section>
+<section id="_behaviours_5"><h2>Behaviours</h2><div class="imageblock" style=""><div class="content"><img src="images/behaviours_2.png" alt="Behaviours" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>Place all the generic code in the <strong>server</strong> module</p></li><li><p>Place all the specific code in the <strong>frequency</strong> module</p></li></ul></div></section>
+<section id="_a_server_example_10"><h2>A Server Example</h2><div class="left"><p class="green" style="text-align:center; font-weight:bold;">Generic</p>
+<div class="pre">-module(server).
+-export([start/2, stop/1,
+        call/2, init/2]).
+
+start(Mod, Args) ->
+   Pid = spawn(server,init,
+               [Mod,Args]),
+   register(Mod, Pid).
+
+stop(Mod) -> Mod ! stop.
+
+init(Mod, Args) ->
+   State = Mod:init(Args),
+   loop(Mod, State).
+</div></div>
+<div class="left"><p style="text-align:center;"><strong>Specific</strong></p>
+<div class="pre">-module(frequency).
+-export([start/0,stop/0,   init/1,handle/2,   allocate/0,deallocate/1]).
+
+start() ->
+ server:start(frequency,[]).
+stop() ->
+   server:stop(frequency).
+
+init(_Args) ->
+   {get_frequencies(), []}.
+get_frequencies() ->
+   [10,11,12,13,14,15].
+</div></div>
+<aside class="notes"><div class="paragraph"><p>go through it all again. Point out what is generic and what is specific. Specify that Generic is in control and only refers to specific when it doesn&#8217;t know what to do anymore (implementation details).</p></div>
+<div class="paragraph"><p>Point the difference between starting and running. <em>start</em> might just be a call done by someone else. Also show that generic&#8217;s start now requires a callback module.</p></div></aside></section>
+<section id="_a_server_example_11"><h2>A Server Example</h2><div class="pre">call(Pid, Message) ->
+    Pid ! {request, self(), Message},
+    receive
+        {reply, Reply} -> Reply
+    end.
+
+reply(Pid, Message) ->
+    Pid ! {reply, Message}.
+</div>
+<span class="green bold rotate" style="float: right; top:-130pt; right: 120pt; font-size: 1.5em; transform: rotate(-30deg); -webkit-transform: rotate(-30deg);">Generic</span>
+<div class="pre">allocate()->
+    server:call(frequency, {allocate, self()}).
+
+deallocate(Freq) ->
+    server:call(frequency, {deallocate, Freq}).
+ 
+ 
+</div>
+<span class="darkred bold rotate" style="float: right; top:-120pt; right: 120pt; font-size: 1.5em; transform: rotate(-30deg); -webkit-transform: rotate(-30deg);">Specific</span></section>
+<section id="_a_server_example_12"><h2>A Server Example</h2><div class="pre">loop(Mod, State) ->
+    receive
+        {request, Pid, Msg} ->
+          {NewState, Reply} = Mod:handle(Msg, State),
+          reply(Pid, Reply),
+          loop(Mod, NewState);
+       stop -> ok
+    end.
+</div>
+<span class="green bold rotate" style="float: right; top:-130pt; right: 120pt; font-size: 1.5em; transform: rotate(-30deg); -webkit-transform: rotate(-30deg);">Generic</span>
+<div class="pre">handle({allocate, Pid}, Frequencies) ->
+    {NewFrequencies, Reply} = allocate(Frequencies, Pid),
+    {NewFrequencies, Reply};
+handle({deallocate, Freq}, Frequencies) ->
+    Reply = ok,
+    {deallocate(Frequencies, Freq), Reply}.
+ 
+</div>
+<span class="darkred bold rotate" style="float: right; top:-120pt; right: 120pt; font-size: 1.5em; transform: rotate(-30deg); -webkit-transform: rotate(-30deg);">Specific</span></section>
+<section id="_behaviours_6"><h2>Behaviours</h2><div class="ulist"><ul><li><p>Design Patterns</p></li><li><p>Behaviours</p></li><li><p>A Server Example</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

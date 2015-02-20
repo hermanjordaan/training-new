@@ -3,8 +3,16 @@ svg {
   font-size: 22pt;
 }
 
+div.centre {
+	text-align: center;
+}
+
 .grey {
   fill: #888;
+}
+
+.lightgrey {
+	fill: #E7E7E7;
 }
 
 .darkred {
@@ -87,6 +95,16 @@ svg {
 
 .show {
   opacity: 1;
+}
+
+.draw {
+  stroke: #fff;
+  stroke-width: 15;
+}
+
+svg .green {
+	color: #007F00;
+	fill: #007F00;
 }
 
 .next_circle_bg {

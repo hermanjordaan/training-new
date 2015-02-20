@@ -1,0 +1,1177 @@
+Finite-State Machines
+=====================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Finite-State Machines
+---------------------
+* Finite-State Machines
+* FSM Examples
+* Generic FSMs
+* Starting a Generic FSM
+* Asynchronous Messages
+* Synchronous Messages
+* Termination
+* Timeouts
+
+
+Finite-State Machines
+---------------------
+++++
+<svg id="fsm_1" class="left" style="width:600; height:250px;" viewBox="0 0 600 250" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#fsm_1");
+
+var arrow = s1.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 5,5, 3.75,2.5);
+
+s1.circle(100,100,40).addClass("shape grey");
+s1.circle(460,100,40).addClass("shape grey");
+s1.text(45,190,"State 1").addClass("darkred bold");
+s1.text(410,190,"State 2").addClass("darkred bold");
+
+s1_g1 = s1.g(s1.path("M60,110 C00,90 40,20 90,58").addClass("line_darkred").attr({"marker-end":marker}),
+			 s1.text(10,35,"Event 1")).addClass("hide");
+s1_g2 = s1.g(s1.path("M127,70 Q280,0 427,70").addClass("line_darkred").attr({"marker-end":marker}),
+			 s1.text(230,70,"Event 2")).addClass("hide");
+s1_g3 = s1.g(s1.path("M433,130 Q280,200 133,130").addClass("line_darkred").attr({"marker-end":marker}),
+			 s1.text(230,150,"Event 3")).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* An abstract machine consists of
+** A finite set of states
+** A finite set of incoming events
+* A state associated with a specific incoming event decides
+** The actions executed
+** The next state
+
+
+Finite-State Machines
+---------------------
+++++
+<div class="centre">
+<svg id="fsm_2" style="width:870; height:440px;" viewBox="0 0 870 440" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}</style>
+<script>
+
+var s2 = Snap("#fsm_2");
+
+var arrow = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 5,5, 3.75,2.5);
+
+var arrow2 = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#4B5056"}).transform('r0');
+var marker2 = arrow2.marker(0,0, 5,5, 3.75,2.5);
+
+s2.text(120,40,"Day").addClass("darkred bold");
+s2.text(570,40,"Night").addClass("darkred bold");
+s2.circle(200,120,60).addClass("shape darkred");
+s2.circle(600,120,60).addClass("shape grey");
+
+s2_g1 = s2.g(s2.path("M250,70 Q390,-10 540,70").addClass("line2").attr({"marker-end":marker2}),
+			 s2.text(350,65,"Sunset")).addClass("hide");
+s2_g2 = s2.g(s2.path("M540,170 Q400,250 250,170").addClass("line_darkred").attr({"marker-end":marker}),
+			 s2.text(350,195,"Sunrise")).addClass("hide");
+
+s2.text(10,280,"day() ->").addClass("code");
+s2.text(10,320,"  receive").addClass("code");
+s2.text(10,360,"     sunset -> night()").addClass("code");
+s2.text(10,400,"  end.").addClass("code");
+
+s2.text(480,280,"night() ->").addClass("code");
+s2.text(480,320,"  receive").addClass("code");
+s2.text(480,360,"     sunrise -> day()").addClass("code");
+s2.text(480,400,"  end.").addClass("code");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 500, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 500, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+++++
+
+* Each state is represented as a tail recursive function
+* Each event is represented as an incoming message
+
+
+Finite-State Machines
+---------------------
+++++
+<svg id="fsm_3" style="width:1100; height:280px;" viewBox="0 0 1100 280" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#fsm_3");
+
+s3.rect(10,10,1080,260).addClass("rect_code");
+
+s3.text(925,80,"Night").addClass("darkred bold");
+s3.circle(900,150,60).addClass("shape grey");
+
+s3.text(20,50,"night() ->").addClass("code");
+s3.text(10,90,"  receive").addClass("code");
+s3.text(10,130,"     sunrise ->").addClass("code");
+s3.text(10,170,"         make_roosters_crow(),").addClass("code");
+s3.text(10,210,"         day()").addClass("code");
+s3.text(10,250,"  end.").addClass("code");
+
+</script>
+</svg>
+++++
+
+* State transitions are triggered by incoming events
+* State transitions are achieved by calling the new state
+** The new state depends on the current state and the incoming events
+* With every state transition actions may be taken
+
+
+Finite-State Machines
+---------------------
+++++
+<svg id="fsm_4" style="width:1100; height:280px;" viewBox="0 0 1100 280" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#fsm_4");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.rect(10,10,1080,260).addClass("rect_code");
+
+s4.text(875,110,"Day").addClass("darkred bold");
+s4.circle(950,190,60).addClass("shape darkred");
+
+s4.path("M620,190 l230,0").addClass("line_darkred").attr({"marker-end":marker})
+s4.text(620,240,"Start").addClass("darkred bold");
+
+s4.text(20,50,"init() ->").addClass("code");
+s4.text(20,90,"  create_earth(),").addClass("code");
+s4.text(20,130,"  day().").addClass("code");
+
+</script>
+</svg>
+++++
+
+* All Finite-State Machines are given a start state
+* Initialisation of the state can occur when starting the FSM
+
+
+FSM Example
+-----------
+* A coffee machine can be programmed using a Finite-State Machine
+
+[role="left"]
+* It would have three states
+** Select coffee type
+** Collect Payment
+** Wait for cup to be removed
+
+[role="right"]
+image::images/coffeemachine.png["Coffee machine", 350, auto]
+
+
+FSM Example
+-----------
+* Incoming events would include
+** Coffee type selected
+** Coins inserted
+** Cancel
+** Cup removed
+* Actions would include
+** Output in the display
+** Give change
+** Drop the cup
+** Make the drink
+
+
+FSM Example
+-----------
+++++
+<div style="margin-top:-40pt;"><img src="images/fsm_example.png" alt="FSM example" /></div>
+++++
+
+
+FSM Example
+-----------
+++++
+<div class="pre">-module(coffee_fsm).
+-export([tea/0, espresso/0, americano/0, cappuccino/0,      
+         pay/1, cup_removed/0, cancel/0]).
+-export([start_link/0, init/0]).
+
+start_link() ->
+    spawn_link(?MODULE, init, []).
+
+init() ->
+    register(?MODULE, self()),
+    hw:reboot(),
+    hw:display("Make Your Selection", []),
+    <b>select()</b>.
+
+</div>
+
+<div style="position:relative; top:-240pt; left:480pt;">
+<svg id="fsm_example_1" style="width:490; height:180px;" viewBox="0 0 490 180" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_example_1 text, #fsm_example_1 text.code {font-size: 18pt;}</style>
+<script>
+
+var s5 = Snap("#fsm_example_1");
+
+var arrow_start = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r180');
+var marker_start = arrow_start.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+var arrow_end = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_end = arrow_end.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(10,85,"Select").addClass("darkred bold");
+s5.text(130,40,"start").addClass("code darkred bold");
+s5.text(130,75,"&lt;Display Make Selection&gt;").addClass("code");
+
+s5.path("M110,20 l0,65").addClass("line").attr({"marker-start":marker_start,"marker-end":marker_end});
+
+s5.circle(110,135,30).addClass("shape darkred")
+
+</script>
+</svg>
+</div>
+++++
+
+
+FSM Example
+-----------
+++++
+<div class="pre"><span class="comment">%% Client Functions for Drink Selections</span>
+tea()        -> ?MODULE ! {selection, tea,       100}.
+espresso()   -> ?MODULE ! {selection, espresso,  150}.
+americano()  -> ?MODULE ! {selection, americano, 100}.
+cappuccino() -> ?MODULE ! {selection, cappuccino,150}.
+
+<span class="comment">%% Client Functions for Actions</span>
+cup_removed() -> ?MODULE ! cup_removed.
+pay(Coin)     -> ?MODULE ! {pay, Coin}.
+cancel()      -> ?MODULE ! cancel.
+
+
+</div>
+++++
+
+
+FSM Example
+-----------
+++++
+<div class="pre"><span class="comment">%% State: drink selection</span>
+select() ->
+  receive
+    {selection, Type, Price} ->
+	      hw:display("Please pay:~w",[Price]),
+	      <b>payment(Type, Price, 0)</b>;
+    {pay, Coin} ->
+	      hw:return_change(Coin),
+	      <b>select()</b>;
+    _Other ->    % cancel
+	      <b>select()</b>
+  end.
+
+
+</div>
+
+<div style="position:relative; top:-375pt; left:600pt;">
+<svg id="fsm_example_2" style="width:360px; height:400px;" viewBox="0 0 360 400" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_example_2 text {font-size: 18pt;} #fsm_example_2 text.code {font-size: 16pt;} #fsm_example_2 .line {stroke-width:2;}</style>
+<script>
+
+var s6 = Snap("#fsm_example_2");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.text(150,35,"Select").addClass("darkred bold");
+s6.text(270,20,"cancel").addClass("code darkred bold");
+s6.circle(240,90,30).addClass("shape darkred")
+s6.path("M245,60 C265,10 310,50 275,85").addClass("line").attr({"marker-end":marker});
+s6.path("M260,110 C280,145 210,150 215,115").addClass("line").attr({"marker-end":marker});
+s6.path("M210,90 Q115,140 120,355").addClass("line").attr({"marker-end":marker});
+s6.text(170,170,"{pay, Coin}").addClass("code darkred bold");
+s6.text(170,200,"&lt;Give Change&gt;").addClass("code");
+s6.text(15,300,"{selection, Type, Price}").addClass("code darkred bold");
+s6.text(15,330,"&lt;Display Price&gt;").addClass("code");
+s6.text(70,390,"Payment").addClass("bold");
+
+</script>
+</svg>
+</div>
+
+++++
+
+
+FSM Example
+-----------
+++++
+<div class="pre">payment(Type, Price, Paid) ->
+  receive 
+     {pay, Coin} ->
+       if Coin + Paid >= Price ->
+            hw:display("Preparing Drink.",[]),
+            hw:return_change(Coin + Paid - Price),
+            hw:drop_cup(), hw:prepare(Type),
+            hw:display("Remove Drink.", []),
+            <b>remove()</b>;
+         true ->
+            ToPay = Price – (Coin + Paid),
+            hw:display("Please pay:~w",[ToPay]),
+            <b>payment(Type, Price, Coin + Paid)</b>
+      end;
+
+</div>
+
+<div style="position:relative; top:-505pt; left:500pt;">
+<svg id="fsm_example_3" style="width:480px; height:280px;" viewBox="0 0 480 280" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_example_3 text {font-size: 18pt;} #fsm_example_3 text.code {font-size: 16pt;} #fsm_example_3 .line {stroke-width:2;}</style>
+<script>
+
+var s7 = Snap("#fsm_example_3");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
+s7.circle(130,70,30).addClass("shape grey")
+s7.path("M140,98 C135,140 65,90 95,70").addClass("line").attr({"marker-end":marker});
+s7.path("M155,88 C185,220 330,180 340,240").addClass("line").attr({"marker-end":marker});
+s7.text(170,170,"").addClass("code");
+
+s7.text(220,50,"{pay, Coin}").addClass("code darkred bold");
+s7.text(220,80,"Total &gt;= Price").addClass("code darkred");
+s7.text(220,110,"&lt;Give Change&gt;").addClass("code");
+s7.text(220,140,"&lt;Make Drink&gt;").addClass("code");
+s7.text(220,170,"&lt;Display Pick Drink&gt;").addClass("code");
+
+s7.text(20,160,"{pay, Coin}").addClass("code darkred bold");
+s7.text(20,190,"Total &lt; Price").addClass("code darkred");
+s7.text(20,220,"&lt;Display New Amount&gt;").addClass("code");
+
+s7.text(320,270,"Remove").addClass("bold green");
+
+</script>
+</svg>
+</div>
+
+++++
+
+
+FSM Example
+-----------
+++++
+<div class="pre">payment(Type, Price, Paid) ->
+  receive
+    ...
+       end;
+    cancel ->        hw:display("Make Your Selection", []),
+       hw:return_change(Paid),
+       <b>select()</b>;
+    _Other ->    %selection
+       <b>payment(Type, Price, Paid)</b>
+  end.
+
+
+</div>
+
+<div style="position:relative; top:-420pt; left:500pt;">
+<svg id="fsm_example_4" style="width:410px; height:210px; background-color:;" viewBox="0 0 410 210" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_example_4 text {font-size: 18pt;} #fsm_example_4 text.code {font-size: 16pt;} #fsm_example_4 .line {stroke-width:2;}</style>
+<script>
+
+var s8 = Snap("#fsm_example_4");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s8.circle(130,65,30).addClass("shape grey")
+s8.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
+s8.text(270,40,"Select").addClass("darkred bold");
+s8.text(95,145,"cancel").addClass("code darkred bold");
+s8.text(95,170,"&lt;Give Change&gt;").addClass("code");
+s8.text(95,195,"&lt;Display Make Selection&gt;").addClass("code");
+s8.path("M130,95 C140,130 220,130 290,55").addClass("line").attr({"marker-end":marker});
+
+</script>
+</svg>
+</div>
+
+
+++++
+
+
+FSM Example
+-----------
+++++
+<div class="pre"><span class="comment">%% State: remove cup</span>
+
+remove() ->
+  receive
+    cup_removed ->
+	   hw:display("Make Your Selection", []),
+	   <b>select()</b>;
+	 {pay, Coin} ->
+	   hw:return_change(Coin),
+	   <b>remove()</b>;
+	 _Other ->    <span class="comment">% cancel/selection</span>
+	   <b>remove()</b>
+end.
+
+</div>
+
+<div style="position:relative; top:-393pt; left:600pt;">
+<svg id="fsm_example_5" style="width:380px; height:400px; background-color:;" viewBox="0 0 380 400" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_example_5 text {font-size: 18pt;} #fsm_example_5 text.code {font-size: 16pt;} #fsm_example_5 .line {stroke-width:2;}</style>
+<script>
+
+var s9 = Snap("#fsm_example_5");
+
+var arrow = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s9.circle(210,300,30).addClass("shape green")
+s9.text(180,25,"Select").addClass("darkred bold");
+s9.text(10,120,"cup_removed").addClass("code darkred bold");
+s9.text(10,145,"&lt;Display Make Selection&gt;").addClass("code");
+s9.text(250,270,"Remove").addClass("green bold");
+s9.text(50,365,"{pay, Coin}").addClass("code darkred bold");
+s9.text(50,390,"&lt;Give Change&gt;").addClass("code");
+s9.path("M210,265 C228,193 335,200  340,150  C345,80 230,80 220 40").addClass("line").attr({"marker-end":marker});
+s9.path("M180,310 C145,325 185,360 195,332").addClass("line").attr({"marker-end":marker});
+s9.path("M225,325 C235,360 275,320 244,310 ").addClass("line").attr({"marker-end":marker});
+
+</script>
+</svg>
+</div>
+
+++++
+
+
+Generic Finite-State Machines
+-----------------------------
+
+[role="left comparison green"]
+Generic::
+* Spawning the FSM
+* Storing the loop data
+* Sending events to the FSM
+* Sending synchronous requests
+* Receiving replies
+* Stopping the FSM
+* Timeouts
+
+[role="right comparison darkred"]
+Specific::
+* Initialising the FSM state
+* The loop data
+* The events
+* Handling events/requests
+* The FSM states
+* State transitions
+* Cleaning up
+
+
+Generic Finite-State Machines
+-----------------------------
+image::images/gen_fsm.png["Generic Finite-State Machines", auto, auto]
+
+* The *gen_fsm* module implements the finite-state machine behaviour
+** It is part of the standard library application
+* The library module contains all the generic code
+* Non-generic code is placed in the callback module
+
+
+Generic Finite-State Machines
+-----------------------------
+++++
+<div class="pre">-module(coffee_fsm).
+<b>-behaviour(gen_fsm).</b>
+
+-export([start_link/0, init/1, ...]).
+
+start_link() -> ...
+
+</div>
+++++
+
+* Call back modules must have two extra directives
+* *behaviour* directive, used at compile time
+* All the state functions have to be exported
+
+
+Starting an FSM
+---------------
+++++
+<svg id="starting_an_fsm_1" style="width:1100px; height:340px;" viewBox="0 0 1100 340" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#starting_an_fsm_1");
+
+var arrow = s10.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s10.text(40,40,"gen_fsm:start_link({Scope,Name},Mod,Args,[])").addClass("code");
+
+s10.text(70,115,"Supervisor");
+s10.circle(290,120,42).addClass("shape").attr({"fill":"#A6A6A6"});
+s10.circle(290,120,37).addClass("shape grey");
+
+s10_g1 = s10.g(s10.path("M820,30 l60,0").addClass("line").attr({"marker-end":marker}),
+							 s10.path("M347,120 l263,0").addClass("line dashed").attr({"stroke-dasharray":"8,6", "marker-end":marker})).addClass("hide");
+
+s10_g2 = s10.g(s10.text(730,115,"Name/Pid"),
+							 s10.circle(670,120,40).addClass("shape darkred"),
+							 s10.text(560,205,"Mod:init(Args)").addClass("code")).addClass("hide");
+
+s10_g3 = s10.path("M675,215 l0,40").attr({"marker-end":marker}).addClass("line hide");
+
+s10_g4 = s10.g(s10.text(317,300,"{ok,State,LoopData} | {stop,Reason}").addClass("code"),
+							 s10.text(900,40,"{ok, Pid}").addClass("code")).addClass("hide");
+
+s10_anim1 = function() { s10_g1.animate({"opacity":"1"}, 500, mina.linear, s10_anim2) };
+s10_anim2 = function() { s10_g2.animate({"opacity":"1"}, 500, mina.linear) };
+s10_anim3 = function() { s10_g3.animate({"opacity":"1"}, 500, mina.linear, s10_anim4) };
+s10_anim4 = function() { s10_g4.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s10_counter=1
+s10.click( function() {
+  switch(s10_counter) {
+    case 1: {s10_anim1(); s10_counter++; break};
+    case 2: {s10_anim3(); s10_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* *gen_fsm:start_link/4* creates a new FSM
+** Name is the process name. *Scope* can be *local* or *global*
+** Mod is the name of the callback module
+** Args are the arguments passed to the init function
+* *Mod:init/1* is called by the FSM callback module
+** It initialises the loop data and returns the first state
+
+
+Starting an FSM
+---------------
+++++
+<svg id="starting_an_fsm_2" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s11 = Snap("#starting_an_fsm_2");
+
+var arrow = s11.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s11.rect(10,20,1040,570).addClass("rect_code");
+
+s11.text(15,50,"-module(coffee_fsm).").addClass("code");
+s11.text(15,90,"-behaviour(gen_fsm).").addClass("code");
+s11.text(15,130,"").addClass("code");
+s11.text(15,170,"-export([start_link/0, init/1, stop/0, terminate/3]).").addClass("code");
+s11.text(15,210,"-export([select/2, payment/2, remove/2]).").addClass("code");
+s11.text(15,250,"-export([americano/0, cappuccino/0, tea/0, espresso/0, ").addClass("code");
+s11.text(15,290,"         pay/1,cancel/0, cup_removed/0]). ").addClass("code");
+s11.text(15,330,"").addClass("code");
+s11.text(15,370,"start_link() ->").addClass("code");
+s11.text(15,410,"    gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).").addClass("code");
+s11.text(15,450,"").addClass("code");
+s11.text(15,490,"init([]) -> hw:reboot(),").addClass("code");
+s11.text(15,530,"            hw:display(\"Make Your Selection\", []),").addClass("code");
+s11.text(15,570,"            {ok, select, null}.").addClass("code");
+
+s11_g1 = s11.g(s11.ellipse(241,39,95,28).addClass("line_darkred"),
+							 s11.path("M336,39 Q748,50 798,365").addClass("line_darkred").attr({"marker-end":marker}),
+							 s11.ellipse(798,400,76,28).addClass("line_darkred")).addClass("hide");
+s11_g2 = s11.g(s11.ellipse(905,400,23,25).addClass("line_darkred"),
+							 s11.path("M905,425 C855,475 200,395 135,450").addClass("line_darkred").attr({"marker-end":marker}),
+							 s11.ellipse(119,480,25,25).addClass("line_darkred")).addClass("hide");
+s11_g3 = s11.g(s11.ellipse(363,563,60,25).addClass("line_darkred"),
+							 s11.path("M418,553 C468,513 875,580 920,526").addClass("line_darkred").attr({"marker-end":marker}),
+							 s11.ellipse(970,485,85,40).addClass("line_darkred"),
+							 s11.text(904,495,"Start state").addClass("darkred").attr({"font-size":"20pt"})).addClass("hide");
+
+var s11_counter=1
+s11.click( function() {
+  switch(s11_counter) {
+    case 1: { s11_g1.animate({"opacity":"1"}, 500, mina.linear); s11_counter++; break };
+    case 2: { s11_g2.animate({"opacity":"1"}, 500, mina.linear); s11_counter++; break };
+    case 3: { s11_g3.animate({"opacity":"1"}, 500, mina.linear); s11_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Sending Events: *asynchronous*
+------------------------------
+++++
+<svg id="sending_events_asynchronous_1" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s12 = Snap("#sending_events_asynchronous_1");
+
+var arrow = s12.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s12.text(40,40,"gen_fsm:send_event(Name, Event)").addClass("code");
+s12.circle(300,120,40).addClass("shape grey");
+s12.text(740,115,"Name");
+s12.circle(680,120,40).addClass("shape darkred");
+
+s12_g1 = s12.g(s12.path("M595,30 l50,0").addClass("line").attr({"marker-end":marker}),
+               s12.text(670,40,"ok").addClass("code"),
+               s12.text(450,110,"Event"),
+               s12.path("M357,120 l263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s12_g2 = s12.text(460,200,"Mod:State(Event, LoopData)").addClass("code hide");
+
+s12_g3 = s12.path("M680,210 l0,40").attr({"marker-end":marker}).addClass("line hide");
+
+s12_g4 = s12.g(s12.text(365,290,"{next_state, NextState, NewLoopData}").addClass("code"),
+               s12.text(365,325,"{stop, Reason, NewLoopData}").addClass("code")).addClass("hide");
+
+s12_anim1 = function() { s12_g1.animate({"opacity":"1"}, 500, mina.linear, s12_anim2) };
+s12_anim2 = function() { s12_g2.animate({"opacity":"1"}, 500, mina.linear) };
+s12_anim3 = function() { s12_g3.animate({"opacity":"1"}, 500, mina.linear, s12_anim4) };
+s12_anim4 = function() { s12_g4.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s12_counter=1
+s12.click( function() {
+  switch(s12_counter) {
+    case 1: {s12_anim1(); s12_counter++; break};
+    case 2: {s12_anim3(); s12_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* *gen_fsm:send_event/2* is used to send events
+** Requests are asynchronous
+** Handled in the *Mod:State/2* function of the FSM callback module
+* *Mod:State/2* returns the new loop data with the next state or the stop reason
+
+
+Sending Events: *asynchronous*
+------------------------------
+++++
+<div class="pre"><span class="comment">%% Client Functions for Drink Selections</span>
+tea() ->   gen_fsm:send_event(?MODULE,{selection,tea,100}).   
+espresso() ->    gen_fsm:send_event(?MODULE,{selection,espresso,150}).
+americano() ->   gen_fsm:send_event(?MODULE,{selection,americano,100}).   
+cappuccino() ->   gen_fsm:send_event(?MODULE,{selection,cappuccino,150}).
+
+<span class="comment">%% Client Functions for Actions</span>
+pay(Coin)     -> gen_fsm:send_event(?MODULE,{pay, Coin}).
+cancel()      -> gen_fsm:send_event(?MODULE,cancel).
+cup_removed() -> gen_fsm:send_event(?MODULE,cup_removed).
+
+</div>
+++++
+
+
+Sending Events: *asynchronous*
+------------------------------
+++++
+<div class="pre"><span class="comment">%% State: drink selection</span>
+
+select({selection,Type,Price}, LoopData) ->
+  hw:display("Please pay:~w",[Price]),
+  {next_state, payment, {Type, Price, 0}};
+select({pay, Coin}, LoopData) ->
+  hw:return_change(Coin),
+  {next_state, select, LoopData};
+select(_Other, LoopData) ->  
+  {next_state, select, LoopData}.
+
+
+
+
+</div>
+
+<div style="position:relative; top:-375pt; left:600pt;">
+<svg id="sending_events_asynchronous_2" style="width:360px; height:400px;" viewBox="0 0 360 400" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#sending_events_asynchronous_2 text {font-size: 18pt;} #sending_events_asynchronous_2 text.code {font-size: 16pt;} #sending_events_asynchronous_2 .line {stroke-width:2;}</style>
+<script>
+
+var s13 = Snap("#sending_events_asynchronous_2");
+
+var arrow = s13.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s13.text(150,35,"Select").addClass("darkred bold");
+s13.text(270,20,"cancel").addClass("code darkred bold");
+s13.circle(240,90,30).addClass("shape darkred")
+s13.path("M245,60 C265,10 310,50 275,85").addClass("line").attr({"marker-end":marker});
+s13.path("M260,110 C280,145 210,150 215,115").addClass("line").attr({"marker-end":marker});
+s13.path("M210,90 Q115,140 120,355").addClass("line").attr({"marker-end":marker});
+s13.text(170,170,"{pay, Coin}").addClass("code darkred bold");
+s13.text(170,200,"&lt;Give Change&gt;").addClass("code");
+s13.text(15,300,"{selection, Type, Price}").addClass("code darkred bold");
+s13.text(15,330,"&lt;Display Price&gt;").addClass("code");
+s13.text(70,390,"Payment").addClass("bold");
+
+</script>
+</svg>
+</div>
+
+++++
+
+
+Sending Events: *asynchronous*
+------------------------------
+....
+payment({pay, Coin}, {Type,Price,Paid}) 
+                when Coin+Paid >= Price ->
+    NewPaid = Coin + Paid,
+    hw:display("Preparing Drink.",[]),
+    hw:return_change(NewPaid - Price),
+    hw:drop_cup(), hw:prepare(Type),
+    hw:display("Remove Drink.", []),
+    {next_state, remove, null};
+payment({pay, Coin}, {Type,Price,Paid}) 
+                when Coin+Paid < Price ->
+    NewPaid = Coin + Paid,
+    hw:display("Please pay:~w",[Price - NewPaid]),
+    {next_state, payment, {Type, Price, NewPaid}};
+....
+
+++++
+<div style="position:relative; top:-300pt; left:580pt;">
+<svg id="sending_events_asynchronous_3" style="width:315px; height:270px;" viewBox="0 0 315 270" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#sending_events_asynchronous_3 text {font-size: 18pt;} #sending_events_asynchronous_3 text.code {font-size: 16pt;} #sending_events_asynchronous_3 .line {stroke-width:2;}</style>
+<script>
+
+var s14 = Snap("#sending_events_asynchronous_3");
+
+var arrow = s14.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s14.circle(125,90,30).addClass("shape grey")
+s14.path("M118,60 C120,21 190,70 157,87").addClass("line").attr({"marker-end":marker});
+s14.path("M144,113 C165,175 250,120 210,240").addClass("line").attr({"marker-end":marker});
+s14.text(5,47,"Payment").attr({"fill":"#4B5056"}).addClass("bold")
+s14.text(144,20,"{pay, Coin}").attr({"fill":"#4B5056"}).addClass("code bold darkred")
+s14.text(144,45,"Total &lt; Price").attr({"fill":"#4B5056"}).addClass("code darkred")
+s14.text(30,180,"{pay, Coin}").attr({"fill":"#4B5056"}).addClass("code bold darkred")
+s14.text(30,205,"Total &gt;= Price").attr({"fill":"#4B5056"}).addClass("code darkred")
+s14.text(122,265,"Remove").addClass("bold green")
+
+</script>
+</svg>
+</div>
+++++
+
+
+Sending Events: *asynchronous*
+------------------------------
+....
+payment(cancel, {Type, Price, Paid}) ->
+    hw:display("Make Your Selection", []),
+    hw:return_change(Paid),
+    {next_state, select, null};
+payment(_Other, LoopData) ->
+    {next_state, payment, LoopData}.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+....
+
+++++
+<div style="position:relative; top:-200pt; left:280pt;">
+<svg id="sending_events_asynchronous_4" style="width:410px; height:210px; background-color:;" viewBox="0 0 410 210" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#sending_events_asynchronous_4 text {font-size: 18pt;} #sending_events_asynchronous_4 text.code {font-size: 16pt;} #sending_events_asynchronous_4 .line {stroke-width:2;}</style>
+<script>
+
+var s15 = Snap("#sending_events_asynchronous_4");
+
+var arrow = s15.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s15.circle(130,65,30).addClass("shape grey")
+s15.text(10,25,"Payment").addClass("bold").attr({"fill":"#4B5056"});
+s15.text(270,40,"Select").addClass("darkred bold");
+s15.text(95,145,"cancel").addClass("code darkred bold");
+s15.text(95,170,"&lt;Give Change&gt;").addClass("code");
+s15.text(95,195,"&lt;Display Make Selection&gt;").addClass("code");
+s15.path("M130,95 C140,130 220,130 290,55").addClass("line").attr({"marker-end":marker});
+
+</script>
+</svg>
+</div>
+++++
+
+
+Sending Events: *asynchronous*
+------------------------------
+++++
+<div class="pre"><span class="comment">%% State: remove cup</span>
+remove(cup_removed, LoopData) ->
+    hw:display("Make Your Selection", []),
+    {next_state, select, LoopData};
+remove({pay, Coin}, LoopData) ->
+    hw:return_change(Coin),
+    {next_state, remove, LoopData};
+remove(_Other, LoopData) ->          
+    {next_state, remove, LoopData}.
+
+
+
+
+
+</div>
+
+<div style="position:relative; top:-350pt; left:525pt;">
+<svg id="sending_events_asynchronous_5" style="width:380px; height:400px; background-color:;" viewBox="0 0 380 400" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#sending_events_asynchronous_5 text {font-size: 18pt;} #sending_events_asynchronous_5 text.code {font-size: 16pt;} #sending_events_asynchronous_5 .line {stroke-width:2;}</style>
+<script>
+
+var s16 = Snap("#sending_events_asynchronous_5");
+
+var arrow = s16.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s16.circle(210,300,30).addClass("shape green")
+s16.text(180,25,"Select").addClass("darkred bold");
+s16.text(10,120,"cup_removed").addClass("code darkred bold");
+s16.text(10,145,"&lt;Display Make Selection&gt;").addClass("code");
+s16.text(250,270,"Remove").addClass("green bold");
+s16.text(50,365,"{pay, Coin}").addClass("code darkred bold");
+s16.text(50,390,"&lt;Give Change&gt;").addClass("code");
+s16.path("M210,265 C228,193 335,200  340,150  C345,80 230,80 220 40").addClass("line").attr({"marker-end":marker});
+s16.path("M180,310 C145,325 185,360 195,332").addClass("line").attr({"marker-end":marker});
+s16.path("M225,325 C235,360 275,320 244,310 ").addClass("line").attr({"marker-end":marker});
+
+</script>
+</svg>
+</div>
+
+++++
+
+
+Sending Events: *asynchronous*
+------------------------------
+++++
+<svg id="sending_events_asynchronous_6" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s17 = Snap("#sending_events_asynchronous_6");
+
+var arrow = s17.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s17.text(40,40,"gen_fsm:send_all_state_event(Name, Event)").addClass("code");
+s17.circle(300,120,40).addClass("shape grey");
+s17.text(740,115,"Name");
+s17.circle(680,120,40).addClass("shape darkred");
+
+s17_g1 = s17.g(s17.path("M767,30 l50,0").addClass("line").attr({"marker-end":marker}),
+               s17.text(840,40,"ok").addClass("code"),
+               s17.text(450,110,"Event"),
+               s17.path("M357,120 l263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s17_g2 = s17.text(338,200,"Mod:handle_event(Event, State, LoopData)").addClass("code hide");
+
+s17_g3 = s17.path("M680,210 l0,40").attr({"marker-end":marker}).addClass("line hide");
+
+s17_g4 = s17.g(s17.text(365,290,"{next_state, NextState, NewLoopData}").addClass("code"),
+               s17.text(365,325,"{stop, Reason, NewLoopData}").addClass("code")).addClass("hide");
+
+s17_anim1 = function() { s17_g1.animate({"opacity":"1"}, 500, mina.linear, s17_anim2) };
+s17_anim2 = function() { s17_g2.animate({"opacity":"1"}, 500, mina.linear) };
+s17_anim3 = function() { s17_g3.animate({"opacity":"1"}, 500, mina.linear, s17_anim4) };
+s17_anim4 = function() { s17_g4.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s17_counter=1
+s17.click( function() {
+  switch(s17_counter) {
+    case 1: {s17_anim1(); s17_counter++; break};
+    case 2: {s17_anim3(); s17_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* *gen_fsm:send_all_state_event/2* is used to send events
+** Requests are asynchronous
+** Handled in the *Mod:handle_event/3* function of the FSM callback module regardless of the state
+* *Mod:State/2* returns the new loop data with the next state or the stop reason
+
+
+Sending Events: *synchronous*
+-----------------------------
+++++
+<svg id="sending_events_asynchronous_7" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s18 = Snap("#sending_events_asynchronous_7");
+
+var arrow = s18.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s18.text(40,40,"gen_fsm:sync_send_event(Name, Event)").addClass("code");
+s18.circle(300,120,40).addClass("shape grey");
+s18.text(740,115,"Name");
+s18.circle(680,120,40).addClass("shape darkred");
+
+s18_g6 = s18.g(s18.path("M700,30 l70,0").addClass("line").attr({"marker-end":marker}),
+			   s18.text(815,40,"Reply").addClass("code")).addClass("hide");
+
+s18_g1 = s18.g(s18.text(430,88,"Message").addClass("code"),
+			   s18.path("M357,98 l263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s18_g5 = s18.g(s18.text(450,134,"Reply").addClass("code"),
+			   s18.path("M625,144 l-263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s18_g2 = s18.text(400,200,"Mod:State(Event, From, LoopData)").addClass("code hide");
+
+s18_g3 = s18.path("M680,210 l0,40").attr({"marker-end":marker}).addClass("line hide");
+
+s18_g4 = s18.g(s18.text(340,290,"{reply, Reply, NextState, NewLoopData}").addClass("code"),
+			   s18.text(340,325,"{stop, Reason, Reply NewLoopData}").addClass("code")).addClass("hide")
+
+s18_anim1 = function() { s18_g1.animate({"opacity":"1"}, 500, mina.linear, s18_anim2) };
+s18_anim2 = function() { s18_g2.animate({"opacity":"1"}, 375, mina.linear) };
+s18_anim3 = function() { s18_g3.animate({"opacity":"1"}, 500, mina.linear, s18_anim4) };
+s18_anim4 = function() { s18_g4.animate({"opacity":"1"}, 500, mina.linear, s18_anim5) };
+s18_anim5 = function() { s18_g5.animate({"opacity":"1"}, 375, mina.linear, s18_anim6) };
+s18_anim6 = function() { s18_g6.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s18_counter=1
+s18.click( function() {
+  switch(s18_counter) {
+    case 1: {s18_anim1(); s18_counter++; break};
+    case 2: {s18_anim3(); s18_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* *gen_fsm:sync_send_event/2* is used to send requests
+** Requests are synchronous
+** Handled in the *Mod:State/3* function of the FSM callback module
+
+
+Sending Events: *termination*
+-----------------------------
+++++
+<svg id="sending_events_termination_1" style="width:1100px; height:370px;" viewBox="0 0 1100 370" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s19 = Snap("#sending_events_termination_1");
+
+var arrow = s19.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s19.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape").transform("t400 -100 r24");
+
+s19.circle(510,100,40).addClass("shape grey");
+s19.path("M510,200 l0,70").addClass("line").attr({"marker-end":marker});
+
+s19_g1 = s19.g(s19.text(110,320,"Mod:terminate(Reason, State, Data)").addClass("code"),
+			   s19.path("M720,310 l60,0").addClass("line").attr({"marker-end":marker}),
+			   s19.text(810,320,"Term").addClass("code")).addClass("hide");
+
+s19.click( function() { s19_g1.animate({"opacity":"1"}, 500, mina.linear) });
+
+</script>
+</svg>
+++++
+
+* If the process crashes, *Mod:terminate/3* is called
+** The FSM must be trapping exits: *process_flag(trap_exit, true)*.
+** If *init/1* returns *stop*, then *terminate/3* is not called.
+
+
+Sending Events: *synchronous*
+-----------------------------
+....
+-export([stop/0, select/3, payment/3, remove/3]).
+-export([terminate/3]).
+
+stop() -> gen_fsm:sync_send_event(?MODULE, stop).
+
+select(stop, From, LoopData) ->
+      {stop, normal, ok, LoopData}.
+payment(stop, From, Paid) ->
+	   hw:return_change(Paid),
+	  {stop, normal, ok, 0}.
+remove(stop, From, LoopData) ->
+	  {stop, normal, ok, LoopData}.
+
+terminate(Reason, StateName, LoopData) -> ok.
+ 
+....
+
+
+Sending Events: *synchronous*
+-----------------------------
+++++
+<svg id="sending_events_synchronous_1" style="width:1100px; height:400px;" viewBox="0 0 1100 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s20 = Snap("#sending_events_synchronous_1");
+
+var arrow = s20.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s20.text(40,40,"gen_fsm:sync_send_all_state_event(Name, Event)").addClass("code");
+
+s20_g6 = s20.g(s20.path("M810,50 l50,30").addClass("line").attr({"marker-end":marker}),
+			   s20.text(880,110,"Reply").addClass("code")).addClass("hide");
+
+s20.circle(170,130,40).addClass("shape grey");
+s20.text(610,125,"Name");
+s20.circle(550,130,40).addClass("shape darkred");
+
+s20_g1 = s20.g(s20.text(300,98,"Message").addClass("code"),
+			   s20.path("M227,108 l263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s20_g5 = s20.g(s20.text(320,144,"Reply").addClass("code"),
+			   s20.path("M495,154 l-263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s20_g2 = s20.text(100,220,"Mod:handle_sync_event(Event, From, State, LoopData)").addClass("code hide");
+
+s20_g3 = s20.path("M565,230 l0,40").attr({"marker-end":marker}).addClass("line hide");
+
+s20_g4 = s20.g(s20.text(245,310,"{reply, Reply, NextState, NewLoopData}").addClass("code"),
+			   s20.text(245,345,"{stop, Reason, Reply NewLoopData}").addClass("code")).addClass("hide");
+
+s20_anim1 = function() { s20_g1.animate({"opacity":"1"}, 500, mina.linear, s20_anim2) };
+s20_anim2 = function() { s20_g2.animate({"opacity":"1"}, 375, mina.linear) };
+s20_anim3 = function() { s20_g3.animate({"opacity":"1"}, 500, mina.linear, s20_anim4) };
+s20_anim4 = function() { s20_g4.animate({"opacity":"1"}, 500, mina.linear, s20_anim5) };
+s20_anim5 = function() { s20_g5.animate({"opacity":"1"}, 375, mina.linear, s20_anim6) };
+s20_anim6 = function() { s20_g6.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s20_counter=1
+s20.click( function() {
+  switch(s20_counter) {
+    case 1: {s20_anim1(); s20_counter++; break};
+    case 2: {s20_anim3(); s20_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Sends synchronous requests to FMSs regardless of their state
+** They are handled in *Mod:handle_sync_event/4*
+* The *Mod:handle_info/3* callback function takes care of all non OTP-compliant messages
+
+
+Timeouts
+--------
+++++
+<svg id="timeouts_1" style="width:1150px; height:300px;" viewBox="0 0 1150 300" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s21 = Snap("#timeouts_1");
+
+var arrow = s21.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s21.rect(6,8,1120,280).addClass("rect_code")
+
+s21.text(15,40, "Mod:init/1                {ok, State, LoopData, Timeout}").addClass("code");
+s21.text(15,40, "                                                Timeout").addClass("code bold darkred");
+s21.text(15,80, "Mod:State/2-3             {next_state, LoopData, Timeout}").addClass("code");
+s21.text(15,80, "                                                 Timeout").addClass("code bold darkred");
+s21.text(15,120,"Mod:handle_event/3        {reply,Reply,State,LoopData, Timeout}").addClass("code");
+s21.text(15,120,"                                                       Timeout").addClass("code bold darkred");
+s21.text(15,160,"Mod:handle_sync_event/4   {reply,Reply,State,LoopData, Timeout}").addClass("code");
+s21.text(15,160,"                                                       Timeout").addClass("code bold darkred");
+s21.text(15,250,"                          Mod:State(timeout, LoopData)").addClass("code");
+s21.text(15,250,"                                    timeout").addClass("code bold darkred");
+
+s21.path("M350,90 l90,0").addClass("line").attr({"marker-end":marker});
+s21.path("M615,175 l0,35").addClass("line").attr({"marker-end":marker});
+
+</script>
+</svg>
+++++
+
+* Timeouts can be generated within the FSM
+* *Timeout* is an integer in milliseconds or the atom *infinity*
+* The *timeout* event is sent to the state the FSM is currently in
+* Timeouts are triggered if no message is received within Timeout ms
+* Timeouts are reset after a timeout event or an incoming event
+
+
+Sending Events: timeouts
+------------------------
+++++
+<div class="pre">-define(TIMEOUT, 30000).
+...
+payment({pay, Coin}, {Type,Price,Paid})
+                           when Coin+Paid < Price ->
+  NewPaid = Coin + Paid,
+  hw:display("Please pay:~w",[Price - NewPaid]),
+  {next_state, payment, {Type, Price, NewPaid}, <b>?TIMEOUT</b>};
+payment(<b>timeout</b>, {Type, Price, Paid}) ->
+  hw:display("Make Your Selection", []),
+  hw:return_change(Paid),
+  {next_state, select, null};
+payment(_Other, LoopData) ->
+  {next_state, payment, LoopData, <b>?TIMEOUT</b>}.
+
+</div>
+++++
+
+
+Finite-State Machines
+---------------------
+* Finite-State Machines
+* FSM Example
+* Generic FSMs
+* Starting a Generic FSM
+* Asynchronous Messages
+* Synchronous Messages
+* Termination
+* Timeouts

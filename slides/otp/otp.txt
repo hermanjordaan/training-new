@@ -1,0 +1,297 @@
+Open Telecom Platform
+=====================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Open Telecom Platform
+---------------------
+* Erlang
+* OTP Components
+* System Design Principles
+* Applications and Libraries
+
+
+Erlang
+------
+*Great features, but what about industrial-grade software?*  +  
+{empty}  +  
+
+[role="left"]
+* Concurrency
+* Error Handling
+* Hot Code Swap
+* Distribution
+* Hooks to C & Java
+* Memory Management
+* Byte Code Interpreter
+
+[role="right"]
+{empty}  +  
+
+image::images/erlang.png["Powered by Erlang", 400, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Note: this is looking at Erlang for the programmer in the large, explaining what's
+useful or important for them. It is assumed the users know Erlang already.
+--
+
+
+Open Telecom Platform
+---------------------
+* Erlang was developed through prototype design cycles
+** Solved many software-related problems
+* It is still just a programming language
+* For large scale software design you need more
+** Ready built applications and libraries
+** Design principles
+** Methodology
+** Tools
+
+
+Open Telecom Platform
+---------------------
+* A project to tackle these issues was started (1993)
+** In parallel with the first major Erlang project
+** The result was BOS, the Basic Operating System
+* Major Erlang projects were started
+** There was a need for real middleware
+* BOS and Erlang were merged to form OTP (1995)
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Put emphasis on the prototype-based design nature of OTP.
+- This was made possible only by having good original users, prepared to have a
+  completely new syntax 'next Monday'
+--
+
+
+Open Telecom Platform
+---------------------
+*Open*::
+	Refers to the openness towards other languages and protocols:
+	* JInterface, erl interface
+	* TCP/IP, UDP/IP,
+	* IDL, ASN1
+	* Corba SNMP
+
+*Telecom*
+
+*Platform*
+
+
+Open Telecom Platform
+---------------------
+*Open*
+
+*Telecom*::
+	Refers to the characteristics of telecom systems (which apply to other areas)
+	* Distributed
+	* Fault Tolerant
+	* Massively Concurrent
+	* Soft Real Time
+
+*Platform*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+For telecom, stress the telecoms characteristics and that applications other than telecom can share the same problems.
+--
+
+
+Open Telecom Platform
+---------------------
+*Open*
+
+*Telecom*
+
+*Platform*::
+	Refers to the role OTP plays as middleware in large scale development
+	* Libraries
+	* Applications
+	* Tools
+	* Design Principles
+
+[NOTE.speaker]
+[role="speaker"]
+--
+- 'Open' Platform is a 'lie': 'open' was a buzzword chosen for the name only, but it turns out it fits the project when seen in the "libraries, applications, tools, design principles" way
+--
+
+
+Open Telecom Platform
+---------------------
+++++
+<div style="text-align:center;">
+<svg id="otp_1" 1000px; height:600px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#otp_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"}).addClass("darkred");
+
+s1.image("images/otp.png", 400, 300, 633/2.75, 645/2.75);
+
+s1_g1 = s1.g(s1.image("images/erlang.png", 10, 150, 829/4, 610/4),
+             s1.path("M215,305 l185,100").addClass("line_darkred").attr({"marker-end":marker, "stroke-width":"6"}))
+          .addClass("hide");
+
+s1_g2 = s1.g(s1.image("images/apps+libs.png", 250, 10, 520/2, 350/2),
+             s1.text(475,80,"Applications &").addClass("darkred").attr({"font-size":"20pt"}),
+             s1.text(510,112,"Libraries").addClass("darkred").attr({"font-size":"20pt"}),
+             s1.path("M510,140 l0,150").addClass("line_darkred").attr({"marker-end":marker, "stroke-width":"6"}))
+          .addClass("hide");
+
+s1_g3 = s1.g(s1.image("images/sys_design_princ_1.png", 750, 100, 545/2.5, 366/2.5),
+             s1.text(740,60,"System Design").addClass("darkred").attr({"font-size":"20pt"}),
+             s1.text(775,92,"Principles").addClass("darkred").attr({"font-size":"20pt"}),
+             s1.path("M760,230 l-150,130").addClass("line_darkred").attr({"marker-end":marker, "stroke-width":"6"}))
+          .addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 600, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 600, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 600, mina.linear); }
+s1.click(function() { s1_anim1() });
+
+</script>
+</svg>
+</div>
+++++
+
+System Design Principles
+------------------------
+* *A set of abstract principles and design rules*
+** They describe the software architecture of an Erlang   System
+** Needed so existing tools will be compatible with them
+** Facilitate the understanding of the system
+* *A set of generic behaviours*
+** Each behaviour is a framework containing generic code
+** Solves a common problem
+** Built-in support for debugging and software upgrade
+** Generic error handling behind the scenes
+** Facilitates understanding the sub blocks in the system
+
+
+System Design Principles
+------------------------
+[role="left"]
+image::images/release.png[Release, auto, auto]
+
+[role="right"]
+* Complete Erlang systems are built as releases
+* A release is:
+**  a version of the Erlang Run Time System (ERTS)
+** A set of OTP applications that work together
+* Releases allow to start, stop, and manage applications in a standard manner
+* Releases can be upgraded or downgraded as a unit
+
+
+System Design Principles
+------------------------
+image::images/application.png[Application, auto, auto]
+
+* An application is a logical unit of processes and modules grouped together to perform a given task
+* Application are trees of supervisors and their workers
+* They can be implemented using generic behaviours
+
+[NOTE.speaker]
+[role="speaker"]
+--
+First example of the principles. It is included in the behaviours we'll use and will be seen later. 
+-Try to raise their expectation of learning the principles.
+--
+
+
+System Design Principles
+------------------------
+image::images/sys_design_princ_2.png["System design principles", auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Talk about what makes up an Erlang system.
+ - ERLANG the language (orange) stands on the VM, the runtime system.
+ - What's the basics you have to have (stdlib, kernel, etc.). Anything with  OTP support will have SASL (green colors).
+ - Orange are generic applications
+--
+
+Applications and Libraries
+--------------------------
+*Basic Applications*::
+Erlang Runtime System, Kernel, Compiler, Standard Lib,  + 
+System Architecture Support Library (SASL)
+
+*Database Applications*::
+Mnesia (Distributed relational database)  + 
+ODBC (Interface for accessing SQL databases)
+
+*Operations and Maintenance Applications*::
+Operating System Monitor  + 
+Simple Network Management Protocol  + 
+OTP MIBs
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that this is not a complete list, just the highlights.
+
+MIB: management information base, a virtual database used for managing the entities in a communications network. Most often associated with the Simple Network Management Protocol (SNMP), the term is also used more generically in contexts such as in OSI/ISO Network management model.
+--
+
+
+Applications and Libraries
+--------------------------
+
+*Interface and communication Applications*::
+* Corba  Object Request Broker Applications
+* ASN1 Compiler
+* Crypto
+* Graphics System (Wx)
+* Inets (TCP, UDP, HTTP, FTP)
+* Java Interface & Erlang to C Interface
+* Megaco stack
+* SSH/SSL
+* XML Parsing
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that this is not a complete list, just the highlights.
+--
+
+
+Applications and Libraries
+--------------------------
+*Tool Applications*::
+* Appmon, Pman, Debugger, Event Trace, Table Visualiser
+* Dialyzer & TypER (Type checking tools)
+* Docbuilder, Edoc
+* Inviso, Observer
+* Percept (Concurrency Profiling tool)
+* Parse & Syntax Tools (YECC, handling ASTs)
+* Runtime and Profiling Tools
+* Tools for debugging production systems
+* Tools for profiling, coverage analysis, support, etc.
+
+
+Open Telecom Platform
+---------------------
+* OTP Components
+* Erlang
+* Applications and Libraries
+* System Design Principles

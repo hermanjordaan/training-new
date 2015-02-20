@@ -155,10 +155,14 @@ pre {
   margin-right: 15px;
 }
 
+.reveal .w_200 {width: 200px !important}
+.reveal .w_300 {width: 300px !important}
 .reveal .w_400 {width: 400px !important}
 .reveal .w_500 {width: 500px !important}
 .reveal .w_600 {width: 600px !important}
 .reveal .w_700 {width: 700px !important}
+.reveal .w_800 {width: 800px !important}
+.reveal .w_900 {width: 900px !important}
 
 .reveal .right {
   display: block;
@@ -192,7 +196,8 @@ pre {
 	font-weight: bold;
 }
 
-.reveal .pre {
+.reveal .pre,
+.pre {
   white-space: pre-wrap;
   font-family: Menlo, monospace !important;
   /* (look at '.reveal pre' in reveal.min.css) */
@@ -204,7 +209,7 @@ pre {
   margin: 8px 0 20px;
   font-size: 0.9em;
   font-family: Menlo, monospace;
-  border: 1px solid #E1E1E1 !important;
+  border: 1px solid #E1E1E1;
   background-color: #F2F2F2;
   width: 95%;
 }
@@ -245,9 +250,25 @@ pre {
   text-align: center;
 }
 
+.reveal dt {
+	margin-bottom: 10pt;
+}
+
 .reveal dd {
   margin-left: 30pt;
   margin-bottom: 15pt;
+}
+
+.reveal dd p {
+	line-height: 1.35em;
+}
+
+.reveal dd ul li {
+	margin-top: 2pt;	
+}
+
+.reveal dd ul li {
+	margin-bottom: 8pt !important;
 }
 
 div.slides:after {
@@ -277,10 +298,16 @@ div.slides:after {
   background-color: #fff !important;
 }
 
-.reveal ul ul {
+.reveal ul ul,
+.reveal .level2 {
   color: #4B5056;
   margin-top: 12pt;
   font-size: 0.94em;
+}
+
+.reveal .level2 ul {
+	margin-left: 50pt;
+	list-style-type: square;
 }
 
 .reveal ul ul li {
@@ -308,3 +335,126 @@ div.slides:after {
   margin-bottom: 1em !important;
 }
 
+svg.placeholder {
+	border: 1px dashed #aaa;
+	background-color: #fafafa;
+	height: 100px;
+	width: 100%;
+	margin-bottom: 20pt;
+}
+
+.reveal .comparison dt {
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.15em;
+	margin-bottom: 15pt;
+}
+
+.reveal .comparison dd {
+	list-style-type: disc;
+	color: #000;
+}
+
+p.red,
+.red dt,
+.red b {
+	color: red;
+}
+
+p.green,
+.green dt,
+.green b {
+	color: forestgreen;
+}
+
+/* <pre> without border/shading */
+.plain,
+.plain pre {
+	border: none !important;
+	background: none !important;
+}
+
+/* tables */
+
+.table1 th, .table1 td,
+.table2 th, .table2 td {
+	border: 1px solid #797979;
+	padding: 10pt;
+	white-space: nowrap;
+}
+
+.table1,
+.table2 {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.table2 th, .table2 td {
+	background-color: #F2F2F2;
+}
+
+.table1 th p, .table1 td p,
+.table2 th p, .table2 td p {
+	line-height: 1.0em;
+	margin: 0;
+}
+
+.table2 th {
+	background-color: #860404 !important;
+	color: #fff;
+	text-align: center;
+}
+
+.clear {
+	clear: both;
+}
+
+/* use as alternative bold which isn't red */
+em {
+	font-style: normal !important;
+	font-weight: bold !important;
+}
+
+blockquote {
+	font-family: 'Menlo Regular', monospace !important;
+	background-color: #F5F5F5 !important;
+	padding: 15pt !important;
+	margin-top: 60pt !important;
+	width: auto !important;
+}
+
+blockquote strong {
+	color: #000 !important;
+}
+
+div.attribution {
+	text-align: right;
+	margin-top: 20pt;
+}
+
+.halign-center {
+	text-align: center !important;
+}
+
+.paragraph + .literalblock,
+.paragraph + .pre {
+	margin-top: 15pt;
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+::selection {
+	color: #000;
+	background: #eee;
+}
+
+.rotate {
+	display: inline-block;
+	position: relative;
+}
+
+.green {
+	color: #007F00;
+}
