@@ -1,0 +1,245 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Query List Comprehensions</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Query List Comprehensions</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_query_list_comprehensions"><h2>Query List Comprehensions</h2><div class="ulist"><ul><li><p>Query Handles</p></li><li><p>Evaluation</p></li><li><p>Cursors</p></li></ul></div></section>
+<section id="_introduction"><h2>Introduction</h2><div class="ulist"><ul><li><p>QLC provides an[other] interface to query tables</p></li><li><p>Works for Mnesia, ETS and DETS tables</p><div class="ulist"><ul><li><p>Can easily be used on proprietary data types</p></li></ul></div></li><li><p>Similar to List Comprehensions</p><div class="ulist"><ul><li><p>Variables in patterns may not be reused in expressions</p></li></ul></div></li><li><p>Intended as a replacement of Mnemosyne</p></li><li><p>QLCs evaluate to Query Handles that are evaluated</p></li></ul></div></section>
+<section id="_query_list_comprehensions_2"><h2>Query List Comprehensions</h2><svg id="query_list_comprehensions_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#query_list_comprehensions_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(150,240,"Handle = qlc:q([X || X <- mnesia:table(employee),").addClass("code");
+s1.text(150,280,"                X#employee.salary > 50000]).").addClass("code");
+
+s1_g1 = s1.g(s1.text(100,130,"Query Generator").addClass("darkred"),
+             s1.path("M210,145 l150,60").addClass("line_darkred").attr({"marker-end":marker}));
+s1_g2 = s1.g(s1.text(390,130,"Template").addClass("darkred"),
+             s1.path("M450,145 l-10,50").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g3 = s1.g(s1.text(685,130,"Generator").addClass("darkred"),
+             s1.path("M763,145 l0,55").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g4 = s1.g(s1.text(540,400,"Filter").addClass("darkred"),
+             s1.path("M575,370 l25,-70").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"0"}, 250, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim3 = function() { s1_g2.animate({"opacity":"0"}, 250, mina.linear, s1_anim4); }
+s1_anim4 = function() { s1_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim5 = function() { s1_g3.animate({"opacity":"0"}, 250, mina.linear, s1_anim6); }
+s1_anim6 = function() { s1_g4.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim3(); s1_counter++; break};
+    case 3: {s1_anim5(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_query_list_comprehensions_3"><h2>Query List Comprehensions</h2><div class="literalblock"><div class="content"><pre>qlc:q([Template || Generator1, ..., GeneratorN,
+                   Filter1, ..., FilterN]).
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p><strong>Template</strong> is a valid Erlang expression</p><div class="ulist"><ul><li><p>May not contain function calls</p></li></ul></div></li><li><p>Generators of the form <strong>Pattern &lt;- ListExpression</strong></p><div class="ulist"><ul><li><p>ListExpression evaluates to a list or a query handle</p></li></ul></div></li><li><p>Filters are functions returning <strong>true</strong> or <strong>false</strong></p></li><li><p>Must include <strong>qlc.hrl</strong> in the code. Use:</p><div class="ulist"><ul><li><p><strong>-include_lib("stdlib/include/qlc.hrl").</strong></p></li></ul></div></li></ul></div></section>
+<section id="_query_list_comprehensions_4"><h2>Query List Comprehensions</h2><div class="literalblock"><div class="content"><pre>qlc:q([Template || Generator1, ..., GeneratorN,
+                   Filter1, ..., FilterN]).
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Options:</p><div class="ulist"><ul><li><p><strong>{max_lookup, Max}</strong> limits the number of keys looked up (rare)</p></li><li><p><strong>cache | {cache, bool()}</strong>: caching of evaluation results in an ETS table, used for sub-queries</p></li><li><p><strong>unique | {unique, bool()}</strong>: duplicate answers are removed</p></li></ul></div></li></ul></div></section>
+<section id="_qlc_strong_example_strong"><h2>QLC: <strong>example</strong></h2><div class="pre">
+<b>15> Q = qlc:q([ X || X <- mnesia:table(employee),
+                     X#employee.salary >= 50000])</b>.
+{qlc_handle,{qlc_lc,#Fun&lt;erl_eval.20.26901802&gt;
+{qlc_opt,false,false,-1}}}
+<b>16> Q1 = qlc:q([X#employee.name||
+                X <- mnesia:table(employee),
+                X#employee.salary < 10000]).</b>
+{qlc_handle,{qlc_lc,#Fun&lt;erl_eval.20.26901802&gt;,
+               {qlc_opt,false,false,-1}}}
+
+
+
+
+</div></section>
+<section id="_query_handles"><h2>Query Handles</h2><div class="literalblock centered"><div class="content"><pre>qlc:append(QH1, QH2)
+qlc:sort(QH [,Options])
+mnesia:table(Table [,Options])</pre></div></div>
+<div class="ulist"><ul><li><p><strong>append/2</strong> returns a handle that returns the answer to QH1 followed by those returned by QH2</p></li><li><p><strong>sort/1-2</strong> sorts the answers to QH1 in lexicographic order</p></li><li><p><strong>table/1-2</strong> returns the elements in the table</p></li></ul></div></section>
+<section id="_query_handles_strong_example_strong"><h2>Query Handles: <strong>example</strong></h2><div class="pre"><b>17> Rich = qlc:q([X || X <- mnesia:table(employee),
+                    X#employee.salary > 50000]),
+    Poor = qlc:q([X || X <- mnesia:table(employee),
+                      X#employee.salary < 10000]),
+    RichAndPoor = qlc:sort(qlc:append(Rich, Poor)).</b>
+{qlc_handle, ... }
+
+
+
+
+
+
+
+</div></section>
+<section id="_evaluation"><h2>Evaluation</h2><svg id="evaluation_1" style="width:1100px; height:280px;" viewBox="0 0 1100 280" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#evaluation_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.rect(10,10,1090,250).addClass("rect_code")
+s2.text(540,150,"mnesia:transaction(fun() -> qlc:eval(Query) end).").addClass("code").attr({"text-anchor":"middle"});
+
+s2_g1 = s2.g(s2.text(420,50,"Query Evaluator").addClass("darkred"),
+             s2.path("M530,65 l130,50").addClass("line_darkred").attr({"marker-end":marker}));
+
+s2.click(function(){s2_g1.animate({"opacity":"0"}, 375, mina.linear)})
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Evaluates a Query Handle in a Mnesia transaction</p></li><li><p>Returns all the answers in a list</p><div class="ulist"><ul><li><p>In the format <strong>{atomic, [Answer]}</strong></p></li></ul></div></li></ul></div></section>
+<section id="_evaluation_strong_example_strong"><h2>Evaluation: <strong>Example</strong></h2><div class="pre"><b>17> Rich = qlc:q([X || X <- mnesia:table(employee),
+                    X#employee.salary > 50000]),
+    Poor = qlc:q([X || X <- mnesia:table(employee),
+                      X#employee.salary < 10000]),
+    RichAndPoor = qlc:sort(qlc:append(Rich, Poor)).</b>
+{qlc_handle, ... }
+<b>18> mnesia:transaction(fun() -> qlc:eval(RichAndPoor)
+end).</b>
+   {atomic,[#employee{emp_no = 1,
+                      name = "Henrik",
+                      salary = 100000},
+            #employee{emp_no = 2,
+                      name = "Francesco",
+                      salary = 250}]}
+
+</div></section>
+<section id="_evaluation_2"><h2>Evaluation</h2><div class="literalblock centered"><div class="content"><pre>qlc:eval(QueryHandle)
+qlc:eval(QueryHandle, Options)</pre></div></div>
+<div class="ulist"><ul><li><p>Returns the list of all the answers to the query handle</p></li><li><p>The options:</p><div class="ulist"><ul><li><p><strong>cache_all, {cache_all, bool()}</strong>: cache results of sub queries that might be reevaluated</p></li><li><p><strong>unique_all, {unique_all, bool()}</strong>: remove duplicates</p></li></ul></div></li></ul></div></section>
+<section id="_cursors"><h2>Cursors</h2><svg id="cursors_1" style="width:1100px; height:280px;" viewBox="0 0 1100 280" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#cursors_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.rect(10,10,1090,250).addClass("rect_code")
+s3.text(540,150,"mnesia:transaction(fun() -> qlc:cursor(Query) end).").addClass("code").attr({"text-anchor":"middle"});
+
+s3_g1 = s3.g(s3.text(438,50,"Query Cursor").addClass("darkred"),
+             s3.path("M530,65 l130,50").addClass("line_darkred").attr({"marker-end":marker}));
+
+s3.click(function(){s3_g1.animate({"opacity":"0"}, 375, mina.linear)})
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Creates a query cursor in a Mnesia transaction</p></li><li><p>Returns <strong>{atomic, [Cursor]}</strong></p></li></ul></div></section>
+<section id="_cursors_2"><h2>Cursors</h2><div class="ulist"><ul><li><p>The cursor functions returns a cursor that can be used to iterate over the answers to the query</p></li><li><p>The Cursor is a process that is spawned</p></li><li><p>The options:</p><div class="ulist"><ul><li><p><strong>cache_all, {cache_all, bool()}</strong> – cache results of sub queries that might be reevaluated</p></li><li><p><strong>unique_all, {unique_all, bool()}</strong> – remove duplicates</p></li><li><p><strong>{spawn_opts, SpawnOpts}</strong> – <strong>erlang:spawn_opt</strong> arguments for memory management</p></li></ul></div></li></ul></div></section>
+<section id="_cursors_3"><h2>Cursors</h2><div class="literalblock centered"><div class="content"><pre>qlc:next_answers(Cursor [, NumberOfAnswers])
+qlc:delete_cursor(Cursor)</pre></div></div>
+<div class="ulist"><ul><li><p><strong>next_answers/1-2</strong> returns a list of some or all of the answers. <strong>NumberofAnswers</strong> determines how many answers are returned, default 10</p></li><li><p><strong>delete_cursor/1</strong> deletes the cursor</p></li><li><p>The functions can only be invoked by the owner of the cursor</p></li></ul></div></section>
+<section id="_cursors_strong_example_strong"><h2>Cursors: <strong>example</strong></h2><svg id="cursors_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#cursors_example_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.rect(10,15,1090,600).addClass("rect_code")
+
+s3.text(20,50,"15> All = qlc:q([X | | X <- mnesia:table(employee)]). ").addClass("code darkred bold");
+s3.text(20,90,"{qlc_handle, ...}").addClass("code");
+s3.text(20,130,"16> mnesia:transaction(fun() -> qlc:cursor(All) end).").addClass("code darkred bold");
+s3.text(20,170,"{atomic, {qlc_cursor, {<0.110.0>, <0.107.0>}}}").addClass("code");
+s3.text(20,210,"17> mnesia:transaction(").addClass("code darkred bold");
+s3.text(20,250,"           fun() -> C = qlc:cursor(All), ").addClass("code darkred bold");
+s3.text(20,290,"                        qlc:next_answers(C, 1),").addClass("code darkred bold");
+s3.text(20,330,"                        qlc:next_answers(C, 2),").addClass("code darkred bold");
+s3.text(20,370,"                        qlc:next_answers(C, all_remaining) ").addClass("code darkred bold");
+s3.text(20,410,"           end).").addClass("code darkred bold");
+s3.text(20,450,"{atomic, [#employee{emp_no = 4, name = \"Klas\", 45000},").addClass("code");
+s3.text(20,490,"          #employee{emp_no = 5, name = \"Ola\", 45000}]}").addClass("code");
+
+s3_g1 = s3.g(s3.text(870,230,"Times out").addClass("darkred"),
+             s3.path("M892,195 l-30,-35").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3.click(function() {s3_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg></section>
+<section id="_query_list_comprehensions_5"><h2>Query List Comprehensions</h2><div class="ulist"><ul><li><p>Query Handles</p></li><li><p>Evaluation</p></li><li><p>Cursors</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

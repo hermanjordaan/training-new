@@ -1,0 +1,149 @@
+Mocking with Meck
+=================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Mocking with Meck
+-----------------
+* Mock modules are fake versions of existing or non-existing modules
+* They replicate the expected interface of a module
+* They replicate the expected behaviour of a module
+* They can track interactions and calls made to them
+* Mock modules can be swapped in and out with the real module.
+
+
+Mocking with Meck: *why mock?*
+------------------------------
+* The module has non-deterministic behaviour
+** Dates, time, randomness, third party's status
+* Some behaviour is hard to trigger
+** Network errors, file permissions, leap years, Nth day of a month, chains of events, etc.
+* The module has hard-to-detect side effects
+** GUI, audio, logs, callbacks to dependencies, complex interactions
+* The module does not exist yet
+
+[NOTE.speaker]
+[role="speaker"]
+--
+non-determinism here is used in the sense of 'a single call can have more than one outcome'.
+--
+
+
+Mocking with Meck
+-----------------
+....
+1> meck:new(fake).  
+ok
+2> meck:new(fake2, [nolink]).
+ok
+3> meck:unload(fak2).
+ok
+ 
+....
+
+* *meck:new(Mod, [Opts])* creates a new module *Mod*. *Opts* can be *nolink* and *passthrough*
+* The new module is dropped if the caller crashes, except when *nolink* is passed
+* Mocks started with *passthrough* let you overload an existing module and keeps the old functions
+* Unload mocks with *meck:unload()* or *meck:unload(Mod)*
+
+
+Mocking with Meck
+-----------------
+....
+4> meck:expect(fake, f, fun() -> hello end). 
+ok
+5> fake:f().
+hello
+6> meck:delete(fake, f, 0).                 
+ok
+ 
+....
+
+* *meck:expect(Mod, FunName, Fun)* creates a new function on the mock objects
+* Many functions of any arity can be attached
+* Functions can be removed from the mock by using *meck:delete(Mod, FunName, Arity)*
+
+
+Mocking with Meck
+-----------------
+++++
+<div class="left w_600">
+<div class="pre">7> meck:expect(fake, do, 
+fun('A') -> upper end), 
+fake:do('A').
+upper
+8> meck:expect(fake,y, fun() -> 
+<b>meck:exception(error, badarith)</b> 
+end).
+ok
+9> catch fake:y().
+{'EXIT',{badarith, ...}}
+<b>10> meck:validate(fake).</b>
+true
+11> catch fake:do(b).   
+{'EXIT',{function_clause,[...]}}
+<b>12> meck:validate(fake).</b>
+false
+
+</div></div>
+++++
+
+[role="right"]
+* *meck:validate(Mod)* returns *true* if the mocked object was used according to expectations or *false* if a call failed in some way.
+* Expected exceptions can be raised with *meck:exception(Class, Reason)* without breaking the validation.
+
+
+Mocking with Meck
+-----------------
+++++
+<div class="left">
+<div class="pre"><b>13> meck:history(fake).</b>
+[{{fake,f,[]},hello},
+ {{fake,do,['A']},upper},
+ {{fake,y,[]},
+  error,badarith,
+  [{meck,exception,2},
+   {meck,exec,4},
+   {fake,y,[]},
+   {erl_eval,do_apply,5},
+   {erl_eval,expr,5},
+   {shell,exprs,7},
+   {shell,eval_exprs,7},
+   {shell,eval_loop,3}]}]
+
+</div></div>
+++++
+
+[role="right"]
+* The function *meck:history(Mod)* can be used to get a list of all the function calls made to the module.
+* The events are returned in order.
+** Successful events are of the form *{{M,F,A}, Return}*
+** Exceptions are of the form *{{M,F,A}, Class, Reason, Stack}*
+
+
+Mocking with Meck
+-----------------
+* Unloading the module restores the original version
+* A linked mock will detect crashes and reload the original version
+* Not two versions of a module can be loaded at once
+** Tests must be ran sequentially
+* Mocking objects is done by replacing the code in the code server
+** Easier than mocking in most other languages
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Do the mock exercises
+--
+

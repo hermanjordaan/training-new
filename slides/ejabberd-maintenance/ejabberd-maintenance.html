@@ -1,0 +1,322 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>ejabberd Maintenance</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>ejabberd Maintenance</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_overview"><h2>Overview</h2><div class="ulist"><ul><li><p>Scripting</p></li><li><p>Testing</p></li><li><p>Debugging</p></li><li><p>Monitoring</p></li><li><p>Scaling</p></li></ul></div></section>
+<section id="_scripting_strong_joining_new_node_strong"><h2>Scripting: <strong>joining new node</strong></h2><div class="literalblock"><div class="content"><pre>$HOME/erlang/bin/erl -sname ejabberd@`hostname -s` 
+-mnesia dir "'/home/ejabberd/ejabberd/var/lib/ejabberd'" 
+-mnesia extra_db_nodes "['ejabberd@some_host']" 
+-s mnesia -setcookie MY_COOKIE
+
+[mnesia:add_table_copy(T, node(), ram_copies) || T &lt;- ...]
+ </pre></div></div>
+<div class="ulist"><ul><li><p>automated way of adding new machines into the cluster</p><div class="ulist"><ul><li><p>no need to restart any other machine already running</p></li></ul></div></li><li><p>copying the config</p><div class="ulist"><ul><li><p>using local repository might be a good idea</p></li><li><p>git/mercurial</p></li><li><p>centralized way to manage the configuration</p></li></ul></div></li></ul></div></section>
+<section id="_scripting_strong_heart_process_strong"><h2>Scripting: <strong>heart process</strong></h2><div class="literalblock"><div class="content"><pre>export HEART_COMMAND=$COMMAND_NAME
+export HEART_BEAT_TIMEOUT=$HEART_SECONDS
+erl -heart</pre></div></div>
+<div class="ulist"><ul><li><p>automated way of restarting the service</p></li><li><p>heart command should keep track of number of restarts</p><div class="ulist"><ul><li><p>monitoring the restart frequency</p></li><li><p>copying over the log files</p></li><li><p>preventing infinite restart loops</p></li><li><p>bugs in the code</p></li><li><p>bugs in the configuration</p></li><li><p>environmental limitations</p></li><li><p>e.g. max 3 restarts in the last 30 minutes</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>there is no way of specifying the health-checks for the node, it just checks if the beam process is still alive</p></div></aside></section>
+<section id="_scripting_strong_rc_d_scripts_strong"><h2>Scripting: <strong>rc.d scripts</strong></h2><div class="literalblock"><div class="content"><pre>/etc/init.d/ejabberd {start|stop|status|restart}
+update-rc.d defaults ejabberd</pre></div></div>
+<div class="ulist"><ul><li><p>standardised way to manage the services</p></li><li><p>starting up ejabberd after the system reboot</p></li></ul></div></section>
+<section id="_coding_strong_auto_discovery_strong"><h2>Coding: <strong>auto discovery</strong></h2><div class="literalblock"><div class="content"><pre>./sbin/ejabberdctl start</pre></div></div>
+<div class="ulist"><ul><li><p>nmap-like behavior</p><div class="ulist"><ul><li><p>scanning the subnet looking for opened 5222 ports</p></li></ul></div></li><li><p>reverse DNS lookup on the found hosts</p><div class="ulist"><ul><li><p>in-addr.arpa domain</p></li></ul></div></li><li><p>automatic dial into the cluster</p><div class="ulist"><ul><li><p>RPC call to obtain details about Mnesia schema</p></li></ul></div></li><li><p>ideal for disk-less workstations or faster set up procedures</p><div class="ulist"><ul><li><p>big clusters</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>is not implemented by the standard ejabberd
+be careful when the network configuration is not very well formatted (e.g. several ejabberd servers running within the same subnet)
+good in combination with DHCP and PXE - Pre Execution Environment (pixie)</p></div></aside></section>
+<section id="_profiling_strong_fprof_strong"><h2>Profiling: <strong>fprof</strong></h2><div class="literalblock"><div class="content"><pre>fprof:trace([start, {procs, all}]).
+...
+fprof:trace([stop]).
+fprof:profile().
+fprof:analyze([{dest, "/tmp/profile.out"}, {sort, own},
+      totals, details]).
+
+grep -n % /tmp/profile.out | head -n 30</pre></div></div>
+<div class="ulist"><ul><li><p>detecting where the system is wasting most of its time</p></li><li><p>run when system is under very low load</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>ideal when we have an ability to do some weighted load balancing and let normal users into the node
+we can narrow profiling to some subset of processes, if we want to profile e.g. only LDAP driver</p></div></aside></section>
+<section id="_testing_strong_tsung_strong"><h2>Testing: <strong>tsung</strong></h2><div class="literalblock"><div class="content"><pre>tsung -f path_to_my_scenario_file.xml start</pre></div></div>
+<div class="ulist"><ul><li><p>Tsung - load testing tool</p><div class="ulist"><ul><li><p><a href="http://tsung.erlang-projects.org/" class="bare">http://tsung.erlang-projects.org/</a></p></li></ul></div></li><li><p>various protocols supported</p><div class="ulist"><ul><li><p>XMPP, HTTP, LDAP, MySQL</p></li></ul></div></li><li><p>declarative way of defining the scenario</p><div class="ulist"><ul><li><p>XML configuration file</p></li></ul></div></li><li><p>support for distributed environments</p><div class="ulist"><ul><li><p>both client and server side</p></li></ul></div></li><li><p>report generators</p></li><li><p>easily extensible</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Tsung does not understand the meaning of the packets
+can not really be used for functional tests
+does not support s2s traffic or acks of messages</p></div></aside></section>
+<section id="_testing_strong_escalus_common_test_strong"><h2>Testing: <strong>escalus (Common Test)</strong></h2><div class="literalblock"><div class="content"><pre>messages_story(Config) -&gt;
+  escalus:story(Config, [1, 1], fun(Alice, Bob) -&gt;
+    %% Alice sends a message to Bob
+    escalus:send(Alice,
+                 escalus_stanza:chat_to(Bob, "OH, HAI!")),
+    %% Bob gets the message
+    escalus:assert(is_chat_message,
+                   ["OH, HAI!"],
+                   escalus:wait_for_stanza(Bob))
+  end).</pre></div></div>
+<div class="ulist"><ul><li><p>XMPP client/testing library</p></li><li><p>ideal for implementing feature and acceptance tests</p></li><li><p>intended for use in Common Test suites</p></li></ul></div></section>
+<section id="_testing_strong_escalus_shell_strong"><h2>Testing: <strong>escalus (shell)</strong></h2><div class="literalblock"><div class="content"><pre>application:start(escalus).
+application:set_env(escalus, common_test, false).
+{ok, Config} = file:consult("test.config").
+CarolSpec = escalus_users:get_options(Config, carol).
+{ok, Carol, _, _} = escalus_connection:start(CarolSpec).
+escalus_connection:send(Carol,
+    escalus_stanza:chat_to(alice, "hi")).
+escalus_connection:stop(Carol).</pre></div></div>
+<div class="ulist"><ul><li><p>can also be used without Common Test from Erlang shell</p></li><li><p><em>alice</em> and <em>carol</em> must be defined in <em>test.config</em></p></li><li><p>real life examples</p><div class="ulist"><ul><li><p><a href="https://github.com/esl/escalus" class="bare">https://github.com/esl/escalus</a></p></li><li><p><a href="https://github.com/esl/ejabberd_tests" class="bare">https://github.com/esl/ejabberd_tests</a></p></li></ul></div></li></ul></div></section>
+<section id="_testing_strong_manually_registering_a_user_strong"><h2>Testing: <strong>manually registering a user</strong></h2><div class="literalblock"><div class="content"><pre>ejabberd_admin:register(“alice”, “localhost”, “secret”).
+ </pre></div></div>
+<div class="ulist"><ul><li><p>handy when mod_register is off and you still want to connect with Adium, Psi, etc</p></li><li><p>sometimes useful for automatic tests (though Escalus can do this automagically without mod_register)</p></li></ul></div></section>
+<section id="_debugging_strong_system_information_strong"><h2>Debugging: <strong>system information</strong></h2><div class="literalblock"><div class="content"><pre>erlang:memory().
+erlang:system_info(allocated_areas).
+erlang:system_info(cpu_topology).
+erlang:system_info(process_count).
+erlang:system_info(wordsize).
+net_kernel:nodes_info().</pre></div></div>
+<div class="ulist"><ul><li><p>basic information about the system&#8217;s health</p><div class="ulist"><ul><li><p>memory allocation summary</p></li><li><p>detected CPU topology</p></li><li><p>number of processes running in the system</p></li><li><p>word size in bytes</p></li><li><p>statistics about Erlang distribution channels</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>some of them might be worth exposing via SNMP or dumped periodically</p></div></aside></section>
+<section id="_debugging_strong_process_information_strong"><h2>Debugging: <strong>process information</strong></h2><div class="literalblock"><div class="content"><pre>Pid = whereis(process_name).
+process_info(Pid).</pre></div></div>
+<div class="ulist"><ul><li><p>obtaining process' details</p><div class="ulist"><ul><li><p>currently evaluated function</p></li><li><p>initial call</p></li><li><p>mailbox content</p></li><li><p>mailbox size</p></li><li><p>garbage collection details</p></li><li><p>reductions count</p></li><li><p>trap exit status</p></li><li><p>links</p></li><li><p>ports</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>it&#8217;s BIF - works only on the local processes
+use RPC module to get more details from remote entities
+be careful when fetching mailbox of overloaded processes</p></div></aside></section>
+<section id="_debugging_strong_session_information_strong"><h2>Debugging: <strong>session information</strong></h2><div class="literalblock"><div class="content"><pre>(ejabberd@localhost)2&gt; ets:tab2list(session).
+[{session,{{1390,577075,560662},&lt;0.716.0&gt;},
+          {&lt;&lt;"asd"&gt;&gt;,&lt;&lt;"localhost"&gt;&gt;,&lt;&lt;"x3"&gt;&gt;},
+          {&lt;&lt;"asd"&gt;&gt;,&lt;&lt;"localhost"&gt;&gt;},
+          5,
+          [{ip,{{127,0,0,1},52628}},
+           {conn,c2s_tls},
+           {auth_module,ejabberd_auth_internal}]}]</pre></div></div>
+<div class="ulist"><ul><li><p>lists sessions from all nodes of the cluster</p></li><li><p>not available when using MongooseIM with Redis session backend (use Redis CLI for similar results)</p></li><li><p>useful for tracing a given c2s process by pid (&lt;0.716.0&gt;)</p></li><li><p>see ejabberd.hrl for the definition of #session{}</p></li></ul></div></section>
+<section id="_debugging_strong_tracing_strong"><h2>Debugging: <strong>tracing</strong></h2><div class="literalblock"><div class="content"><pre>dbg:tracer().
+dbg:p(all, call).
+dbg:tpl(Module, x).
+dbg:tpl(Module, Function, x).
+dbg:tpl(Module, Function, Arity, x).</pre></div></div>
+<div class="ulist"><ul><li><p>tracing function calls in the system</p></li><li><p>narrowing the range of the calls</p><div class="ulist"><ul><li><p>tp equivalent available</p></li><li><p>ctp/ctpl clearing functions available</p></li></ul></div></li><li><p>printed out in the Erlang shell</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>other events tracking is also available, e.g. message passing or garbage collection triggers
+it is possible to track events on more than one node
+it is possible to redirect the events into the process</p></div></aside></section>
+<section id="_debugging_strong_tracing_a_running_node_strong"><h2>Debugging: <strong>tracing a running node</strong></h2><div class="literalblock"><div class="content"><pre>dbg:tracer(process, {fun dbg:dhandler/2, standard_io}).
+%% dbg:p/tp/tpl as usual
+
+%% don’t forget to stop the tracer when you’re done:
+dbg:stop_clear().
+ </pre></div></div>
+<div class="ulist"><ul><li><p><em>dbg:tracer/2</em> allows for tracing from a shell started as <em>ejabberdctl debug</em></p></li><li><p>otherwise the traces wouldn’t appear on the screen</p></li><li><p>tracing a staging/production system</p></li><li><p>don’t forget the cleanup!</p></li></ul></div></section>
+<section id="_debugging_strong_misc_strong"><h2>Debugging: <strong>misc.</strong></h2><div class="literalblock"><div class="content"><pre>ets:i().
+ets:tab2list(Table).
+
+sys:get_status(Pid).
+
+garbage_collect(Pid).
+ </pre></div></div>
+<div class="ulist"><ul><li><p>displaying all public/protected ETS tables</p></li><li><p>listing all contents of the ETS table</p></li><li><p>fetches an OTP process' internal state</p><div class="ulist"><ul><li><p>including #state{} of gen_server/gen_fsm</p></li><li><p>broken in p1_fsm</p></li></ul></div></li><li><p>manually triggers garbage collection for a given process</p></li></ul></div></section>
+<section id="_debugging_strong_tcp_connections_strong"><h2>Debugging: <strong>TCP connections</strong></h2><div class="literalblock"><div class="content"><pre>(ejabberd@localhost)1&gt; os:getpid().
+"23510"
+
+$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613-&gt;localhost:epmd (ESTABLISHED)
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)
+beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)
+beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client-&gt;localhost:52628 (ESTABLISHED)</pre></div></div>
+<aside class="notes"><div class="paragraph"><p>BEAM is the Erlang virtual machine
+-a ANDs the conditions, the default is to OR them</p></div></aside></section>
+<section id="_debugging_strong_tcp_connections_strong_2"><h2>Debugging: <strong>TCP connections</strong></h2><div class="pre"><span class="comment">$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME</span>
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+<span class="comment">beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)
+beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)
+beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)</span>
+</div>
+<div class="ulist"><ul><li><p>Distributed Erlang</p></li><li><p>epmd - Erlang Port Mapper Daemon</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>more nodes in the cluster - more established connections</p></div></aside></section>
+<section id="_debugging_strong_tcp_connections_strong_3"><h2>Debugging: <strong>TCP connections</strong></h2><div class="pre"><span class="comment">$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME<
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)</span>
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)
+<span class="comment">beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)</span>
+beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)
+</div>
+<div class="ulist"><ul><li><p>5222 listening for XMPP connections</p></li><li><p>established client connection</p></li></ul></div></section>
+<section id="_debugging_strong_tcp_connections_strong_4"><h2>Debugging: <strong>TCP connections</strong></h2><div class="pre"><span class="comment">$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)</span>
+beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)
+<span class="comment">beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)</span>
+</div>
+<div class="ulist"><ul><li><p>5269 listening for XMPP server to server connections (federation)</p></li><li><p>5280 - BOSH and WebSocket XMPP listener</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>5269 s2s - federation</p></div></aside></section>
+<section id="_debugging_strong_cluster_status_strong"><h2>Debugging: <strong>cluster status</strong></h2><div class="literalblock"><div class="content"><pre>(ejabberd1@x3)1&gt; mnesia:info(). %% Erlang shell
+...
+running db nodes   = [ejabberd2@x3,ejabberd1@x3]
+stopped db nodes   = []
+
+$ ejabberdctl mnesia %% sh/bash/etc
+...
+{db_nodes,[ejabberd2@x3,ejabberd1@x3]},
+{running_db_nodes,[ejabberd1@x3,ejabberd2@x3]}</pre></div></div>
+<div class="ulist"><ul><li><p>same information accessible by different means</p></li></ul></div></section>
+<section id="_debugging_strong_cluster_status_strong_2"><h2>Debugging: <strong>cluster status</strong></h2><div class="literalblock"><div class="content"><pre>(ejabberd1@x3)2&gt; erlang:get_cookie().
+'ejabberd'
+
+(ejabberd1@x3)5&gt; net_adm:ping(ejabberd2@x3).
+pong</pre></div></div>
+<div class="ulist"><ul><li><p>Distributed Erlang basics:</p><div class="ulist"><ul><li><p>cookie must be the same on all nodes</p></li><li><p>otherwise we get pang instead of pong - no connectivity</p></li></ul></div></li></ul></div></section>
+<section id="_debugging_strong_module_status_and_hooks_strong"><h2>Debugging: <strong>module status and hooks</strong></h2><div class="literalblock left"><div class="content"><pre>gen_mod:is_loaded("localhost",
+mod_roster).
+
+
+ets:tab2list(hooks).
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>check whether a module is loaded for domain localhost</p></li><li><p>display all registered hook handlers</p></li></ul></div></section>
+<section id="_monitoring_strong_distributed_calls_strong"><h2>Monitoring: <strong>distributed calls</strong></h2><div class="literalblock"><div class="content"><pre>apply(M, F, [Arg1, Arg2, Arg3]).
+  =&gt;
+M:F(Arg1, Arg2, Arg3).
+
+rpc:call(Node, M, F, A).
+rpc:multicall(M, F, A).</pre></div></div>
+<div class="ulist"><ul><li><p>collecting data from the remote nodes</p><div class="ulist"><ul><li><p>faster debugging</p></li><li><p>comparing results from all nodes in the cluster</p></li></ul></div></li><li><p>be careful with the CPU intensive operations</p></li><li><p>timeouts</p></li></ul></div></section>
+<section id="_monitoring_strong_mnesia_strong"><h2>Monitoring: <strong>mnesia</strong></h2><div class="literalblock"><div class="content"><pre>mnesia:info().
+mnesia:table_info(Table, all).
+
+[mnesia:wait_for_tables([T], 100) ||
+    T &lt;- mnesia:system_info(local_tables)].</pre></div></div>
+<div class="ulist"><ul><li><p>information about mnesia state</p><div class="ulist"><ul><li><p>acquired locks</p></li><li><p>tables' statuses</p></li><li><p>statistics about the transactions, etc.</p></li></ul></div></li><li><p>information about table state</p><div class="ulist"><ul><li><p>size</p></li><li><p>indexes</p></li><li><p>row fields</p></li></ul></div></li></ul></div></section>
+<section id="_monitoring_strong_ejabberd_strong"><h2>Monitoring: <strong>ejabberd</strong></h2><div class="ulist"><ul><li><p>integration with centralized logging server</p><div class="ulist"><ul><li><p>splunk</p></li><li><p>rsyslog</p></li></ul></div></li><li><p>health-checks</p><div class="ulist"><ul><li><p>end-to-end tests</p></li><li><p>nagios</p></li></ul></div></li><li><p>monitoring</p><div class="ulist"><ul><li><p>SNMP</p></li><li><p>zabbix/cacti</p></li></ul></div></li></ul></div></section>
+<section id="_monitoring_strong_logging_strong"><h2>Monitoring: <strong>logging</strong></h2><div class="literalblock left"><div class="content"><pre>erlang:system_monitor/2
+ 
+ 
+ 
+ 
+ 
+mnesia:subscribe/1
+ 
+ 
+ 
+ 
+ 
+erlang:process_info/1
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>internal system events</p><div class="ulist"><ul><li><p>large heaps</p></li><li><p>long GC</p></li><li><p>busy_port/busy_dist_port</p></li></ul></div></li><li><p>mnesia events</p><div class="ulist"><ul><li><p>overloads</p></li><li><p>inconsistency</p></li><li><p>joining/leaving the cluster</p></li></ul></div></li><li><p>integrity checks</p><div class="ulist"><ul><li><p>heap sizes</p></li><li><p>message queue lengths</p></li><li><p>reduction counters</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>system_monitor: large heaps, long gc, busy_port, busy_dist_port
+mnesia: overloaded, inconsistent_database, mnesia_fatal, mnesia_up/down
+process_info: heap size, message_queue_len, reduction counters</p></div></aside></section>
+<section id="_ejabberd_logs"><h2>ejabberd Logs</h2><div class="literalblock"><div class="content"><pre>ejabberd_loglevel:get().
+ejabberd_loglevel:set(N).
+
+tcpdump -nn -ttt -x -X -s 0 -A  \(tcp and port 5222\)
+    | tee /tmp/xmpp.pcap
+ </pre></div></div>
+<div class="ulist"><ul><li><p>changing the log level in the run-time</p></li><li><p>dumping the entire TCP traffic to the file</p><div class="ulist"><ul><li><p>root access</p></li><li><p>dumped in wireshark-compatible format</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>-nn do not convert protocol/host numbers to names
+-ttt print timestamps and time deltas between each lines
+-x print each packet in hex
+-X print each packet in ASCII as well
+-s 0 catch all packets (do not truncate them)
+-A print ASCII</p></div></aside></section>
+<section id="_scalability"><h2>Scalability</h2><div class="ulist"><ul><li><p>node specialization</p><div class="ulist"><ul><li><p>dedicated Erlang nodes for some subsets of functionality</p></li><li><p>rosters/offline messages/privacy lists</p></li><li><p>O&amp;M boxes</p></li><li><p>gateways to some other networks</p></li></ul></div></li><li><p>removing the global state</p><div class="ulist"><ul><li><p>leaving some very stable tables, such as route, s2s, config</p></li><li><p>everything else stored in cache/RAM based storage</p></li></ul></div></li><li><p>auto configuration/discovery</p><div class="ulist"><ul><li><p>network scanning</p></li><li><p>diskless workstations</p></li></ul></div></li></ul></div></section>
+<section id="_scalability_2"><h2>Scalability</h2><div class="imageblock" style=""><div class="content"><img src="images/placeholder.png" alt="Placeholder" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>ejabberd_sm disaster recovery</p><div class="ulist"><ul><li><p>p2p architecture</p></li><li><p>ejabberdctl stop</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>full scan of Mnesia session table, removal of all the processes that were running on the faulty node
+presence flood
+reconnect wave
+N-2 delete misses, 1 delete hit</p></div></aside></section>
+<section id="_overview_2"><h2>Overview</h2><div class="ulist"><ul><li><p>Scripting</p></li><li><p>Testing</p></li><li><p>Debugging</p></li><li><p>Monitoring</p></li><li><p>Scaling</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

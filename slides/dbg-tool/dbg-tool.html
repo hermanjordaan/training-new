@@ -1,0 +1,387 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>The DBG Tool</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>The DBG Tool</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_the_dbg_tool"><h2>The DBG Tool</h2><div class="ulist"><ul><li><p>The DBG Tool</p></li><li><p>Match Specifications</p></li><li><p>Creating Match Specifications</p></li><li><p>Distributed Environments</p></li><li><p>Redirecting Output</p></li></ul></div></section>
+<section id="_the_dbg_tool_2"><h2>The DBG Tool</h2><div class="ulist"><ul><li><p>The <strong>dbg</strong> tool is a text based debugger</p><div class="ulist"><ul><li><p>Suitable on text based terminals</p></li></ul></div></li><li><p>Provides a friendly interface to the <strong>trace</strong> and <strong>trace_pattern</strong> BIFs</p></li><li><p>Can be used as a complement to the <strong>pman</strong> tool</p></li><li><p>Has relatively small impacts on system performance</p><div class="ulist"><ul><li><p>Suitable on large systems</p></li></ul></div></li></ul></div></section>
+<section id="_the_dbg_tool_3"><h2>The DBG Tool</h2><div class="pre"><b>1> dbg:h().</b>
+The following help items are available:
+   <strong>p, c</strong>
+       - Set trace flags for processes
+   <strong>tp, tpl, ctp, ctpl, ctpg, ltp, dtp, wtp, rtp</strong>
+       - Manipulate trace patterns for functions
+   <strong>n, cn, ln</strong>
+       - Add/remove traced nodes.
+   <strong>tracer, trace_port, trace_client, get_tracer, stop, stop_clear</strong>
+       - Manipulate tracer process/port
+   <strong>i</strong>
+       - Info
+</div></section>
+<section id="_the_dbg_tool_4"><h2>The DBG Tool</h2><div class="pre"><b>2> dbg:h(c).</b>
+c(Mod, Fun, Args)
+ - Evaluates apply(M,F,Args) with all trace flags set.
+c(Mod, Fun, Args, Flags)
+ - Evaluates apply(M,F,Args) with Flags trace flags set.
+ok
+3> <b>dbg:h(n).</b>
+n(Nodename) -> {ok, Nodename} | {error, Reason}
+ - Starts a tracer server on the given node.
+n(Nodename,Type,Data) -> {ok, Nodename} | {error, Reason}
+ - Starts a tracer server with additional args on the given node.
+
+</div>
+<div class="ulist"><ul><li><p><strong>dbg:h()</strong> and <strong>dbg:h(Item)</strong> can be used to obtain quick help</p></li></ul></div></section>
+<section id="_the_dbg_tool_strong_dbg_p_2_strong"><h2>The DBG Tool: <strong>dbg:p/2</strong></h2><div class="ulist"><ul><li><p><code><strong>dbg:p(Item, FlagList)</strong></code></p></li><li><p><strong>Item</strong> specifies which process we want to trace</p><div class="ulist"><ul><li><p><strong>pid()</strong>, <strong>all</strong>, <strong>new</strong>, <strong>existing</strong></p></li><li><p>registered name other than <strong>all</strong>, <strong>new</strong> or <strong>existing</strong></p></li><li><p><strong>{X,Y,Z}</strong> - the process &lt;X.Y.Z&gt;</p></li></ul></div></li><li><p><strong>FlagList</strong> is a single atom or a list of flags</p><div class="ulist"><ul><li><p>Any flag accepted by the <strong>trace</strong> BIF</p></li><li><p>Abbreviations to some of these flags</p></li><li><p><strong>all</strong> sets all flags</p></li><li><p><strong>clear</strong> clears all flags</p></li></ul></div></li></ul></div></section>
+<section id="_the_dbg_tool_strong_trace_bif_flags_strong"><h2>The DBG Tool: <strong>Trace BIF Flags</strong></h2><div class="ulist"><ul><li><p>Some of the <strong>trace</strong> BIF flags are abbreviated</p><div class="ulist"><ul><li><p><strong>s</strong> traces sent messages, r traces received messages</p></li><li><p><strong>m</strong> traces sent and received messages</p></li><li><p><strong>c</strong> traces global calls according to the trace patterns set</p></li><li><p><strong>p</strong> traces process related events</p></li><li><p><strong>sos</strong>, <strong>sofs</strong> &#8594; <em>s</em>et <em>o</em>n [<em>f</em>irst] <em>s</em>pawn</p></li><li><p><strong>sol</strong>, <strong>sofl</strong> &#8594; <em>s</em>et <em>o</em>n [<em>f</em>irst] <em>l</em>ink</p></li><li><p><strong>all</strong> sets all flags</p></li><li><p><strong>clear</strong> clears all flags</p></li></ul></div></li></ul></div></section>
+<section id="_the_dbg_tool_strong_example_strong"><h2>The DBG Tool: <strong>Example</strong></h2><div class="literalblock"><div class="content"><pre>-module(ping).
+-export([start/0, send/1, loop/0]).
+start() -&gt; spawn_link(ping, loop, []).
+send(Pid) -&gt;
+    Pid ! {self(), ping},
+    receive  pong -&gt; pong end.
+
+loop() -&gt;
+    receive
+        {Pid, ping} -&gt;
+            spawn(crash, do_not_exist, []),
+	         Pid ! pong,
+	         loop()
+    end.</pre></div></div></section>
+<section id="_the_dbg_tool_strong_example_strong_2"><h2>The DBG Tool: <strong>Example</strong></h2><svg id="the_dbg_tool_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#the_dbg_tool_example_1");
+
+s1.text(10,40,"1> Pid = ping:start().").addClass("code darkred bold");
+s1.text(10,80,"<0.38.0>").addClass("code");
+s1_g1 = s1.g(s1.text(10,120,"2> dbg:tracer().").addClass("code darkred bold"),
+             s1.text(10,160,"{ok, <0.40.0>}").addClass("code")).addClass("hide");
+s1_g2 = s1.g(s1.text(10,200,"3> dbg:p(Pid, m).      ").addClass("code darkred bold"),
+             s1.text(10,240,"{ok,[{matched, nonode@nohost, 1}]}").addClass("code")).addClass("hide");
+s1_g3 = s1.g(s1.text(10,280,"4> ping:send(Pid).").addClass("code darkred bold"),
+             s1.text(10,320,"pong").addClass("code"),
+             s1.text(10,360,"(<0.38.0>) << {<0.31.0>,ping}").addClass("code"),
+             s1.text(10,400,"(<0.38.0>) <0.31.0> ! Pong").addClass("code")).addClass("hide")
+s1_g4 = s1.g(s1.text(10,440,"5> dbg:stop().").addClass("code darkred bold"),
+             s1.text(10,480,"ok").addClass("code")).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 4: {s1_g4.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Tell the students to ignore the error report
+Explain the flags that you set,
+let them do it at the same time you do it</p></div></aside></section>
+<section id="_the_dbg_tool_strong_example_strong_3"><h2>The DBG Tool: <strong>Example</strong></h2><svg id="the_dbg_tool_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#the_dbg_tool_example_2");
+
+s2.text(10,40,"6> dbg:tracer().").addClass("code darkred bold");
+s2.text(10,80,"{ok,<0.47.0>}").addClass("code");
+s2_g1 = s2.g(s2.text(10,120,"7> dbg:p(Pid, [p, sos]).").addClass("code darkred bold"),
+             s2.text(10,160,"{ok,[{matched,nonode@nohost,1}]}").addClass("code")).addClass("hide");
+s2_g2 = s2.g(s2.text(10,200,"9> ping:send(Pid).").addClass("code darkred bold"),
+             s2.text(10,240,"pong").addClass("code"),
+             s2.text(10,280,"(<0.38.0>) spawn <0.51.0> as crash:do_not_exist()").addClass("code"),
+             s2.text(10,320,"(<0.51.0>) exit {undef,[{crash,do_not_exist,[]}]}").addClass("code")).addClass("hide");
+s2_g3 = s2.g(s2.text(10,360,"10> dbg:stop().").addClass("code darkred bold"),
+             s2.text(10,400,"ok").addClass("code")).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Tell the students to ignore the error report</p></div></aside></section>
+<section id="_the_dbg_tool_strong_dbg_c_4_strong"><h2>The DBG Tool: <strong>dbg:c/4</strong></h2><div class="ulist"><ul><li><p><strong>dbg:c(Mod, Fun, Args, Flags)</strong></p></li><li><p>Evaluates the expression <strong>apply(Module, Func, Args)</strong></p></li><li><p>Sets the trace flags in that function</p></li><li><p>Convenient when tracing/profiling from the shell</p></li><li><p>If the Flags argument is omitted, all flags are set</p><div class="ulist"><ul><li><p><strong>dbg:c(Mod, Fun, Args)</strong></p></li></ul></div></li></ul></div></section>
+<section id="_the_dbg_tool_strong_example_strong_4"><h2>The DBG Tool: <strong>Example</strong></h2><svg id="the_dbg_tool_example_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#the_dbg_tool_example_3");
+
+s3.text(10,40,"1> dbg:tracer().").addClass("code darkred bold");
+s3.text(10,80,"{ok,<0.33.0>}").addClass("code");
+s3_g1 = s3.g(s3.text(10,120,"2> Pid = dbg:c(ping, start, [], [p, sos]).").addClass("code darkred bold"),
+             s3.text(10,160,"(<0.36.0>) spawn <0.37.0> as ping:loop()").addClass("code"),
+             s3.text(10,200,"(<0.36.0>) link <0.37.0>").addClass("code"),
+             s3.text(10,240,"(<0.37.0>) getting_unlinked <0.36.0>").addClass("code"),
+             s3.text(10,280,"<0.37.0>").addClass("code")).addClass("hide");
+s3.text(10,320,"3> dbg:c(ping, send, [Pid], [p, sos]).").addClass("code darkred bold");
+s3.text(10,360,"pong").addClass("code");
+s3_g2 = s3.g(s3.text(10,400,"4> dbg:c(ping, send, [Pid], [m, sos]).").addClass("code darkred bold"),
+             s3.text(10,440,"(<0.50.0>) <0.37.0> ! {<0.50.0>,ping}").addClass("code"),
+             s3.text(10,480,"(<0.50.0>) << pong").addClass("code"),
+             s3.text(10,520,"pong").addClass("code")).addClass("hide");
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_g1.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 2: {s3_g2.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>The <em>getting unlinked</em> messages have to do with the way the dbg runs the items with proxy processes</p></div>
+<div class="paragraph"><p>on 3&gt; we no longer see the exit info because we only trace <em>send</em>, not <em>loop</em></p></div></aside></section>
+<section id="_the_dbg_tool_strong_dbg_tp_2_dbg_tpl_2_strong"><h2>The DBG Tool: <strong>dbg:tp/2, dbg:tpl/2</strong></h2><div class="ulist"><ul><li><p><code><strong>dbg:tp({M,F,Arity}, MatchSpec)</strong></code> <br>
+<code><strong>dbg:tpl({M,F,Arity}, MatchSpec)</strong></code></p></li><li><p>Enable call trace for local and/or global functions</p></li><li><p>Tracing is enabled on the intersection of the sets</p></li><li><p><strong>M</strong>, <strong>F</strong> and <strong>Arity</strong> can be defined as '_'</p><div class="ulist"><ul><li><p>Formats of the type {'_', Function, '_'} are not allowed</p></li></ul></div></li><li><p>Match Specifications will be covered later</p><div class="ulist"><ul><li><p>Use []</p></li></ul></div></li><li><p>Several variants of the <strong>tp/2</strong> and <strong>tpl/2</strong> functions exist</p></li></ul></div></section>
+<section id="_the_dbg_tool_strong_dbg_ctpg_1_dbg_ctpl_1_strong"><h2>The DBG Tool: <strong>dbg:ctpg/1, dbg:ctpl/1</strong></h2><div class="ulist"><ul><li><p><code><strong>dbg:ctpg({Mod,Fun,Arity})</strong></code> <br>
+<code><strong>dbg:ctpl({Mod,Fun,Arity})</strong></code></p></li><li><p>Disables call tracing on local and/or global functions</p><div class="ulist"><ul><li><p>Mapped to what function enabled the trace</p></li></ul></div></li><li><p><code><strong>dbg:ctp({Mod, Fun, Arity})</strong></code> will disable the function pattern</p><div class="ulist"><ul><li><p>Independent on what function enabled the trace</p></li></ul></div></li></ul></div></section>
+<section id="_the_dbg_tool_strong_example_strong_5"><h2>The DBG Tool: <strong>Example</strong></h2><svg id="the_dbg_tool_example_4" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#the_dbg_tool_example_4");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred")
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.text(10,40,"1> dbg:tracer().").addClass("code darkred bold");
+s4.text(10,80,"{ok,<0.72.0>}").addClass("code");
+s4_g1 = s4.g(s4.text(10,120,"2> dbg:p(all, [c]).").addClass("code darkred bold"),
+             s4.text(10,160,"{ok,[{matched,nonode@nohost,27}]}").addClass("code")).addClass("hide");
+s4_g2 = s4.g(s4.text(10,200,"3> dbg:tp({ping, '_', '_'}, []).").addClass("code darkred bold"),
+             s4.text(10,240,"{ok,[{matched,nonode@nohost,5}]}").addClass("code"),
+             s4.text(700,380,"5 functions were").addClass("darkred middle"),
+             s4.text(700,420,"matched. Why?").addClass("darkred middle"),
+             s4.path("M570,370 Q520,350 510,260").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_g1.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break};
+    case 2: {s4_g2.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>The two additional functions are module_info/1-2</p></div></aside></section>
+<section id="_the_dbg_tool_5"><h2>The DBG Tool</h2><svg id="the_dbg_tool_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#the_dbg_tool_1");
+
+s5.text(10,40,"1> dbg:tracer().").addClass("code darkred bold");
+s5.text(10,80,"{ok,<0.35.0>}").addClass("code");
+s5_g1 = s5.g(s5.text(10,120,"2> dbg:p(Pid, [c]).").addClass("code darkred bold"),
+             s5.text(10,160,"{ok,[{matched,nonode@nohost,1}]}").addClass("code")).addClass("hide");
+s5_g2 = s5.g(s5.text(10,200,"3> MS = dbg:fun2ms(fun([ping,F,A]) -> return_trace() end).").addClass("code darkred bold"),
+             s5.text(10,240,"[{[ping,'$1','$2'],[],[{return_trace}]}]").addClass("code")).addClass("hide");
+s5_g3 = s5.g(s5.text(10,280,"4> dbg:tpl(erlang, spawn, MS).").addClass("code darkred bold"),
+             s5.text(10,320,"{ok,[{matched,nonode@nohost,4},{saved,1}]}").addClass("code")).addClass("hide");
+s5_g4 = s5.g(s5.text(10,360,"5> ping:send(Pid).").addClass("code darkred bold"),
+             s5.text(10,400,"pong").addClass("code"),
+             s5.text(10,440,"(<0.35.0>) call erlang:spawn(    ,             ,[])").addClass("code"),
+             s5.text(10,440,"                             ping waste_of_time").addClass("code darkred bold"),
+             s5.text(10,480,"(<0.35.0>) returned from erlang:spawn/3 -> <0.40.0>").addClass("code")).addClass("hide");
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_g1.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 2: {s5_g2.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 3: {s5_g3.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 4: {s5_g4.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Have the students add a function ping:waste_of_time/0 that does nothing before running the example. Make it replace the <em>crash</em> function. (spawn(ping, waste_of_time)) Export it.</p></div></aside></section>
+<section id="_the_dbg_tool_6"><h2>The DBG Tool</h2><svg id="the_dbg_tool_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#the_dbg_tool_2");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred")
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.text(10,40,"1> dbg:tracer().").addClass("code darkred bold");
+s6.text(10,80,"{ok,<0.35.0>}").addClass("code");
+s6_g1 = s6.g(s6.text(10,120,"2> dbg:tpl({ping,’_’,’_’},[{[],[],[{message,{process_dump}").addClass("code darkred bold"),
+             s6.text(10,160,"}]}]).").addClass("code darkred bold"),
+             s6.text(10,200,"{ok,[{matched,nonode@nohost,5}]}").addClass("code")).addClass("hide");
+s6_g2 = s6.g(s6.text(10,240,"3> ping:send(P).").addClass("code darkred bold"),
+             s6.text(10,280,"pong").addClass("code")).addClass("hide");
+s6_g3 = s6.g(s6.text(10,320,"4> receive {trace,P,call,{ping,loop,0},Bin} -> Bin end.").addClass("code darkred bold"),
+             s6.text(10,360,"<<60,48,46,51,51,46,48,62,32,82,117,110,110,105,110,...>>").addClass("code"),
+             s6.text(900,475,"The binary gets").addClass("darkred middle"),
+             s6.text(900,510,"appended to the").addClass("darkred middle"),
+             s6.text(900,545,"trace event").addClass("darkred middle"),
+             s6.path("M900,440 Q880,380 764,334").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s6_g4 = s6.g(s6.text(10,400,"5> io:format(\"~s~n\",[binary_to_list(Bin)]).").addClass("code darkred bold"),
+             s6.text(10,440,"<0.33.0> Running.").addClass("code"),
+             s6.text(10,480,"Spawned as: ping:loop/0").addClass("code"),
+             s6.text(10,520,"Message buffer data: 0 words").addClass("code")).addClass("hide");
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_g1.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 2: {s6_g2.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 3: {s6_g3.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 4: {s6_g4.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_the_dbg_tool_7"><h2>The DBG Tool</h2><svg id="the_dbg_tool_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#the_dbg_tool_3");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred")
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.text(10,40,"1> dbg:tracer().").addClass("code darkred bold");
+s7.text(10,80,"{ok,<0.35.0>}").addClass("code");
+s7_g1 = s7.g(s7.text(10,120,"2> dbg:p(all, [c]).").addClass("code darkred bold"),
+             s7.text(10,160,"{ok,[{matched,nonode@nohost,1}]}").addClass("code")).addClass("hide");
+s7_g2 = s7.g(s7.text(10,200,"3> MS = dbg:fun2ms(fun(_) -> display(caller()) end).").addClass("code darkred bold"),
+             s7.text(10,240,"[{‘_’,[],[{display,{caller}}]}]").addClass("code")).addClass("hide");
+s7_g3 = s7.g(s7.text(10,280,"2> dbg:tp({io,format,2},MS).").addClass("code darkred bold"), //FIXME - should this be 4> ?
+             s7.text(10,320,"{ok,[{matched,nonode@nohost,1},{saved,1}]}").addClass("code")).addClass("hide");
+s7_g4 = s7.g(s7.text(10,360,"5> io:format(\"Hello~n\",[]).").addClass("code darkred bold"),
+             s7.text(10,400,"{erl_eval,expr,3}").addClass("code"),
+             s7.text(10,440,"Hello").addClass("code"),
+             s7.text(10,480,"(<0.25.0>) call io:format(\"Hello~n\",[])").addClass("code"),
+             s7.text(10,520,"ok").addClass("code"),
+             s7.text(880,370,"io:format is called").addClass("darkred middle"),
+             s7.text(880,405,"by the shell").addClass("darkred middle"),
+             s7.text(880,440,"process").addClass("darkred middle"),
+             s7.path("M750,395 l-275,0").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_g1.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 2: {s7_g2.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 3: {s7_g3.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 4: {s7_g4.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_distributed_environments"><h2>Distributed Environments</h2><div class="imageblock" style=""><div class="content"><img src="images/distributed_environments.png" alt="Distributed Environments" width="auto" height="375"></div></div>
+<div class="ulist"><ul><li><p>Tracing can take place in distributed environments</p></li><li><p><strong>dbg:n(Node)</strong> adds node to the traced list</p></li><li><p><strong>dbg:cn(Node)</strong> removes the node from the list</p></li><li><p><strong>dbg:ln()</strong> lists the nodes on which tracing is performed</p></li></ul></div></section>
+<section id="_distributed_environments_2"><h2>Distributed Environments</h2><div class="ulist"><ul><li><p>When setting trace items, flags and function patterns, all traced nodes will be affected</p></li><li><p>p, tp, tpl, ctp, ctpl, ctpg in a distributed environment return</p><div class="ulist"><ul><li><p>{matched, node(), integer()} if successful</p></li><li><p>{matched, node(), 0, RpcError} if the call failed</p></li></ul></div></li><li><p>Pids passed to p/2 can be on other nodes</p><div class="ulist"><ul><li><p>Does not handle globally registered names</p></li></ul></div></li></ul></div></section>
+<section id="_redirecting_the_output"><h2>Redirecting the Output</h2><div class="ulist"><ul><li><p>You can create your own server to handle trace messages</p></li><li><p><strong>dbg:tracer(process, {HandleFun, Data})</strong> starts a server that will apply the fun on all incoming messages.</p></li><li><p>HandleFun is user defined and of arity 2</p><div class="ulist"><ul><li><p>The trace message is the first argument</p></li><li><p>User defined Data is the second</p></li><li><p>Returns <strong>NewData</strong> which is passed to the Fun on the next iteration</p></li></ul></div></li></ul></div></section>
+<section id="_redirecting_the_output_2"><h2>Redirecting the Output</h2><div class="pre plain">
+<b>1> Fun = fun(Msg, Count) -> io:format("~w:~w~n",[Count, Msg]), Count+1 end.</b>
+#Fun<erl_eval.12.107821302>
+<b>2> dbg:tracer(process, {Fun, 0}).</b>
+{ok,<0.34.0>}
+<b>3> dbg:tp({ping, '_', '_'}, []).</b>
+{ok,[{matched,nonode@nohost,6}]}
+<b>4> dbg:c(ping, start, [], [c, sos]).</b>
+0:{trace,<0.38.0>,call,{ping,start,[]}}
+1:{trace,<0.39.0>,call,{ping,loop,[]}}
+<0.39.0>
+<aside class="notes"><div class="paragraph"><p>Explain that it&#8217;s possible to send messages with the callback, but to be careful not to send trace messages to a process being traced&#8230;&#8203;</p></div></aside></section>
+<section id="_redirecting_the_output_3"><h2>Redirecting the Output</h2><div class="imageblock" style=""><div class="content"><img src="images/redirecting_output.png" alt="Redirecting the Output" width="auto" height="320"></div></div>
+<div class="ulist"><ul><li><p><strong>dbg:tracer(port, PortFun)</strong> starts a server that will pass the trace messages to a port without overheads</p></li><li><p><strong>PortFun</strong> is returned from the function call trace_port/2</p><div class="ulist"><ul><li><p><strong>dbg:trace_port(ip, PortNumber | {PortNumber, Size})</strong> will forward all messages to an ip trace driver</p></li><li><p><strong>dbg:trace_port(file, FileName)</strong> will send all messages to a binary file.</p></li></ul></div></li></ul></div></section>
+<section id="_redirecting_the_output_4"><h2>Redirecting the Output</h2><div class="imageblock" style=""><div class="content"><img src="images/redirecting_output.png" alt="Redirecting the Output" width="auto" height="320"></div></div>
+<div class="ulist"><ul><li><p><strong>dbg:trace_client(Type, Arg)</strong> allows for the printing of trace messages sent to the drivers</p><div class="ulist"><ul><li><p>If <strong>Type</strong> is <strong>ip</strong>, the <strong>Arg</strong> is either <strong>PortNumber</strong> or the tuple <strong>{HostName, PortNumber}</strong></p></li><li><p>If <strong>Type</strong> is <strong>file</strong> or <strong>follow_file</strong>, <strong>Arg</strong> is the <strong>FileName</strong> used by the driver</p></li></ul></div></li></ul></div></section>
+<section id="_redirecting_the_output_5"><h2>Redirecting the Output</h2><div class="ulist"><ul><li><p><strong>dbg:trace_client(Type, Arg, {HandleFun, Data})</strong> starts a client that will apply the fun on all incoming messages</p><div class="ulist"><ul><li><p><strong>Type</strong> and <strong>Arg</strong> are the same as in <strong>trace_client/2</strong></p></li><li><p><strong>{HandleFun, Data}</strong> are the same as in <strong>tracer/2</strong></p></li></ul></div></li><li><p><strong>dbg:stop_trace_client(Pid)</strong> stops the client.</p></li></ul></div></section>
+<section id="_redirecting_the_output_6"><h2>Redirecting the Output</h2><div class="pre plain"><b>1> PortFun = dbg:trace_port(ip, 1234).</b>
+#Fun<dbg.12.19790780>
+<b>2> dbg:tracer(port, PortFun).</b>
+{ok,<0.34.0>}
+<b>3> dbg:p(all, [c]).</b>
+{ok,[{matched,nonode@nohost,26}]}
+<b>4> dbg:tp({ping, '_', '_'}, []).</b>
+{ok,[{matched,nonode@nohost,6}]}
+<b>5> Pid = ping:start().</b>
+<0.38.0>
+<b>6> ping:send(Pid).</b>
+pong
+</div></section>
+<section id="_redirecting_the_output_7"><h2>Redirecting the Output</h2><div class="pre plain"><b>1> Pid = dbg:trace_client(ip, 1234).</b>
+<0.40.0>
+<0.31.0>) call ping:start()
+(<0.38.0>) call ping:loop()
+(<0.31.0>) call ping:send(<0.38.0>)
+(<0.40.0>) call ping:waste_of_time()
+<b>2> dbg:stop_trace_client(Pid).</b>
+ok
+<aside class="notes"><div class="paragraph"><p>This one is in a second shell. Options can be passed so a file plays the same role.</p></div></aside></section>
+<section id="_the_dbg_tool_8"><h2>The DBG Tool</h2><div class="ulist"><ul><li><p>The DBG Tool</p></li><li><p>Match Specifications</p></li><li><p>Creating Match Specifications</p></li><li><p>Distributed Environments</p></li><li><p>Redirecting Output</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

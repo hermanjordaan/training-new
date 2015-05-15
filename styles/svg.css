@@ -90,7 +90,7 @@ div.centre {
 }
 
 .hide {
-  opacity: 0;
+  opacity: 0.0;
 }
 
 .show {
@@ -117,6 +117,10 @@ svg .green {
 
 .next_arrow {
 	fill: #fff;
+}
+
+.middle {
+	text-anchor: middle;
 }
 
 @media print {

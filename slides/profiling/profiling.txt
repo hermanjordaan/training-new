@@ -1,0 +1,496 @@
+Profiling Erlang Code
+=====================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Profiling Erlang Code
+---------------------
+* Introduction to Profiling
+* Metrics to Consider
+* A Profiling Example
+* Profiling Tools
+* Miscellanea
+
+
+Introduction to Profiling
+-------------------------
+[quote, "Erlang and OTP in Action, Chapter 14"]
+“ Gathering *statistics* about the code  +  
+    as it’s *running*,  +  
+      *associating* the data with  +  
+        corresponding points in the *code* ”
+
+
+Introduction to Profiling
+-------------------------
+[quote, "Joe Armstrong, inventor of Erlang"]
+“ Make it *work*,  +  
+    then make it *beautiful*,  +  
+      then if you really, really have to, make it *fast*. ”
+
+
+Introduction to Profiling
+-------------------------
+[quote, "Joe Armstrong, inventor of Erlang"]
+“ 90 percent of the time,  +  
+    if you make it beautiful, it will already be fast.  +  
+      So really, *just make it beautiful*!”
+
+
+Introduction to Profiling
+-------------------------
+[quote, "Donald Knuth, Stanford University"]
+“ Premature optimization is the root of all *evil*. ”
+
+
+Introduction to Profiling
+-------------------------
+* *Do not guess* about performance
+* Profile *before* optimizing
+* Be *systematic*
+* Change *one* thing at the time
+* Start *simple*
+
+
+Introduction to Profiling
+-------------------------
+++++
+<div style="text-align:center; margin-top:100pt; font-size:36pt; font-family:'Gill Sans'">
+<img src="images/workflow.png" style="margin:10px auto 120px;" />
+<p><b>Lather,  Rinse, Repeat</b></p>
+<p><i>until the performance requirements are met</i></p>
+</div>
+++++
+
+
+
+Metrics to Consider
+-------------------
+* CPU time
+** How much CPU time do I spend?
+** Where do I spend CPU time?
+* Wall-clock time
+** How much time does my task take?
+* Processes ready to run
+** Are there any processes blocked by other processes?
+* Memory consumption
+** Are there any obvious memory leaks in my application?
+* ...
+
+[NOTE.speaker]
+[role="speaker"]
+--
+“Time” is often approximated -> Number of calls, number of lines executed
+High CPU Time -> I might use a bad algorithm, with exponential complexity.
+Wall-clock time -> If this is high, but CPU time is low, I’m probably spending time in I/O or network.--
+--
+
+
+A Profiling Example
+-------------------
+....
+-module(example).
+
+-export([factorial/1]).
+
+factorial(0) -> 1;
+factorial(N) when N > 0 ->
+  N * factorial(N - 1).
+....
+
+....
+Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> example:factorial(5).
+120.
+2> example:factorial(1000).
+4023872600770937735...
+....
+
+
+A Profiling Example
+-------------------
+....
+Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> {Time, Value} = timer:tc(example, factorial, [1000]).
+{813, 4023872600770937735...}
+....
+
+* +*timer:tc/3*+ evaluates apply/3 and measures the elapsed real time, returning {Time, Value}
+* Time is in *microseconds*
+* *Not* really reliable
+
+
+A Profiling Example
+-------------------
+....
+Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> statistics(runtime).   
+{330,330}
+2> example:factorial(1000).
+4023...
+3> statistics(runtime).
+{340,10}
+....
+
+* +*statistics/1*+ measures CPU time spent in the Erlang VM 
+* More consistent that timer:tc/3
+* Misleading if I/O is involved (OS kernel time not included)
+
+
+Profiling Tools
+---------------
+* cprof
+* fprof
+* eprof
+
+
+Profiling using cprof
+---------------------
+++++
+<div class="pre">Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> <strong>cprof:start().</strong>
+5883
+2> example:factorial(1000).
+4023872600770937735...
+3> <strong>cprof:pause().</strong>
+5883
+4> <strong>cprof:analyse(example).</strong>
+{example,1001,[{{example,factorial,1},1001}]}
+5> <strong>cprof:stop().</strong>
+5905
+
+</div>
+++++
+
+//NOTE: darkred text like in all other code samples
+
+
+cprof
+-----
+* *start/1*
+** Start call count tracing
+** Trace all functions in all modules
+* *pause/1*
+** Pause call count tracing
+* *analyse/1*
+** Collect and analyse the call counters for a given module
+* *stop/0*
+** Stop call count tracing
+
+
+cprof: *interpreting the output*
+--------------------------------
+....
+{example, 1001,
+  [
+    {
+      {example,factorial,1},
+      1001
+    }
+  ]
+}
+ 
+ 
+ 
+ 
+ 
+....
+
+
+cprof
+-----
+* The *simplest* Erlang/OTP profiling tool
+* Part of the *tools* application
+* Counts *number* of function calls
+* Works on a *per module* basis
+* *No* need to compile code with *debug_info*
+* *Low* impact (10% performance degradation)
+* Very *limited* information
+* *Cannot* profile *BIFs*
+
+
+Profiling using fprof
+---------------------
+++++
+<div class="pre">Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> <strong>fprof:trace(start).</strong>
+ok
+2> <strong>example:factorial(100000).</strong>
+2824229407960347...
+3> <strong>fprof:trace(stop).</strong>
+ok
+4> <strong>fprof:profile().</strong>
+...
+ok
+5> <strong>fprof:analyse({dest, "profile.txt"}).</strong>
+...
+ok
+</div>
+++++
+
+fprof
+-----
+* *trace/1*
+** Start/stop tracing
+* *profile/0*
+** Compile a trace into raw profile data held by the fprof server
+* *analyse/1*
+** Analyses raw profile data in the fprof server
+
+
+fprof: *interpreting the output*
+--------------------------------
+....
+$ cat profile.txt
+%% Analysis results:
+{analysis_options,
+  [{callers, true},
+   {sort, acc},
+   {totals, false},
+   {details, true}]}.
+
+%                          CNT         ACC         OWN        
+[{ totals,              122159,  87359.657,  42304.516}].  %%%
+
+%                          CNT         ACC         OWN        
+[{ "<0.32.0>",          122159,  undefined,  42304.516}].   %%
+...
+ 
+....
+
+
+fprof: *interpreting the output*
+--------------------------------
+* Output in Erlang format
+** Use *file:consult/1* to parse it
+* Three Sections
+** Analysis options (useful to reproduce it)
+** Summary
+** Detailed analysis per process
+* Times expressed in *milliseconds*
+
+
+Interpreting the fprof output
+-----------------------------
+....
+{analysis_options,
+ [{callers, true},
+  {sort, acc},
+  {totals, false},
+  {details, true}]}.
+ 
+...
+....
+
+* Print callers and called information
+* Sort lines by execution time (ACC)
+* Do not include a summary for call statistics
+* Print detailed call statistics for each process
+
+
+fprof: *interpreting the output*
+--------------------------------
+....
+...
+                 CNT             ACC         OWN        
+[{ totals,       122159,   87359.657,  42304.516}].  %%%
+
+...
+ 
+ 
+....
+
+* CNT
+** Number of function calls
+* ACC
+** Total execution time
+* OWN
+** Execution time spent on profiled functions
+
+
+fprof: *interpreting the output*
+--------------------------------
+....
+...
+                 CNT             ACC         OWN        
+[{ “<0.32.0>”,   122159,   undefined,  42304.516}].   %%
+
+...
+ 
+ 
+....
+
+* An entry for each process
+* In our case, CNT and OWN coincide with TOTALS (1 process)
+
+
+fprof: *interpreting the output*
+--------------------------------
+....
+...
+{[{{shell,apply_fun,3},                      1,14065.965, 5271.820},      
+  {{error_handler,undefined_function,3},     1,  127.642,   51.671},      
+  {{example,factorial,1},               110000,    0.000,  519.431}],     
+ { {example,factorial,1},               110002,14193.607,10842.922}, %
+ [{garbage_collect,                       7514, 3349.796, 3349.796},      
+  {suspend,                                 55,    0.889,    0.000},      
+  {{example,factorial,1},               110000,    0.000, 5519.431}]}.
+...
+ 
+....
+
+* A paragraph for each function
+* *%* tells us which function the paragraph is about
+* Above % are the *calling* functions
+* Below % are the *called* functions
+* *suspend* indicates the process has been suspended
+
+
+fprof
+-----
+* More *powerful* profiling tool
+* Part of the *tools* application
+* Implemented using Erlang *tracing BIFs*
+* Works on a *per process* basis
+* *Verbose* information
+* Trace to file to reduce *impact*
+
+
+fprof: *notes*
+--------------
+* If you find the fprof output complicated:
+** Convert it to callgrind format
+** Use the existing visualizing tools
+** https://github.com/isacssouza/erlgrind
+
+
+fprof: *notes*
+--------------
+image::images/qcachegrind.png["fprof: notes", auto, 600]
+
+
+Profiling using eprof
+---------------------
+++++
+<div class="pre">Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> <strong>eprof:start().</strong>
+{ok,<0.36.0>}
+2> <strong>eprof:start_profiling([self()]).</strong>
+profiling
+3> example:factorial(1000).
+4023872600770937735...
+4> <strong>eprof:stop_profiling().</strong>
+profiling_stopped
+5> <strong>eprof:analyze().</strong>
+...
+6> <strong>eprof:stop().</strong>
+stopped
+
+</div>
+++++
+
+
+eprof
+-----
+* *start/0*
+** Start the eprof server
+* *start_profiling/1*
+** Start profiling for a given set of processes
+* *stop_profiling/0*
+** Display the results of the analysis for each process
+* *analyse/0*
+** Display the results of the analysis for each process
+* *stop/0*
+** Stop the eprof server
+
+
+eprof: *interpreting the output*
+--------------------------------
+....
+*** Process <0.32.0     -- 100.00 % of profiled time *** 
+FUNCTION                  CALLS      %  TIME  [uS / CALLS]
+--------                  -----    ---  ----  [----------]
+io_lib:write_atom/1           1   0.00     0  [      0.00]
+...
+erlang:integer_to_list/1      1  27.44  1011  [   1011.00]
+example:factorial/1        1001  30.54  1125  [      1.12]
+ 
+....
+
+* The factorial/1 function has been executed 1001 times
+* 30.54% (i.e. ~1.12 seconds) of the total execution time has been spent in the factorial/1 function
+* In average, a single execution of the factorial/1 function took 1.63 microseconds
+
+
+eprof
+-----
+* Part of the *tools* application
+* Implemented using Erlang *tracing BIFs*
+* Somewhere in between *cprof* and *fprof*
+* *High* impact
+
+
+Miscellanea
+-----------
+* observer
+** General tool for inspecting Erlang system
+** Can view overall system data and load
+* percept
+** Erlang Concurrency Profiling Tool
+** Focus on application-level concurrency
+** Help identifying concurrency-bottlenecks
+** Focus on the _state_ of a process
+** waiting/running/etc
+** Percept2 under active development
+
+
+Miscellanea
+-----------
+* etop
+** Erlang equivalent of UNIX +_top_+ command
+** Available in both textual and graphical format
+** +etop:start/1+
+* cover
+** A +_Coverage Analysis Tool_+ for Erlang
+** HTML pages generated (with colours!)
+
+
+Miscellanea
+-----------
+* eper
+** Loose collection of Erlang Performance related tools.
+** _sherk_ (similar to OS X’s _Instruments_)
+** _gperf_ (a graphical performance monitor; shows CPU, memory and network usage)
+** _dtop_  (similar to unix top)
+** _redbug_ (improved dbg application)
+
+Profiling Erlang Code
+---------------------
+* Introduction to Profiling
+* Metrics to Consider
+* A Profiling Example
+* Profiling Tools
+* Miscellanea

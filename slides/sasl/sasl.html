@@ -1,0 +1,224 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>System Application Support Libraries</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>System Application Support Libraries</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_system_application_support_libraries"><h2>System Application Support Libraries</h2><div class="ulist"><ul><li><p>SASL Application</p></li><li><p>Error Logging</p></li><li><p>Report Browser</p></li><li><p>Alarm Handler</p></li><li><p>Other Topics</p></li></ul></div></section>
+<section id="_sasl_application"><h2>SASL Application</h2><div class="ulist"><ul><li><p>A generic infrastructure for large scale software projects</p><div class="ulist"><ul><li><p>Reuse generic code</p></li><li><p>Start simple, add complexity when needed</p></li></ul></div></li><li><p>Starts processes for event logging and alarm handling</p></li><li><p>Contains libraries facilitating common release tasks</p></li><li><p>SASL must be included in a minimal OTP release</p><div class="ulist"><ul><li><p>A basic application</p></li></ul></div></li></ul></div></section>
+<section id="_error_logging"><h2>Error Logging</h2><div class="literalblock"><div class="content"><pre> 
+=PROGRESS REPORT==== 15-May-2005::13:24:35 ===
+         application: sasl
+          started_at: nonode@nohost
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>SASL starts an event handler which receives events:</p><div class="ulist"><ul><li><p>Supervisor reports</p></li><li><p>Progress reports</p></li><li><p>Error reports</p></li><li><p>Crash reports</p></li></ul></div></li><li><p>Event variables state which handler is loaded</p><div class="ulist"><ul><li><p>Default prints events to standard io</p></li><li><p>The format will vary depending on the OTP release</p></li></ul></div></li></ul></div></section>
+<section id="_error_reports"><h2>Error Reports</h2><div class="literalblock"><div class="content"><pre>=ERROR REPORT==== 15-May-2005::13:51:24 ===
+Error in process &lt;0.42.0&gt; with exit value: {badarith,
+    [{erl_eval,eval_op,3},{shell,exprs,6},
+     {shell,eval_loop,3}]}
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Issued by behaviours upon abnormal termination</p></li><li><p>Users can generate them in their code</p><div class="ulist"><ul><li><p>Use <strong>error_logger:error_msg(String, Args)</strong></p></li><li><p>Too many user generated errors will hide serious issues</p></li></ul></div></li><li><p>The format will change from release to release</p></li></ul></div></section>
+<section id="_error_reports_2"><h2>Error Reports</h2><div class="literalblock"><div class="content"><pre>1&gt; error_logger:error_msg("Error in ~w. Division by zero!~n", [self()]).
+
+=ERROR REPORT==== 15-May-2005::13:56:18 ===
+Error in &lt;0.48.0&gt;. Division by zero!
+ok
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_supervisor_reports"><h2>Supervisor Reports</h2><ul style="margin-bottom:15pt;"><li>Issued by supervisors upon abnormal child termination <img src="images/supervisor_reports.png" style="position:absolute; float:right; width:240px; height:auto; margin-top:-10px;" /></li></ul>
+<div class="ulist"><ul><li><p>The supervisor report will contain:</p><div class="ulist"><ul><li><p>The name of the reporting supervisor</p></li><li><p>The phase of the child when the error occurred</p></li><li><p><strong>start_error</strong>, <strong>child_terminated</strong>, <strong>shutdown_error</strong></p></li></ul></div></li><li><p>The reason for terminating</p></li><li><p>The child specification</p></li></ul></div></section>
+<section id="_progress_reports"><h2>Progress Reports</h2><ul style="margin-bottom:15pt;"><li>Issued by supervisors upon starting or restarting a child <img src="images/progress_reports.png" style="position:absolute; float:right; width:auto; height:230px; margin-top:-30pt;" /></li></ul>
+<div class="ulist"><ul><li><p>The progress report will contain:</p><div class="ulist"><ul><li><p>The name of the reporting supervisor</p></li><li><p>The child specification</p></li></ul></div></li><li><p>Issued by application masters when starting or restarting an application</p></li><li><p>The progress report will contain</p><div class="ulist"><ul><li><p>The name of the application</p></li><li><p>The node on which it has been started</p></li></ul></div></li></ul></div></section>
+<section id="_crash_reports"><h2>Crash Reports</h2><div class="ulist"><ul><li><p>Issued by processes started with the <strong>proc_lib</strong> library.</p><div class="ulist"><ul><li><p>Includes all behaviours</p></li></ul></div></li><li><p>A catch in the loop will trap all abnormal terminations</p><div class="ulist"><ul><li><p>Excludes the reasons <strong>normal</strong> and <strong>shutdown</strong></p></li></ul></div></li><li><p>A crash report will contain:</p><div class="ulist"><ul><li><p>Information on the crashed process, including exit reason, initial function and message queue</p></li><li><p>Information on linked processes not trapping exits</p></li></ul></div></li></ul></div></section>
+<section id="_report_example"><h2>Report Example</h2><div class="literalblock"><div class="content"><pre>=ERROR REPORT==== 15-May-2005::15:31:47 ===
+** Generic server test terminating
+** Last message in was timeout
+** When Server state == []
+** Reason for termination ==
+** {badarith,[{test,handle_info,2},{proc_lib,init_p,5}]}
+{ok,&lt;0.48.0&gt;}
+ 
+ 
+ </pre></div></div>
+<div class="imageblock" style=""><div class="content"><img src="images/report_example_1.png" alt="Report Example" width="auto" height="220"></div></div></section>
+<section id="_report_example_2"><h2>Report Example</h2><div class="literalblock"><div class="content"><pre>=CRASH REPORT==== 15-May-2005::15:31:47 ===
+  crasher:
+    pid: &lt;0.49.0&gt;
+    registered_name: test
+    error_info: {badarith,[{test,handle_info,2}, ….
+    initial_call: {gen,init_it, [gen_server,&lt;0.48.0&gt;,
+                                &lt;0.48.0&gt;,
+{local,test},test,[],[]]}
+    ancestors: [&lt;0.48.0&gt;,&lt;0.36.0&gt;], ……
+ </pre></div></div>
+<div class="imageblock" style=""><div class="content"><img src="images/report_example_2.png" alt="Report Example" width="auto" height="260"></div></div></section>
+<section id="_report_example_3"><h2>Report Example</h2><div class="literalblock"><div class="content"><pre>=SUPERVISOR REPORT==== 15-May-2005::15:31:47 ===
+     Supervisor: {&lt;0.48.0&gt;,s}
+     Context:    child_terminated
+     Reason:     {badarith,[{test,handle_info,2},…]}
+     Offender:   [{pid,&lt;0.49.0&gt;}, {name,test},
+                  {mfa,{test,start_link,[]}}, {restart_type,permanent},
+                  {shutdown,5000}, {child_type,worker}]
+ 
+ </pre></div></div>
+<div class="imageblock" style=""><div class="content"><img src="images/report_example_3.png" alt="Report Example" width="auto" height="100"></div></div></section>
+<section id="_report_example_4"><h2>Report Example</h2><div class="literalblock"><div class="content"><pre>=PROGRESS REPORT==== 15-May-2005::15:31:47 ===
+          supervisor: {&lt;0.48.0&gt;,s}
+             started: [{pid,&lt;0.49.0&gt;},
+                       {name,test},
+                       {mfa,{test,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,5000},
+                       {child_type,worker}]
+ 
+ </pre></div></div>
+<div class="imageblock" style=""><div class="content"><img src="images/report_example_4.png" alt="Report Example" width="auto" height="220"></div></div></section>
+<section id="_report_browser"><h2>Report Browser</h2><div class="ulist"><ul><li><p>All event logging can be sent to wrap-around logs</p></li><li><p>Efficiently stores contents as binary files</p></li><li><p>Location, number of files and file size are configurable</p></li><li><p>Tools for browsing, searching and filtering are provided</p></li></ul></div></section>
+<section id="_report_browser_2"><h2>Report Browser</h2><div class="pre">{application, sasl,                            <span class="comment">%% SASL.app</span>
+   [{description, "SASL  CXC 138 11"},
+    ...
+    {env,[{error_logger_mf_dir, “/home/erlang/logs/sasl”},
+          {error_logger_mf_maxbytes, 20000},
+          {error_logger_mf_maxfiles, 5}]}]}.
+
+</div>
+<div class="ulist"><ul><li><p>Started by configuring sasl environment variables</p><div class="ulist"><ul><li><p>error_logger_mf_dir</p></li><li><p>error_logger_mf_maxbytes</p></li><li><p>error_logger_mf_maxfiles</p></li></ul></div></li></ul></div></section>
+<section id="_report_browser_3"><h2>Report Browser</h2><div class="pre" style="font-size:0.75em; line-height:1.45em;"><b>20> rb:start().</b>
+rb: reading report...done.
+ok
+<b>21> rb:list().</b>
+  No   Type               Process   Date         Time
+  ==   ====               =======   ====         ====
+  12   progress           <0.86.0>  2005-05-15   17:07:13
+  11   progress           <0.21.0>  2005-05-15   17:07:13
+  10   progress           <0.86.0>  2005-05-15   17:07:17
+   9   error              <0.22.0>  2005-05-15   17:07:25
+   8   crash_report       test      2005-05-15   17:07:25
+   7   progress           <0.22.0>  2005-05-15   17:07:26
+   6   supervisor_report  <0.22.0>  2005-05-15   17:07:26
+   5   error              <0.22.0>  2005-05-15   17:07:26
+   4   crash_report       test      2005-05-15   17:07:26
+   3   progress           <0.22.0>  2005-05-15   17:07:26
+   2   supervisor_report  <0.22.0>  2005-05-15   17:07:26
+   1   supervisor_report  <0.22.0>  2005-05-15   17:07:26
+ok
+</div></section>
+<section id="_report_browser_4"><h2>Report Browser</h2><div class="pre" style="font-size:0.75em; line-height:1.45em;"><b>27> rb:show(1).</b>
+
+SUPERVISOR REPORT  <0.92.0>              2005-05 16:39:28
+=================================================================
+Reporting supervisor                     {<0.92.0>,s}
+
+Child process
+   errorContext                          shutdown
+   reason                                reached_max_restart_intensity
+   pid                                   <0.94.0>
+   name                                  test
+   start_function                        {test,start_link,[]}
+   restart_type                          permanent
+   shutdown                              5000
+   child_type                            worker
+
+ok
+<b>28> rb:help().</b>
+
+</div>
+
+<svg id="release_handling_upgrade_1" style="width:450px; height:80; position:relative; top:-125px; left:200px;" viewBox="0 0 450 80; preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#release_handling_upgrade_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(290,30,"For help on the fly,").addClass("darkred").attr({"text-anchor":"middle"});;
+s1.text(290,65,"use rb:help()").addClass("darkred").attr({"text-anchor":"middle"});;
+s1.path("M140,40 c-40,-5 -80,10 -120,10").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg></section>
+<section id="_alarm_handler"><h2>Alarm Handler</h2><div class="ulist"><ul><li><p>A simple event handler installed in SASL</p></li><li><p>Interfaces through the alarm_handler module</p><div class="ulist"><ul><li><p>set_alarm({Id, Alarm}), clear_alarm(Id), get_alarms()</p></li></ul></div></li><li><p>Users can swap this alarm handler</p><div class="ulist"><ul><li><p>Use gen_event:swap_handler(alarm_handler, {alarm_handler,swap}, {new_handler,Args}).</p></li><li><p>Must handle events of the format {set_alarm, {Id, Alarm}} or {clear_alarm, Id}</p></li><li><p>Must be able to return active alarms through get_alarms().</p></li></ul></div></li></ul></div></section>
+<section id="_alarm_handler_2"><h2>Alarm Handler</h2><div class="literalblock"><div class="content"><pre>28&gt; alarm_handler:set_alarm({{subrack, 1}, fan_off}).
+ok
+=INFO REPORT==== 15-May-2005::17:31:59 ===
+    alarm_handler: {set,{{subrack,1},fan_off}}
+
+29&gt; alarm_handler:get_alarms().
+[{{subrack,1},fan_off}]
+30&gt; alarm_handler:clear_alarm({subrack, 1}).
+ok
+=INFO REPORT==== 15-May-2005::17:32:33 ===
+    alarm_handler: {clear,{subrack,1}}
+
+31&gt; alarm_handler:get_alarms().
+[]</pre></div></div></section>
+<section id="_other_topics"><h2>Other Topics</h2><div class="ulist"><ul><li><p><strong>overload:request() &#8594; accept or reject</strong></p></li><li><p>The overload process indirectly regulates CPU usage</p></li><li><p>Based on configurable parameters</p><div class="ulist"><ul><li><p>Maximum intensity</p></li><li><p>A weight</p></li></ul></div></li><li><p>Fine tune and test to get the best throughput</p></li><li><p>If an overload occurs, an alarm <strong>{overload, []}</strong> is raised</p></li></ul></div></section>
+<section id="_other_topics_2"><h2>Other Topics</h2><div class="ulist"><ul><li><p>Release Handling is handled in SASL</p><div class="ulist"><ul><li><p>Releases</p></li><li><p>Upgrades</p></li><li><p>Downgrades</p></li></ul></div></li><li><p>Systools is a SASL library module</p><div class="ulist"><ul><li><p>Contains functions to create boot scripts</p></li><li><p>Contains functions to create release packages</p></li></ul></div></li></ul></div></section>
+<section id="_system_application_support_libraries_2"><h2>System Application Support Libraries</h2><div class="ulist"><ul><li><p>SASL Application</p></li><li><p>Error Logging</p></li><li><p>Report Browser</p></li><li><p>Alarm Handler</p></li><li><p>Other Topics</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

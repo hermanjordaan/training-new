@@ -1,0 +1,405 @@
+ejabberd API
+============
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Overview
+--------
+* IQ handlers
+* Hooks
+* Modules
+* Custom Authentication
+
+
+IQ handlers
+-----------
+++++
+<div class="left w_600">
+<div class="pre">&lt;iq
+ from=&quot;alice@server/my_resource&quot; 
+ type=&quot;get&quot; 
+ id=&quot;roster_get_1&quot;&gt;
+  &lt;query 
+   xmlns=&quot;jabber:iq:roster&quot;/&gt;
+&lt;/iq&gt;
+
+
+
+</div></div>
+++++
+
+
+[role="right"]
+* *IQ*
+** stands for Info/Query
+** request-response mechanism
+** id attribute
+** four types of queries
+** get/set
+** result/error
+** routing based on namespaces
+
+[NOTE.speaker]
+[role="speaker"]
+--
+similar to HTTP request/response
+asynchronous (both server and client handling)
+--
+
+
+IQ handlers
+-----------
+....
+gen_iq_handler:add_iq_handler(
+  Scope, Host, Namespace, Module, Func, Type)
+ 
+....
+
+* Scope
+** ejabberd_local - registers handler for IQs addressed to the server itself
+** ejabberd_sm - registers handler for IQs addressed to bare JID
+* Host
+** virtual domain for which the handler should be registered
+* Namespace
+** namespace served by this IQ handler
+
+[NOTE.speaker]
+[role="speaker"]
+--
+very convenient IQ stanzas representation (special record)
+nice way of serializing/parallelizing IQ handling (be careful with one_queue and parallel)
+three types of addressing: _local ("my_server.com"), _sm ("user@my_server.com") and direct/routable ("user@my_server.com/resource")
+__
+--
+
+
+IQ handlers
+-----------
+....
+gen_iq_handler:add_iq_handler(
+  Scope, Host, Namespace, Module, Func, Type)
+ 
+....
+
+* Module, Func
+** callback function used for processing incoming IQ requests
+* processing disciplines
+** no_queue
+** one_queue
+** {queues, N}
+** parallel
+
+[NOTE.speaker]
+[role="speaker"]
+--
+no_queue - stanzas processed in the context of the caller process
+one_queue - single process handling all the namespace requests
+{queues, N} - pre-spawned pool of processes ({queues, 1} == one_queue)
+parallel - new handler spawned for each request
+--
+
+
+IQ handlers
+-----------
+++++
+<svg id="iq_handlers_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+s1 = Snap("#iq_handlers_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"4"});
+var f_Shadow = s1.filter(Snap.filter.shadow(1, 2, 1, "#808080"));
+
+s1.rect(10,15,1040,600).addClass("rect_code");
+
+s1.text(20,40,"gen_iq_handler:add_iq_handler(").addClass("code");
+s1.text(20,80,"  ejabberd_local, ").addClass("code");
+s1.text(20,120,"  \"my_server.com\", ").addClass("code");
+s1.text(20,160,"  \"server:admin:ns\",").addClass("code");
+s1.text(20,200,"  mod_server_admin,").addClass("code");
+s1.text(20,240,"  handle_iq, ").addClass("code");
+s1.text(20,280,"  parallel).").addClass("code");
+s1.text(20,320,"").addClass("code");
+s1.text(20,360,"").addClass("code");
+s1.text(20,400,"&lt;iq type=\"get\" to=\"my_server.com\"&gt;").addClass("code");
+s1.text(20,440,"  &lt;query xmlns=\"server:admin:ns\"/&gt;").addClass("code");
+s1.text(20,480,"&lt;/iq&gt;").addClass("code");
+s1.text(20,520,"").addClass("code");
+s1.text(20,560,"mod_server_admin:handle_iq(From, To, IQ)").addClass("code");
+
+s1_g2 = s1.g(s1.ellipse(710,425,80,40).addClass("shape").attr({"stroke-width":"2px", "fill":"#D6D6D6"}),
+             s1.path("M652,448 l-110,80 130,-70 Z").addClass("shape").attr({"stroke-width":"0", "fill":"#D6D6D6"}),
+             s1.path("M650,451 l-110,80 130,-71").addClass("line").attr({"stroke-width":"2px"}),
+             s1.text(710,435,"#jid{}").addClass("darkred bold middle").attr({filter:f_Shadow})).addClass("hide");
+
+s1_g1 = s1.g(s1.ellipse(880,425,80,40).addClass("shape").attr({"stroke-width":"2px", "fill":"#D6D6D6"}),
+             s1.path("M812,440 l-180,90 200,-76 Z").addClass("shape").attr({"stroke-width":"0", "fill":"#D6D6D6"}),
+             s1.path("M810,443 l-180,90 200,-77").addClass("line").attr({"stroke-width":"2px"}),
+             s1.text(880,435,"#jid{}").addClass("darkred bold middle").attr({filter:f_Shadow})).addClass("hide");
+
+s1_g3 = s1.g(s1.ellipse(915,525,80,40).addClass("shape").attr({"stroke-width":"2px", "fill":"#D6D6D6"}),
+             s1.path("M837,525 l-125,25 132,-10 Z").addClass("shape").attr({"stroke-width":"0", "fill":"#D6D6D6"}),
+             s1.path("M835,525 l-125,25 132,-10").addClass("line").attr({"stroke-width":"2px"}),
+             s1.text(915,535,"#iq{}").addClass("darkred bold middle").attr({filter:f_Shadow})).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim2 = function() { s1_g1.animate({"opacity":"0"}, 375, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim4 = function() { s1_g2.animate({"opacity":"0"}, 375, mina.linear, s1_anim5); }
+s1_anim5 = function() { s1_g3.animate({"opacity":"1"}, 375, mina.linear); }
+
+s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim2(); s1_counter++; break};
+    case 3: {s1_anim4(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+very convenient IQ stanzas representation (special record)
+nice way of serializing/parallelizing IQ handling (be careful with one_queue and parallel)
+--
+
+
+Hooks
+-----
+....
+ejabberd_hooks:add(my_hook_name, Domain, 
+                   module_name, function_name, Priority).
+
+
+ejabberd_hooks:run(my_hook_name, Domain, [Arg1, Arg2]).
+
+module_name:function_name(Arg1, Arg2).
+ 
+....
+
+* inversion of control
+* registering callback functions under hook names
+** callbacks might have priorities
+* hooks triggered from the code
+
+[NOTE.speaker]
+[role="speaker"]
+--
+hooks are evaluated in the context of caller process, be careful with performing some heavy computations there
+--
+
+
+Hooks
+-----
+....
+ejabberd_hooks:add(my_hook, Domain, mod, foo, 50).
+ejabberd_hooks:add(my_hook, Domain, mod, bar, 55).
+
+
+ok = ejabberd_hooks:run(my_hook, Domain, [Arg1]).
+
+mod:foo(Arg1).
+mod:bar(Arg1).
+ 
+....
+
+* difference between ‘run’ and ‘run_fold’
+
+
+Hooks
+-----
+....
+ejabberd_hooks:add(my_hook, Domain, mod, foo, 50).
+ejabberd_hooks:add(my_hook, Domain, mod, bar, 55).
+
+
+Res = ejabberd_hooks:run_fold(my_hook, Domain, Init,
+                             [Arg1]).
+Res1 = mod:foo(Init, Arg1).
+Res = mod:bar(Res1, Arg1).
+ 
+....
+
+* difference between ‘run’ and ‘run_fold’
+
+
+Hooks
+-----
+* caveats:
+** no documentation
+** number of arguments to the callback function may vary
+** random places in the code
+** priority/order does matter
+** some of them are called very frequently
+
+[NOTE.speaker]
+[role="speaker"]
+--
+for example: priority when storing an offline message: if we save it successfully in mod_offline_*, the error message is not going to be generated back to the sender
+for example: filter_packet/privacy_check_packet
+--
+
+
+Modules
+-------
+[role="left"]
+....
+ejabberd.cfg:
+
+
+{modules, [
+  {mod_roster, []},
+  {mod_register, 
+    [{access, register}]},
+  {mod_privacy_odbc, []}
+]}.
+ 
+....
+
+[role="right"]
+* system of plug-ins to ejabberd
+* configurable via ejabberd.cfg file
+** might be enabled/disabled in the run-time
+* different nature of modules
+* implementation of most XEPs
+
+[NOTE.speaker]
+[role="speaker"]
+--
+- internal system utilities (monitoring, health-checks, logging)
+- hooks subscription (offline messages, rosters, privacy lists)
+- IQ handlers (entire namespace handling)
+- subdomains handlers (gateways, subsystems like MUC)
+--
+
+
+Modules
+-------
+[role="left"]
+....
+-behavior(gen_mod).
+
+-export([start/2, stop/1]).
+
+start(Domain, Opts) ->
+  ...
+
+stop(Domain) ->
+  ...
+
+
+{modules, [{my_mod,
+            [{opt1, val1}]}]}.
+
+my_mod:start(Domain,
+             [{opt1, val1}]).
+ 
+....
+
+[role="right"]
+* special gen_mod behavior
+* ODBC/LDAP equivalents of some DB-related modules
+* a lot of XEPs implemented
+* separate repository for extensions: ejabberd-modules
+** still kept in SVN
+
+
+Custom Authentication
+---------------------
+* custom backends
+** ejabberd_auth_MY_BACKEND.erl
+** 3rd party services
+** web services
+** local files (.htpasswd?)
+** Facebook API
+* new mechanisms
+** custom authentication method (e.g. Facebook like token auth)
+
+
+External Authentication	
+------------------------
+[role="left"]
+....
+%% ejabberd.cfg
+
+{auth_method, external}.
+{extauth_program, 
+  "/path/to/auth/script"}.
+ 
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* support for external, third party authentication backends, e.g.:
+** RESTful services
+** CSV files
+** custom scripts
+* communication using standard input/output
+
+[NOTE.speaker]
+[role="speaker"]
+--
+[steve] as to my experience this approach should not be recommended, it totally breaks fault tolerance and doesn’t scale well
+--
+
+
+External Authentication	
+------------------------
+[role="left"]
+....
+input
+PREFIX:CMD:ARGS
+
+output
+0x0000 | 0x0001 (true | false)
+
+
+
+example
+0x001A auth:michal:esl.com:secret
+
+output:
+0x0001
+ 
+ 
+....
+
+[role="right"]
+* PREFIX
+** 2 bytes with packet size
+* CMD
+** auth
+** isuser
+** setpass
+** tryregister
+** removeuser
+* ARGS
+** command-specific, colon-delimited data
+
+
+Overview
+--------
+* IQ handlers
+* Hooks
+* Modules
+* Custom Authentication

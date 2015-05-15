@@ -1,0 +1,523 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Event Handlers</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Event Handlers</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_event_handlers"><h2>Event Handlers</h2><div class="ulist"><ul><li><p>Events</p></li><li><p>Event Handlers</p></li><li><p>Adding Handlers</p></li><li><p>Sending Events</p></li><li><p>Swapping Handlers</p></li><li><p>Deleting Handlers</p></li><li><p>Event Handler Example</p></li></ul></div></section>
+<section id="_events"><h2>Events</h2><div class="ulist"><ul><li><p>An event represents a state change in the system</p><div class="ulist"><ul><li><p>A high processor load</p></li><li><p>A board failure</p></li><li><p>A trace printout on the activity of a link</p></li></ul></div></li><li><p>For every event that is generated, the system might want to</p><div class="ulist"><ul><li><p>Generate SNMP traps</p></li><li><p>Collect statistics</p></li><li><p>Print a message to I/O</p></li><li><p>Log to file</p></li></ul></div></li></ul></div></section>
+<section id="_events_2"><h2>Events</h2><div class="imageblock" style=""><div class="content"><img src="images/events.png" alt="Events" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Processes can be used to implement event managers</p></li></ul></div></section>
+<section id="_event_handlers_2"><h2>Event Handlers</h2><div class="ulist"><ul><li><p>Each event manager will receive a specific type of event</p><div class="ulist"><ul><li><p>Alarms, equipment state changes, debug traces, etc.</p></li></ul></div></li><li><p>Event handlers subscribe to events sent to a manager</p><div class="ulist"><ul><li><p>Several handlers can subscribe to one manager</p></li></ul></div></li><li><p>During runtime, event managers provide functionality to:</p><div class="ulist"><ul><li><p>Add, remove and upgrade event handlers</p></li></ul></div></li></ul></div></section>
+<section id="_event_handlers_3"><h2>Event Handlers</h2><div class="dlist left comparison green"><dl><dt class="hdlist1">Generic</dt><dd><div class="ulist"><ul><li><p>Starting/stopping the event manager</p></li><li><p>Sending events</p></li><li><p>Sending synchronous requests</p></li><li><p>Forwarding events/requests to handlers</p></li><li><p>Adding/deleting handlers</p></li><li><p>Upgrading handlers</p></li></ul></div></dd></dl></div>
+<div class="dlist right comparison darkred"><dl><dt class="hdlist1">Specific</dt><dd><div class="ulist"><ul><li><p>The events</p></li><li><p>The event handlers</p></li><li><p>Initialising event handlers</p></li><li><p>Event handler loop data</p></li><li><p>Handling events/requests</p></li><li><p>Cleaning up</p></li></ul></div></dd></dl></div></section>
+<section id="_event_handlers_4"><h2>Event Handlers</h2><div class="imageblock" style=""><div class="content"><img src="images/event_handlers.png" alt="Event Handlers" width="auto" height="320px"></div></div>
+<div class="ulist"><ul><li><p>The <strong>gen_event</strong> module implements the event manager</p><div class="ulist"><ul><li><p>It is part of the standard library application</p></li><li><p>Each handler solves a specific event-driven task</p></li></ul></div></li><li><p>An event manager will take care of several event handlers</p><div class="ulist"><ul><li><p>The event handlers contain the specific code</p></li></ul></div></li></ul></div></section>
+<section id="_event_managers"><h2>Event Managers</h2><svg id="event_managers_1" style="width:1100px; height:440px;" viewBox="0 0 1100 440" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#event_managers_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(100,75,"Supervisor");
+s1.circle(330,80,40).addClass("shape").attr({"fill":"#A6A6A6"});
+s1.circle(330,80,35).addClass("shape grey")
+
+s1_g1 = s1.g(s1.path("M385,80 l255,0").addClass("line").attr({"marker-end":marker, "stroke-dasharray":"7,5"}),
+               s1.path("M660,305 l140,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s1_g2 = s1.g(s1.circle(700,80,40).addClass("shape darkred"),
+               s1.text(765,75,"Name/Pid"),
+               s1.text(600,165,"Handlers = []").addClass("code"),
+               s1.text(820,315,"{ok, Pid}").addClass("code")).addClass("hide");
+
+s1.text(105,265,"gen_event:start_link({Scope,Name})").addClass("code");
+s1.text(105,300,"gen_event:start_link()").addClass("code");
+s1.text(105,335,"gen_event:start({Scope,Name})").addClass("code");
+s1.text(105,370,"gen_event:start()").addClass("code");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 375, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear); }
+
+s1.click(function() { s1_anim1() });
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>gen_event:start_link/0-1</strong> creates a new event manager</p><div class="ulist"><ul><li><p>Name is the process name. <strong>Scope</strong> can be <strong>local</strong> or <strong>global</strong></p></li><li><p>No callback modules are passed</p></li></ul></div></li></ul></div></section>
+<section id="_event_handlers_5"><h2>Event Handlers</h2><div class="literalblock"><div class="content"><pre>-module(logger).
+-behaviour(gen_event).
+
+-export([init/1, terminate/2, handle_event/2,          handle_info/2]).
+
+init(File) -&gt; ...
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Event handlers are more generic than other behaviours</p></li><li><p>The same Handler can be added to many event managers</p></li><li><p>Event manager start functions are rarely included in the handlers</p></li></ul></div></section>
+<section id="_adding_handlers"><h2>Adding Handlers</h2><svg id="adding_handlers_1" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#adding_handlers_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(50,50,"gen_event:add_handler(Name,Mod,Args)").addClass("code");
+
+s2.circle(150,130,40).addClass("shape grey");
+s2.circle(550,130,40).addClass("shape darkred");
+
+s2_g1 = s2.g(s2.path("M710,40 l50,0").addClass("line").attr({"marker-end":marker}),
+               s2.path("M210,130 l270,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+s2_g2 = s2.text(800,50,"ok").addClass("code").addClass("hide");
+s2_g3 = s2.path("M550,190 l0,50").addClass("line ").attr({"marker-end":marker}).addClass("hide");
+s2_g4 = s2.text(270,300,"Mod:init(Args) -> {ok, LoopData}").addClass("code").addClass("hide");
+s2_g5 = s2.text(620,120,"Handlers = [{Mod, Data}|...]").addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 375, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 375, mina.linear, s2_anim4); }
+s2_anim4 = function() { s2_g4.animate({"opacity":"1"}, 375, mina.linear, s2_anim5); }
+s2_anim5 = function() { s2_g5.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: { s2_anim1(); s2_counter++; break };
+    case 2: { s2_anim3(); s2_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>gen_event:add_handler/3</strong> adds a new handler</p><div class="ulist"><ul><li><p>Many handlers can be added to the same event manager</p></li><li><p>When the handler is added, <strong>Mod:init/1</strong> initialises its state</p></li><li><p>The event manager stores a list of handlers and their data</p></li></ul></div></li></ul></div></section>
+<section id="_sending_events"><h2>Sending Events</h2><svg id="sending_events_1" style="width:1100px; height:440px;" viewBox="0 0 1100 440" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#sending_events_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(100,40,"gen_event:notify(Name,Event)").addClass("code");
+s3.text(100,80,"gen_event:sync_notify(Name, Event)").addClass("code");
+
+s3.circle(150,180,40).addClass("shape grey");
+s3.circle(550,180,40).addClass("shape darkred");
+
+s3_g1 = s3.g(s3.text(305,170,"Event"),
+               s3.path("M210,180 l275,0").addClass("line").attr({"marker-end":marker}),
+               s3.path("M610,32 l160,0").addClass("line").attr({"marker-end":marker}),
+               s3.path("M715,72 l55,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s3_g2 = s3.text(800,40,"ok").addClass("code").addClass("hide");
+s3_g6 = s3.text(800,80,"ok").addClass("code").addClass("hide");
+
+s3_g5 = s3.text(630,165,"Handlers = [{Mod,NewData}|...]").addClass("hide");
+
+s3_g3 = s3.g(s3.text(300,270,"Mod1:handle_event(Event, Data)").addClass("code"),
+               s3.text(300,310,"Mod2:handle_event(Event, Data)").addClass("code"),
+               s3.path("M525,325 l50,45").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s3_g4 = s3.text(590,390,"{ok, NewData}").addClass("code").addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 375, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 375, mina.linear, s3_anim4); }
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 375, mina.linear, s3_anim5); }
+s3_anim5 = function() { s3_g5.animate({"opacity":"1"}, 375, mina.linear, s3_anim6); }
+s3_anim6 = function() { s3_g6.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: { s3_anim1(); s3_counter++; break };
+    case 2: { s3_anim3(); s3_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>notify/2</strong> sends asynchronous events to all handlers</p></li><li><p><strong>sync_notify/2</strong> sends synchronous events to all handlers</p><div class="ulist"><ul><li><p>It returns <strong>ok</strong> when all <strong>Mod:handle_event</strong> callbacks have been executed</p></li></ul></div></li></ul></div></section>
+<section id="_sending_events_2"><h2>Sending Events</h2><svg id="sending_events_2" style="width:1100px; height:400px;" viewBox="0 0 1100 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#sending_events_2");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.text(85,40,"gen_event:call(Name, Mod, Message)").addClass("code");
+
+s4_g5 = s4.text(790,40,"Reply").addClass("code").addClass("hide");
+
+s4.circle(150,150,40).addClass("shape grey");
+s4.circle(550,150,40).addClass("shape darkred");
+
+s4_g1 = s4.g(s4.path("M695,30 l70,0").addClass("line").attr({"marker-end":marker}),
+               s4.path("M210,125 l270,0").addClass("line").attr({"marker-end":marker}),
+               s4.text(290,115,"Message")).addClass("hide");
+
+s4_g4 = s4.g(s4.path("M485,175 l-270,0").addClass("line").attr({"marker-end":marker}),
+               s4.text(310,165,"Reply")).addClass("hide");
+
+s4_g2 = s4.g(s4.text(330,250,"Mod:handle_call(Message, Data)").addClass("code"),
+               s4.path("M550,260 l45,40").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s4_g3 = s4.text(610,320,"{ok, Reply, NewData}").addClass("code").addClass("hide");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 375, mina.linear); }
+s4_anim2 = function() { s4_g2.animate({"opacity":"1"}, 375, mina.linear, s4_anim3); }
+s4_anim3 = function() { s4_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s4_anim4 = function() { s4_g4.animate({"opacity":"1"}, 375, mina.linear, s4_anim5); }
+s4_anim5 = function() { s4_g5.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: { s4_anim1(); s4_counter++; break };
+    case 2: { s4_anim2(); s4_counter++; break };
+    case 3: { s4_anim4(); s4_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>gen_event:call/2</strong> is used to retrieve data from handlers</p><div class="ulist"><ul><li><p>Requests are synchronous</p></li><li><p>Handled in the <strong>Mod:handle_call/3</strong> function in the callback module</p></li><li><p>The handler the request is being sent to has to be specified</p></li></ul></div></li></ul></div></section>
+<section id="_swapping_handlers"><h2>Swapping Handlers</h2><svg id="swapping_handlers_1" style="width:1100px; height:500px;" viewBox="0 0 1100 500" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#swapping_handlers_1");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(45,40,"gen_event:swap_handler(Name, {OldMod,OldArgs},").addClass("code");
+s5.text(45,80,"                             {NewMod,NewArgs})").addClass("code");
+
+s5.circle(110,160,40).addClass("shape grey");
+s5.circle(430,160,40).addClass("shape darkred");
+
+s5_g1 = s5.g(s5.path("M170,160 l195,0").addClass("line").attr({"marker-end":marker}),
+               s5.text(200,150,"{swap, ...}"),
+               s5.path("M870,50 l65,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s5_g7_1 = s5.text(970,60,"ok").addClass("code");
+
+s5_g6 = s5.text(510,160,"Handlers=[{OldMod, OldData}|..]").addClass("code").addClass("hide");
+
+s5_g2 = s5.g(s5.text(275,250,"OldMod:terminate(OldArgs, OldData)").addClass("code"),
+               s5.path("M830,265 l42,32").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s5_g3 = s5.text(895,315,"Res").addClass("code green bold").addClass("hide");
+
+s5_g7_2 = s5.path("M530,270 l0,50").addClass("line").attr({"marker-end":marker});
+
+s5_g4 = s5.g(s5.text(275,370,"NewMod:init({NewArgs,    })").addClass("code"),
+               s5.text(275,370,"                      Res").addClass("code green bold")).addClass("hide");
+
+s5_g7_3 = s5.path("M532,385 l42,32").addClass("line").attr({"marker-end":marker});
+
+s5_g5 = s5.text(595,435,"{ok, NewData}").addClass("code").addClass("hide");
+
+s5_g7 = s5.g(s5_g7_1, s5_g7_2, s5_g7_3).addClass("hide");
+
+s5_anim1 = function() { s5_g1.animate({"opacity":"1"}, 375, mina.linear); }
+s5_anim2 = function() { s5_g2.animate({"opacity":"1"}, 375, mina.linear, s5_anim3); }
+s5_anim3 = function() { s5_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s5_anim4 = function() { s5_g4.animate({"opacity":"1"}, 375, mina.linear, s5_anim5); }
+s5_anim5 = function() { s5_g5.animate({"opacity":"1"}, 375, mina.linear); }
+s5_anim6 = function() { s5_g6.animate({"opacity":"1"}, 375, mina.linear, s5_anim7); }
+s5_anim7 = function() { s5_g7.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: { s5_anim1(); s5_counter++; break };
+    case 2: { s5_anim2(); s5_counter++; break };
+    case 3: { s5_anim4(); s5_counter++; break };
+    case 4: { s5_anim6(); s5_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>swap_handler/3</strong> allows handlers to be swapped/upgraded</p><div class="ulist"><ul><li><p>Executes non-stop, ensuring all events are handled</p></li></ul></div></li></ul></div></section>
+<section id="_deleting_event_handlers"><h2>Deleting Event Handlers</h2><svg id="deleting_event_handlers_1" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#deleting_event_handlers_1");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.text(80,40,"gen_event:delete_handler(Name,Mod,Args)").addClass("code");
+s6_g1_2 = s6.path("M780,32 l70,0").addClass("line").attr({"marker-end":marker});
+s6_g3 = s6.text(880,40,"ok").addClass("code").addClass("hide");
+
+s6.circle(200,130,40).addClass("shape grey");
+s6_g1_1 = s6.path("M260,130 l250,0").addClass("line").attr({"marker-end":marker});
+s6.circle(580,130,40).addClass("shape darkred");
+
+s6_g2 = s6.text(650,130,"Handlers = [...]").addClass("hide");
+s6_g4 = s6.path("M580,190 l0,50").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s6_g5 = s6.text(300,300,"Mod:terminate(Args,State) -> Term").addClass("code").addClass("hide");
+
+s6_g1 = s6.g(s6_g1_1, s6_g1_2).addClass("hide");
+
+s6_anim1 = function() { s6_g1.animate({"opacity":"1"}, 375, mina.linear, s6_anim2); }
+s6_anim2 = function() { s6_g2.animate({"opacity":"1"}, 375, mina.linear, s6_anim3); }
+s6_anim3 = function() { s6_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s6_anim4 = function() { s6_g4.animate({"opacity":"1"}, 375, mina.linear, s6_anim5); }
+s6_anim5 = function() { s6_g5.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: { s6_anim1(); s6_counter++; break };
+    case 2: { s6_anim4(); s6_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>gen_event:delete_handler/3</strong> removes a handler</p><div class="ulist"><ul><li><p>The handler instance is only removed in the <strong>Name</strong> manager</p></li><li><p>The term returned by <strong>Mod:terminate/2</strong> can be used for handler upgrades</p></li><li><p>The event manager removes the handlers from its list</p></li></ul></div></li></ul></div></section>
+<section id="_deleting_event_handlers_2"><h2>Deleting Event Handlers</h2><svg id="deleting_event_handlers_2" style="width:550px; height:600px;" class="left" viewBox="0 0 550 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#deleting_event_handlers_2");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.circle(100,250,90).addClass("shape").attr({"fill":"#F2F2F2"})
+s7.text(55,238,"Event").attr({"fill":"#4B5056","font-size":"26pt"});
+s7.text(28,278,"Manager").attr({"fill":"#4B5056","font-size":"26pt"});
+
+s7_g4 = s7.rect(328,160,160,55).addClass("shape").attr({"fill":"#4B5056"});
+s7.rect(328,285,160,55).addClass("shape").attr({"fill":"#4B5056"});
+
+s7_g1 = s7.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape").transform("t325 -12 s1 r15").addClass("hide");
+
+s7_g2 = s7_g1.clone().transform( "t240,-12 r15" ).addClass("hide");
+
+s7_g3 = s7.path("M190,250 l130,-60").addClass("line").attr({"marker-end":marker});
+s7.path("M190,250 l130,60").addClass("line").attr({"marker-end":marker});
+
+s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 375, mina.linear, s7_anim2); }
+s7_anim2 = function() { s7_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s7_anim3 = function() { s7_g1.animate({"opacity":"0"}, 375, mina.linear); s7_g2.animate({"opacity":"0"}, 375, mina.linear, s7_anim4); }
+s7_anim4 = function() { s7_g3.animate({"opacity":"0"}, 375, mina.linear); s7_g4.animate({"opacity":"0"}, 375, mina.linear); }
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: { s7_anim1(); s7_counter++; break };
+    case 2: { s7_anim3(); s7_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>If an event handler crashes, it is deleted</p><div class="ulist"><ul><li><p>The event manager and other handlers are not affected</p></li></ul></div></li><li><p>The event manager traps exits by default</p></li><li><p>It is possible to connect a handler to the calling process</p><div class="ulist"><ul><li><p>If the calling process terminates, the handler is deleted</p></li><li><p>Use <strong>add_sup_handler/3</strong></p></li></ul></div></li></ul></div></section>
+<section id="_event_handler_example"><h2>Event Handler Example</h2><div class="imageblock left w_600" style=""><div class="content"><img src="images/event_handler_example.png" alt="Event Handler Example" width="auto" height="auto"></div></div>
+<div class="ulist right w_500"><ul><li><p>Remember the Frequency allocator?</p></li><li><p>Let us generate an alarm every time frequencies run out</p></li><li><p>Let us clear the alarm when a frequency is released</p></li><li><p>When generating the alarm, we want to:</p><div class="ulist"><ul><li><p>Log it on file</p></li><li><p>Display a warning in the shell</p></li></ul></div></li></ul></div></section>
+<section id="_event_handler_example_2"><h2>Event Handler Example</h2><div class="pre">allocate({[], Allocated}, Pid) ->
+    <b>freq_overload:no_frequency(),</b>
+    {{[], Allocated}, {error, no_frequency}};
+allocate({[Freq|Free], Allocated}, Pid) ->
+    {{Free, [{Freq, Pid}|Allocated]}, {ok, Freq}}.
+
+deallocate({Free, Allocated}, Freq) ->
+    <b>case Free of
+        [] -> freq_overload:frequency_available();
+        _  -> ok
+    end,</b>
+    NewAllocated = lists:keydelete(Freq, 1, Allocated),
+    {[Freq|Free],  NewAllocated}.
+
+</div>
+<aside class="notes"><div class="paragraph"><p>These are the internal functions of frequency.erl</p></div></aside></section>
+<section id="_event_handler_example_3"><h2>Event Handler Example</h2><div class="literalblock"><div class="content"><pre>-module(freq_overload).
+
+-export([start_link/0, add_handler/2, delete_handler/2]).
+-export([no_frequency/0, frequency_available/0]).
+
+start_link() -&gt; gen_event:start_link({local, ?MODULE}).
+
+add_handler(M,A) -&gt; gen_event:add_handler(?MODULE, M, A).
+delete_handler(M,A)-&gt;gen_event:delete_handler(?MODULE,M,A).
+
+no_frequency() -&gt;     gen_event:notify(?MODULE, {alarm, no_frequency}).
+frequency_available() -&gt;     gen_event:notify(?MODULE, {clear, no_frequency}).</pre></div></div>
+<aside class="notes"><div class="paragraph"><p>Implements the event manager functionality</p></div></aside></section>
+<section id="_event_handler_example_4"><h2>Event Handler Example</h2><div class="pre"><span class="comment">%% Event Handler module for alarm I/O -module(event_io).</span>
+-behaviour(gen_event).
+
+-export([get_count/1]). %% client functions
+-export([init/1, handle_call/2, handle_event/2,
+         terminate/2]).
+
+get_count(EventManager) ->
+	gen_event:call(EventManager, ?MODULE, get_count).
+
+init(_Args)-> {ok, 0}.
+terminate(Reason, Counter) -> {count, Counter}.
+
+</div>
+<aside class="notes"><div class="paragraph"><p>Event Handler module for alarm I/O</p></div></aside></section>
+<section id="_event_handler_example_5"><h2>Event Handler Example</h2><div class="pre"><span class="comment">%% Synchronous call retrieving the number of alarms</span>
+handle_call(get_count, Count) ->
+    Reply = {count, Count},
+    {ok, Reply, Count}.
+
+<span class="comment">%% Asynchronous event handling</span>
+handle_event({alarm, Alarm}, Count) ->
+    io:format("Alarm Raised: ~w~n", [Alarm]),
+    {ok, Count+1};
+handle_event({clear, Alarm}, Count) ->
+    io:format("Alarm Cleared: ~w~n", [Alarm]),
+    {ok, Count}.
+
+
+</div></section>
+<section id="_event_handler_example_6"><h2>Event Handler Example</h2><div class="literalblock"><div class="content"><pre>-module(logger).
+
+-behaviour(gen_event).
+-export([init/1, terminate/2,
+         handle_event/2, handle_info/2]). %% callbacks
+
+init(File) -&gt; {ok, Fd} = file:open(File, write).
+terminate(Reason, Fd) -&gt; file:close(Fd).
+
+handle_event(Event, Fd) -&gt;
+    io:format(Fd, "Time:~w~n Date:~w~n Event:~w~n",
+             [time(),date(),Event]),
+    {ok, Fd}.
+ </pre></div></div></section>
+<section id="_event_handler_example_7"><h2>Event Handler Example</h2><svg id="event_handler_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#event_handler_example_1");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s8_t1 = s8.g(s8.text(10,30,"1> freq_overload:start_link().").addClass("code darkred bold"),
+               s8.text(10,69,"{ok,<0.29.0>}").addClass("code")).addClass("hide");
+s8_t2 = s8.g(s8.text(10,108,"2> freq_overload:add_handler(logger, \"log.txt\").").addClass("code darkred bold"),
+               s8.text(10,147,"ok").addClass("code")).addClass("hide");
+s8_t3 = s8.g(s8.text(10,186,"3> freq_overload:no_frequency().").addClass("code darkred bold"),
+               s8.text(10,225,"ok").addClass("code")).addClass("hide");
+s8_t4 = s8.g(s8.text(10,264,"4> freq_overload:add_handler(event_io, {}).").addClass("code darkred bold"),
+               s8.text(10,303,"ok").addClass("code")).addClass("hide");
+s8_t5 = s8.g(s8.text(10,342,"5> freq_overload:no_frequency().").addClass("code darkred bold"),
+               s8.text(10,381,"Alarm Raised: no_frequency").addClass("code")).addClass("hide");
+s8_t6 = s8.g(s8.text(10,420,"6> freq_overload:delete_handler(logger, {}).").addClass("code darkred bold"),
+               s8.text(10,459,"ok").addClass("code")).addClass("hide");
+s8_t7 = s8.g(s8.text(10,498,"7> freq_overload:frequency_available().").addClass("code darkred bold"),
+               s8.text(10,537,"Alarm Cleared: no_frequency").addClass("code")).addClass("hide");
+s8_t8 = s8.g(s8.text(10,576,"8> event_io:get_count(freq_overload).").addClass("code darkred bold"),
+               s8.text(10,615,"{count, 1}").addClass("code")).addClass("hide");
+
+s8_g1 = s8.circle(850,270,44).addClass("shape").attr({"fill":"#F2F2F2"}).addClass("hide");
+s8_g2 = s8.g(s8.path("M894,270 l58,-26").addClass("line").attr({"marker-end":marker}),
+               s8.rect(960,226,80,30).addClass("shape").attr({"fill":"#4B5056"})).addClass("hide");
+s8_g3 = s8.g(s8.path("M894,270 l58, 26").addClass("line").attr({"marker-end":marker}),
+               s8.rect(960,284,80,30).addClass("shape").attr({"fill":"#4B5056"})).addClass("hide");
+
+s8_fade1 = function() { s8_g2.animate({"opacity":"0.25"}, 500, mina.linear, s8_fade1a); }
+s8_fade1a = function() { s8_g2.animate({"opacity":"1"}, 500, mina.linear); }
+s8_fade2 = function() { s8_g3.animate({"opacity":"0.25"}, 500, mina.linear, s8_fade2a); }
+s8_fade2a = function() { s8_g3.animate({"opacity":"1"}, 500, mina.linear); }
+s8_fade3 = function() { s8_fade1(); setTimeout( function() {s8_fade2()}, 875) };
+
+s8_anim1 = function() { s8_t1.animate({"opacity":"1"}, 375, mina.linear, s8_anim2); }
+s8_anim2 = function() { s8_g1.animate({"opacity":"1"}, 375, mina.linear); }
+s8_anim3 = function() { s8_t2.animate({"opacity":"1"}, 375, mina.linear, s8_anim4); }
+s8_anim4 = function() { s8_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s8_anim5 = function() { s8_t3.animate({"opacity":"1"}, 375, mina.linear, s8_fade1); }
+s8_anim6 = function() { s8_t4.animate({"opacity":"1"}, 375, mina.linear, s8_anim7); }
+s8_anim7 = function() { s8_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s8_anim8 = function() { s8_t5.animate({"opacity":"1"}, 375, mina.linear, s8_fade3); }
+s8_anim9 = function() { s8_t6.animate({"opacity":"1"}, 375, mina.linear, s8_anim10); }
+s8_anim10 = function() { s8_g2.animate({"opacity":"0"}, 375, mina.linear); }
+s8_anim11 = function() { s8_t7.animate({"opacity":"1"}, 375, mina.linear, s8_fade2); }
+s8_anim12 = function() { s8_t8.animate({"opacity":"1"}, 375, mina.linear, s8_fade2); }
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: { s8_anim1(); s8_counter++; break };
+    case 2: { s8_anim3(); s8_counter++; break };
+    case 3: { s8_anim5(); s8_counter++; break };
+    case 4: { s8_anim6(); s8_counter++; break };
+    case 5: { s8_anim8(); s8_counter++; break };
+    case 6: { s8_anim9(); s8_counter++; break };
+    case 7: { s8_anim11(); s8_counter++; break };
+    case 8: { s8_anim12(); s8_counter++; break };
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_event_handlers_6"><h2>Event Handlers</h2><div class="ulist"><ul><li><p>Events</p></li><li><p>Event Handlers</p></li><li><p>Adding Handlers</p></li><li><p>Sending Events</p></li><li><p>Swapping Handlers</p></li><li><p>Deleting Handlers</p></li><li><p>Event Handler Example</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

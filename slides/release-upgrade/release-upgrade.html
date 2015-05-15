@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Release Upgrade</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Release Upgrade</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_release_upgrade"><h2>Release Upgrade</h2><div class="ulist"><ul><li><p>Create a Release Upgrade</p></li><li><p>Create Application Upgrade Files</p></li><li><p>Create Release Upgrade Files</p></li><li><p>Install an Upgrade</p></li><li><p>Downgrade</p></li><li><p>Remove a Release</p></li></ul></div></section>
+<section id="_create_a_release_upgrade"><h2>Create a Release Upgrade</h2><div class="ulist"><ul><li><p>A Release Upgrade consists of:</p></li><li><p>A new version of some of the applications included in the release</p></li><li><p>Zero or more new applications</p></li><li><p>An application upgrade file for each application that has been changed</p></li><li><p>A Release Upgrade File</p></li></ul></div></section>
+<section id="_fsm_example_strong_machine_strong"><h2>FSM Example: <strong>machine</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/fsm_example_machine.png" alt="FSM Example: Machine" width="auto" height="600"></div></div></section>
+<section id="_fsm_example_strong_initial_state_strong"><h2>FSM Example: <strong>initial state</strong></h2><div class="pre plain" style="line-height:1.5em;">
+<img src="images/initial_state.png" style="position:relative; float:right; height:200px; width:auto; margin-top:-60px;" />
+-module(coffee_fsm).
+-behaviour(gen_fsm).
+-version('1.2').
+-export([start_link/0, init/1]).
+-export([selection/2, payment/2, remove/2,<b>service/2</b>]).
+-export([americano/0, cappuccino/0, tea/0, espresso/0,
+         pay/1, cancel/0, cup_removed/0,
+         <b>open/0, close/0, code_change/4</b>]).
+
+start_link() ->
+    gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).
+init([]) ->  hw:reboot(),
+             hw:display("Make Your Selection", []),
+             {ok,  selection,  null}.
+</div></section>
+<section id="_fsm_example_strong_client_actions_strong"><h2>FSM Example: <strong>client actions</strong></h2><div class="pre plain" style="line-height:1.4em;">
+<span class="comment">%% Client Functions for Drink Selections</span>
+tea() -> gen_fsm:send_event(?MODULE,{selection,tea,100}).
+espresso() ->
+    gen_fsm:send_event(?MODULE, selection,espresso,150}).
+americano() ->
+    gen_fsm:send_event(?MODULE,{selection,americano,100}).
+cappuccino() ->
+    gen_fsm:send_event(?MODULE,{selection,cappuccino,150}).
+
+pay(Coin)     -> gen_fsm:send_event(?MODULE,{pay, Coin}).
+cancel()      -> gen_fsm:send_event(?MODULE,cancel).
+cup_removed() -> gen_fsm:send_event(?MODULE,cup_removed).
+<b>open()        -> gen_fsm:send_event(?MODULE, open).</b>
+<b>close()       -> gen_fsm:send_event(?MODULE, close).</b>
+</div></section>
+<section id="_fsm_example_strong_selection_state_strong"><h2>FSM Example: <strong>selection state</strong></h2><img src="images/selection_state.png" style="position:absolute; height:450px; width:auto; top:80px; right:0;" />
+<div class="pre plain" style="line-height:1.5em;">
+<span class="comment">%% State: drink selection</span>
+selection({selection, Type, Price}, LoopData) ->
+      hw:display("Please pay:~w",[Price]),
+      {next_state, payment, {Type, Price, 0}};
+selection({pay, Coin}, LoopData) ->
+      hw:return_change(Coin),
+      {next_state, selection, LoopData};
+<b>selection(open, LoopData) ->
+      hw:display("Open", []),
+      {next_state, service, LoopData};</b>
+selection(_Other, LoopData) ->
+      {next_state, selection, LoopData}.
+</div></section>
+<section id="_fsm_example_strong_service_state_strong"><h2>FSM Example: <strong>service state</strong></h2><img src="images/service_state.png" style="position:absolute; height:auto; width:550px; top:100px; right:0;" />
+<div class="pre plain" style="line-height:1.5em; margin-top:190px;">
+<span class="comment">%% State: service</span>
+service(close, LoopData) ->
+  hw:reboot(),
+  hw:display("Make Your Selection", []),
+  {next_state, selection, LoopData};
+service({pay, Coin}, LoopData) ->
+  hw:return_change(Coin),
+  {next_state, service, LoopData};
+service(_Other, LoopData) ->
+  {next_state, service, LoopData).
+</div></section>
+<section id="_fsm_example_strong_code_change_strong"><h2>FSM Example: <strong>code change</strong></h2><div class="pre plain">
+<span class="comment">%% : Upgrade/Downgrade.</span>
+
+code_change({down, '1.1'}, service, LoopData, _Extra) ->
+  hw:reboot(),
+  hw:display("Make Your Selection", []),
+  {ok, selection, LoopData};
+code_change(_Vsn, State, LoopData, _Extra) ->
+  {ok, State, LoopData};
+</div></section>
+<section id="_fsm_example_strong_application_upgrade_file_strong"><h2>FSM Example: <strong>application upgrade file</strong></h2><div class="pre plain" style="line-height:1.5em;">
+<span class="comment">%% File:coffee.appup</span>
+{"1.1",  % Current version
+<span class="comment">% Upgrade from</span>
+ [{"1.0", [{load_module, coffee_fsm}]}],
+<span class="comment">% Downgrade to</span>
+ [{"1.0", [{load_module, coffee_fsm}]}]
+}.
+</div>
+<img src="images/app_upgrade_file.png" style="position:absolute; height:650px; width:auto; top:200px; right:0;" /></section>
+<section id="_application_upgrade_file"><h2>Application Upgrade File</h2><div class="literalblock"><div class="content"><pre>{Vsn,
+  [{UpFromVsn1, InstructionsU1}, ...,
+   {UpFromVsnK, InstructionsUK}],
+  [{DownToVsn1, InstructionsD1}, ...,
+   {DownToVsnK,InstructionsDK}]}.
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>The filename is <strong>ApplicationName.appup</strong></p></li><li><p><strong>Vsn</strong> is the version we are changing to/from</p></li><li><p>The first list of instructions are how to upgrade</p></li><li><p>The second line describes how to downgrade</p></li><li><p>For each up/downgrade a list of actions is taken</p></li></ul></div></section>
+<section id="_application_upgrade_file_strong_actions_strong"><h2>Application Upgrade File: <strong>actions</strong></h2><div class="ulist"><ul><li><p><strong>{update, coffee_sup, supervisor}</strong></p></li><li><p>High level Actions</p><div class="ulist"><ul><li><p>Synchronised code replacement based on one module</p></li><li><p>All affected processes are suspended, modules reloaded and processes restarted</p></li></ul></div></li><li><p>The example updates <strong>coffee_sup</strong> taking into account that it is a supervisor</p></li></ul></div></section>
+<section id="_application_upgrade_file_strong_actions_strong_2"><h2>Application Upgrade File: <strong>actions</strong></h2><div class="ulist"><ul><li><p><strong>{load_module, coffee_fsm}</strong></p></li><li><p>Simple module modification</p><div class="ulist"><ul><li><p>Simple addition or deletion of module without suspending any process</p></li></ul></div></li><li><p><strong>{restart_application, coffee}</strong></p></li><li><p>Add/Remove/Restart Application</p><div class="ulist"><ul><li><p>Adding loads and starts the application</p></li><li><p>Remove stops and unloads the application</p></li><li><p>Restart stops, unloads, loads and starts the application</p></li></ul></div></li></ul></div></section>
+<section id="_application_upgrade_file_strong_actions_strong_3"><h2>Application Upgrade File: <strong>actions</strong></h2><div class="ulist"><ul><li><p><strong>{suspend, coffee_fsm}</strong></p></li><li><p>Low level actions</p><div class="ulist"><ul><li><p>Building blocks to construct the higher level actions, such as stopping and resuming processes that are dependant on a specific module</p></li></ul></div></li></ul></div></section>
+<section id="_fsm_example_strong_release_upgrade_file_strong"><h2>FSM Example: <strong>release upgrade file</strong></h2><div class="literalblock left"><div class="content"><pre>17&gt; systools:make_relup("coffee-1.1",
+      ["coffee-1.0"],  ["coffee-1.0"],
+      [{path, ["c:/ ../lib/coffee*/ebin"]}]).</pre></div></div>
+<div class="ulist right"><ul><li><p>Upgrade files can either be written manually or generated</p></li><li><p>The release upgrade file contains low level update actions</p></li></ul></div>
+<div class="paragraph clear"><p></p></div>
+<div class="literalblock"><div class="content"><pre>{"1.1",
+ [{"1.0", [],
+   [{load_object_code,{coffee,"1.1",[coffee_fsm]}},
+    point_of_no_return,      {load,coffee_fsm,brutal_purge,brutal_purge}}]}],
+ [{"1.0", [],
+   [{load_object_code,{coffee,"1.0",[coffee_fsm]}},
+    point_of_no_return,
+    {load,{coffee_fsm,brutal_purge,brutal_purge}}]}]}.</pre></div></div></section>
+<section id="_release_upgrade_file"><h2>Release Upgrade File</h2><div class="ulist"><ul><li><p><strong>systools:make_relup(Name, UpFrom, DownTo, [Opt])</strong></p></li><li><p>The <strong>make_relup</strong> function creates a <strong>relup</strong> upgrade file</p></li><li><p><strong>Name</strong> is the name of the new version</p></li><li><p><strong>UpFrom</strong> is the version to upgrade and <strong>DownTo</strong> is the version to downgrade to. Both are given so it is possible to revert to the previous version</p></li></ul></div></section>
+<section id="_release_upgrade_file_strong_options_strong"><h2>Release Upgrade File: <strong>options</strong></h2><div class="ulist"><ul><li><p><strong>systools:make_relup(Name, UpFrom, DownTo, [Opt])</strong></p></li><li><p>The Options:</p><div class="ulist"><ul><li><p><strong>{path, Dir}</strong>: additional path to find the .app, .erl and .appup files</p></li><li><p><strong>restart_emulator</strong>: if the emulator is to be restarted</p></li><li><p><strong>silent</strong>: no output on the tty</p></li><li><p><strong>noexec</strong>: silent and no <strong>relup</strong> file is generated</p></li></ul></div></li></ul></div></section>
+<section id="_installing_an_update"><h2>Installing an Update</h2><div class="literalblock"><div class="content"><pre>18&gt; release_handler:unpack_release("coffee-1.1").
+{ok, "1.1"}
+19&gt; release_handler:install_release("1.1").
+{ok, "1.0", ""}
+20&gt; release_handler:make_permanent("1.1").
+ok
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Releases are installed using the <strong>release_handler</strong> provided by the SASL application</p></li><li><p>First the release is unpacked</p></li><li><p>The release is then installed</p></li><li><p>If successful the system is now running the new release. After reboot it will revert to the old version so we have to make the change permanent</p></li></ul></div></section>
+<section id="_downgrading_an_update"><h2>Downgrading an Update</h2><div class="literalblock"><div class="content"><pre>21&gt; release_handler:install_release("1.0").
+{ok, "1.0", ""}
+22&gt; release_handler:make_permanent("1.0").
+ok
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>To go back to the old version we have to reinstall it</p></li><li><p>The old release is made permanent</p></li></ul></div></section>
+<section id="_remove_a_release"><h2>Remove a Release</h2><div class="literalblock"><div class="content"><pre>23&gt; release_handler:remove_release("1.1").
+ok
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Unused releases can be removed from the system</p></li><li><p>To be reinstalled version "1.1" has to be reloaded</p></li></ul></div></section>
+<section id="_release_upgrade_2"><h2>Release Upgrade</h2><div class="ulist"><ul><li><p>Create a Release Upgrade</p></li><li><p>Create Application Upgrade Files</p></li><li><p>Create Release Upgrade Files</p></li><li><p>Install an Upgrade</p></li><li><p>Downgrade</p></li><li><p>Remove a Release</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

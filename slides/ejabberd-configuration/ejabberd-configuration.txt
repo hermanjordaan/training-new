@@ -1,0 +1,463 @@
+ejabberd Configuration
+======================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Overview
+--------
+* Configuration files
+* Tuning
+
+
+Configuration Files
+-------------------
+[role="left comparison darkred"]
+ejabberd.cfg::
+* ejabberd-specific configuration
+* listening ports
+* enabled modules
+* authentication models
+* access control lists
+
+[role="right comparison darkred"]
+ejabberdctl.cfg::
+* VM-related options
+* additional parameters passed to the VM
+* performance tuning
+
+
+ejabberd.cfg: *modules*
+-----------------------
+[role="left"]
+....
+{modules, [
+  {mod_roster, []},
+  {mod_register, 
+    [{access, register}]},
+  {mod_privacy_odbc, []}
+]}.
+ 
+ 
+ 
+....
+
+[role="right"]
+* system of plug-ins to ejabberd
+* configurable via ejabberd.cfg file
+** might be enabled/disabled in the run-time
+* different nature of modules
+* implementation of most XEPs
+
+[NOTE.speaker]
+[role="speaker"]
+--
+- internal system utilities (monitoring, health-checks, logging)
+- hooks subscription (offline messages, rosters, privacy lists)
+- IQ handlers (entire namespace handling)
+- subdomains handlers (gateways, subsystems like MUC)
+--
+
+
+ejabberd.cfg: *modules*
+-----------------------
+[role="left"]
+....
+{modules, [
+  ...
+  {mod_private, []},
+  {mod_pubsub, []},
+  {mod_time, []},
+  {mod_last, []},
+  ...
+]},
+ 
+....
+
+[role="right"]
+* remove unused modules
+** faster startup
+** less callback modules for hooks
+** faster execution
+** lower database activity
+** security
+
+[NOTE.speaker]
+[role="speaker"]
+--
+some modules depend on one another, e.g. web panel and mod_configure
+shapers use bytes, not stanzas sent/received - when the limit is exceeded we are not going to read data from the socket until the average rate is again below the allowed maximum
+be careful with odbc_pool_size - too little will cause bottlenecks in the system, too many may overload the database (if we have a single one)
+--
+
+
+ejabberd.cfg: *shapers and pools*
+---------------------------------
+[role="left"]
+....
+{shaper, shaper_name, 
+  {maxrate, 10000}}.
+
+{odbc_pool_size, 100}.
+ 
+....
+
+[role="right"]
+* shapers
+** prevent server from being flooded
+* pool size for DB workers
+
+[NOTE.speaker]
+[role="speaker"]
+--
+some modules depend on one another, e.g. web panel and mod_configure
+shapers use bytes, not stanzas sent/received - when the limit is exceeded we are not going to read data from the socket until the average rate is again below the allowed maximum
+be careful with odbc_pool_size - too little will cause bottlenecks in the system, too many may overload the database (if we have a single one)
+--
+
+
+ejabberd.cfg: *listeners*
+-------------------------
+[role="left"]
+....
+{listen, [
+  {1234, my_listener, 
+     [opt1, opt2, opt3]},
+
+  {5222, ejabberd_c2s, 
+     [{max_stanza_size, 1024}]}
+]}.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* dedicated XMPP traffic
+** separating e.g. mobile and desktop clients
+* extensions to XMPP
+** BOSH
+** fast reconnect
+* non-XMPP traffic
+** JSON
+** HTTP
+** STUN
+* proxies, gateways
+
+
+ejabberdctl.cfg: *tuning*
+-------------------------
+* SMP
+
+....
+-smp enable
+....
+
+* async threads
+
+....
++A 100
+....
+
+* kernel poll
+
+....
++K true
+....
+
+* maximum number of ports
+
+....
+ERL_MAX_PORTS=200000
+....
+
+* maximum number of processes
+
+....
+ERL_PROCESSES=300000
+....
+
+[NOTE.speaker]
+[role="speaker"]
+--
+SMP: ensure we are going to use more than one core (architecture has been detected properly)
+when the ERTS blocking call is issued, we do not stop scheduling other processes: the call is made in a separate OS thread, to not to interrupt other internal processes from continuing the processing
+kernel poll is more efficient way of checking if there is some data available in a vast number of file descriptors (/dev/poll interface)
+ejabberd creates 2-3 ports per connection, we should have a safe limit on that. Port table is however pre-allocated on the VM startup, so if the number is unreasonably large, the launch is going to take longer time (several seconds) and we will end up in the increased memory usage (several MBs)
+comment similar to the one above - however, there is no memory/latency cost of having a large number of processes running in the system
+--
+
+
+ejabberdctl.cfg: *tuning*
+-------------------------
+* garbage collection strategy
+
+....
+ERL_FULLSWEEP_AFTER=2
+....
+
+* scheduler policy
+
+....
+erlang:system_info(cpu_topology).
++sbt tnnps     // thread_no_node_processor_spread
+....
+
+* heart script
+
+....
+-heart
+HEART_COMMAND=/path/to/heart/command
+....
+
+[NOTE.speaker]
+[role="speaker"]
+--
+garbage collection is per-process and it's generational - we operate on a very transient data, there is no need to keep a history. Lower memory usage, increased CPU utilization
+scheduler policy - how the next cores are going to be used (db - default bind - assign next cores when the currently used are utilized already)
+--
+
+
+ejabberdctl
+-----------
+[role="left"]
+....
+./sbin/ejabberdctl
+
+./sbin/ejabberdctl start/stop
+
+./sbin/ejabberdctl connected_users_number
+
+./sbin/ejabberdctl mnesia info
+ 
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* CLI for ejabberd
+* controlling the node
+** get/set operations
+** be careful with some operations
+** e.g. listing all registered users
+* registering new commands is fairly easy
+* invoking the command results in forking new hidden Erlang node
+
+
+Tuning: *OS*
+------------
+* maximum number of process' file descriptors
+
+....
+ulimit -n
+/etc/security/limits.conf
+....
+
+* socket configuration
+
+....
+/etc/sysctl.conf
+....
+
+[role="level2"]
+* maximum number of packets polled at once from NIC buffer
+
+....
+net.core.netdev_max_backlog
+....
+
+[role="level2"]
+* OS send/receive buffer for network connections
+
+....
+net.core.[rw]mem_max
+....
+
+[role="level2"]
+* TCP autotuning settings
+
+....
+net.ipv4.tcp_[rw]mem
+....
+
+[NOTE.speaker]
+[role="speaker"]
+--
+FD: used for listening sockets, expat/SSL drivers. Not related to the accepted connections
+net.core.rwmem_max - important for inter-node cluster links and when we send large packets of data
+TCP autotuning:                     
+- first number - kernel does not bother about the socket
+         - second number - when we start to pressing on the socket to lower the memory down
+                    - third number - maximum limit, start dropping the incoming packets
+--
+
+
+Tuning: *OS*
+------------
+* maximum number of packets that can be flushed from NIC buffer at once
+
+....
+/sbin/ifconfig $IFACE txqueuelen $N
+....
+
+* enabling jumbo frames
+
+....
+/sbin/ifconfig $IFACE mtu $SIZE
+....
+
+* system clocks synchronization
+** NTP
+* dedicated inter-cluster network interfaces
+* SSD/RAM disks for fast access
+
+[NOTE.speaker]
+[role="speaker"]
+--
+jumbo - packets bigger than 1.5kB are not going to be divided into smaller ones
+all changes to the interface configuration should be persisted in /etc/networking/interfaces
+NTP: remember about it when we want to kick out our previous sessions
+--
+
+
+Tuning: *ejabberd*
+------------------
+* plugging off Mnesia tables
+** large clusters
+** frequent updates
+** integration with other subsystems
+** ODBC/LDAP equivalents
+* roster tuning
+** do we really need roster?
+** bi-directionality
+** domain storage
+** shared rosters
+* privacy lists handling
+** over-engineered 
+
+[NOTE.speaker]
+[role="speaker"]
+--
+roster: can we use a simple one-way relationship? 
+roster: if we handle only a few domains we can have a tree of sets structure inside of the c2s, do not duplicate the domain name N times
+
+-> what to do when you want to replace mnesia with some other db backend (storing session data in mnesia?)
+
+[steve] most things here in this slide are not self explanatory, please be more verbose, elaborate!
+--
+
+
+Tuning: *ejabberd*
+------------------
+* using binaries instead of lists
+** "pivot" == [112,105,118,111,116]
+** reference counting
+** faster processing
+** marshalling
+** matching
+* session counter removal
+** modified every time session table is updated
+** the same as
+
+[NOTE.speaker]
+[role="speaker"]
+--
+binaries: there is no such data type as 'string' in Erlang: instead we have a linked list of pointers to the consequent characters (list of integers). It's much slower and consumes much more memory than binaries handling.
+reference counting for binaries larger than 64 bytes
+
+[steve] what’s implemented in mongoose already?
+--
+
+
+Tuning: *ejabberd*
+------------------
+* making session processes thiner
+** removing unused fields
+** 32 fields
+* correcting p1_fsm
+** enhanced gen_fsm behaviour
+** max_queue parameter
+** sys:get_status handling
+* ODBC tuning
+** reformatting SQL tables
+** make use of stored procedures
+** slow auto_increment
+
+[NOTE.speaker]
+[role="speaker"]
+--
+c2s fields: at other project we went down to 15 fields only
+
+p1_fsm breaks otp compliance - we fixed that at MIM -> remove info on p1_fsm
+
+[steve] what’s implemented in mongoose already?
+--
+
+
+Tuning: *ejabberd*
+------------------
+* ODBC improvements
+** separate worker pools for read/write operations
+** easier master-slave replication
+** separate worker pools for each functionality
+** dynamically resizing pool size
+** dynamically switching database endpoint
+* LDAP improvements
+** multiple LDAP connections
+** fetching passwords
+
+[NOTE.speaker]
+[role="speaker"]
+--
+[steve] what’s implemented in mongoose already?
+[steve] add slides about how mongoose im compares to ejabberd and how it solves some of the issues from above
+--
+
+
+Tuning: *ejabberd*
+------------------
+* enabling transient supervisors
+* asynchronous listeners
+** accepting clients in the faster way
+** increasing backlog option on the listening sockets
+* caching
+** memcached
+** membase
+** mnesia
+* external SSL offloaders
+* tuning the database
+** RAM disks
+** Percona MySQL
+
+[NOTE.speaker]
+[role="speaker"]
+--
+caching rosters/privacy lists/passwords
+
+[steve] what’s implemented in mongoose already?
+--
+
+
+Overview
+--------
+* Configuration files
+* Tuning

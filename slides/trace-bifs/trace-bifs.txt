@@ -1,0 +1,446 @@
+Trace BIFs
+==========
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Trace BIFs
+----------
+* Trace BIF
+* Trace Flags
+* Trace Patterns
+
+
+Trace BIF
+---------
+* *erlang:trace(PidSpec, Bool, TraceFlags)*
+* Enables/disables low-level trace mechanisms
+* Provides data for monitoring execution and memory usage
+* Used by tools such as the Debugger and the process manager (Pman)
+* No need to trace-compile the code
+
+image::images/loupe.png[Loupe, 200, auto]
+
+
+Trace BIF
+---------
+* *erlang:trace(PidSpec, Bool, TraceFlags)*
+* Events are sent as trace messages of the format
+** +{trace, Pid, Tag, Data1 [,Data2]}+
+* Events include 
+** Message passing
+** Gc and memory usage
+** Process activity
+* At any one given time, only one process may receive trace events from another process
+
+
+Trace BIF
+---------
+* *erlang:trace(PidSpec, Bool, TraceFlags)*
+* *PidSpec* defines which Pids we want to trace
+** existing
+** new
+** all
+** pid()
+* *Bool* specifies if we want to turn debug on or off
+** true or false
+* Returns the number of processes being traced
+
+
+Trace Flags
+-----------
+++++
+<svg id="trace_flags_1" style="width:1100px; height:350px;" viewBox="0 0 1100 350" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#trace_flags_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(180,90,"Pid1");
+s1.circle(300,100,40).addClass("shape grey")
+s1.text(760,90,"Pid2");
+s1.circle(700,100,40).addClass("shape darkred")
+
+s1_g2 = s1.g(s1.path("M350,100 l290,0").addClass("line").attr({"marker-end":marker}),
+             s1.text(395,90,"{Pid1, foo}").addClass("code")).addClass("hide");
+
+s1.text(115,200,"Pid2 ! {self(), foo}").addClass("code");
+s1_g1 = s1.text(115,200,"Pid2 ! {self(), foo}").addClass("code darkred bold").addClass("hide");
+
+
+s1.text(550,190,"receive").addClass("code");
+s1.text(550,230,"  {From, Msg} -> ...").addClass("code");
+s1.text(550,270,"end").addClass("code");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 500, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g1.animate({"opacity":"0"}, 375, mina.linear, s1_anim2); }
+
+s1.click( function() {s1_anim1()});
+
+</script>
+</svg>
+++++
+
+* *send* traces all messages sent by a process.
+** +{trace, Pid, send, Message, To}+
+** +{trace, Pid, send_to_non_existing_process, Message, To}+
+* *receive* traces all received messages
+** +{trace, Pid, \'receive', Message}+
+
+
+Trace Flags
+-----------
+....
+-module(ping).
+-export([start/0, send/1, loop/0]).
+
+start() -> spawn_link(ping, loop, []).
+
+send(Pid) ->
+    Pid ! {self(), ping},
+    receive  pong -> pong end.
+
+loop() ->
+    receive
+        {Pid, ping} -> 
+            spawn(crash, do_not_exist, []),
+            Pid ! pong,
+            loop()
+    end.
+....
+
+
+Trace Flags
+-----------
+++++
+<svg id="trace_flags_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#trace_flags_2");
+
+s2.rect(10,15,1090,600).addClass("rect_code");
+
+s2.text(20,50,"1> Pid = ping:start().").addClass("code darkred bold");
+s2.text(20,90,"<0.55.0>").addClass("code");
+s2_g1 = s2.g(s2.text(20,130,"2> erlang:trace(Pid, true, [send, 'receive']).").addClass("code darkred bold"),
+             s2.text(20,170,"1").addClass("code")).addClass("hide");
+s2_g2 = s2.g(s2.text(20,210,"3> ping:send(Pid).").addClass("code darkred bold"),
+             s2.text(20,250,"pong").addClass("code")).addClass("hide");
+s2_g3 = s2.g(s2.text(20,290,"4> flush().").addClass("code darkred bold"),
+             s2.text(20,330,"Shell got {trace,<0.55.0>,'receive',{<0.39.0>,ping}}").addClass("code"),
+             s2.text(20,370,"Shell got {trace,<0.55.0>,send,pong,<0.39.0>}").addClass("code"),
+             s2.text(20,410,"ok").addClass("code")).addClass("hide");
+s2_g4 = s2.g(s2.text(20,450,"5> erlang:trace(Pid, false, [send, 'receive']).").addClass("code darkred bold"),
+             s2.text(20,490,"1").addClass("code")).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 4: {s2_g4.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Trace Flags
+-----------
+image::images/trace_flags_1.png["Trace Flags", auto, 360]
+
+* *running* traces the Module:Function/Arity the process was executing when it was scheduled (in) and preempted (out)
+** {trace, Pid, in, {Module, Function, Arity}}
+** {trace, Pid, out, {Module, Function, Arity}}
+
+
+Trace Flags
+-----------
+++++
+<svg id="trace_flags_3" style="width:1100px; height:250px;" viewBox="0 0 1100 250" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#trace_flags_3");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(290,90,"Pid1");
+s3.circle(400,100,40).addClass("shape grey")
+s3.circle(800,100,40).addClass("shape darkred")
+s3.text(850,90,"Pid2");
+
+s3_g1 = s3.g(s3.path("M450,100 l293,0").addClass("line").attr({"marker-end":marker, "strokeDasharray":"3,6"}),
+             s3.text(485,80,"spawn / link").addClass("code")).addClass("hide");
+
+s3.click( function() {s3_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+++++
+
+* *procs* traces process related events.
+** {trace, Pid, spawnPid2}
+** {trace, Pid, exit, Reason}
+** {trace, Pid, link | unlink, Pid2} 
+** {trace, Pid, getting_linked | getting_unlinked, Pid2}
+** {trace, Pid, register | unregister, Pid2}
+
+
+Trace Flags
+-----------
+image::images/trace_flags_2.png["Trace Flags", auto, auto]
+
+* +*set_on_spawn*+ specifies that any process created will inherit the flags of its parent, including the set_on_spawn flag. 
+
+
+Trace Flags
+-----------
+image::images/trace_flags_3.png["Trace Flags", auto, auto]
+
+* +*set_on_first_spawn*+ specifies that any process which is spawned will inherit the flags of its parents except the set_on_first_spawn flag.  
+
+
+Trace Flags
+-----------
+++++
+<svg id="trace_flags_5" style="width:1100px; height:400px;" viewBox="0 0 1100 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#trace_flags_5");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(200,140,"traced process").addClass("code middle");
+s5.circle(200,200,40).addClass("shape darkred");
+
+s5_g1 = s5.g(s5.text(320,190,"link(...)").addClass("code"),
+             s5.path("M250,200 l290,0").addClass("line").attr({"marker-end":marker, "strokeDasharray":"3,6"})).addClass("hide");
+
+s5_g2 = s5.g(s5.circle(600,200,40).addClass("shape darkred"),
+             s5.text(655,210,"inherits trace flags").addClass("code")).addClass("hide");
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_g1.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 2: {s5_g2.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* +*set_on_link*+ and +*set_on_first_link*+ are similar to the set_on_spawn flags, only that flags are inherited when linking occurs.
+
+
+Trace Flags
+-----------
+++++
+<svg id="trace_flags_6" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#trace_flags_6");
+
+s6.rect(10,15,1090,600).addClass("rect_code")
+
+s6.text(20,50,"1> Pid = ping:start().").addClass("code darkred bold");
+s6.text(20,90,"<0.31.0>").addClass("code");
+s6_g1 = s6.g(s6.text(20,130,"2> erlang:trace(Pid, true, [set_on_spawn, procs]).").addClass("code darkred bold"),
+             s6.text(20,170,"1").addClass("code")).addClass("hide");
+s6_g2 = s6.g(s6.text(20,210,"3> ping:send(Pid).").addClass("code darkred bold"),
+             s6.text(20,250,"pong").addClass("code")).addClass("hide");
+s6_g3 = s6.g(s6.text(20,290,"4> flush().").addClass("code darkred bold"),
+             s6.text(20,330,"Shell got {trace,<31>,spawn,<0.34.0>}").addClass("code"),
+             s6.text(20,370,"Shell got {trace,<0.34.0>,exit,{undef,do_not_exist,[]}]}}").addClass("code"),
+             s6.text(20,410,"ok").addClass("code")).addClass("hide");
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_g1.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 2: {s6_g2.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 3: {s6_g3.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 4: {s6_g4.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Trace Flags
+-----------
+* *garbage_collection* traces GC initiation and termination
+**  {trace, Pid, gc_start | gc_end, Info}
+* *Info* is a list of tagged tuples containing:
+** *heap_size*: used part of the heap.
+** *old_heap_size*: used part of the old heap.
+** *stack_size*: actual stack size
+** *recent_size*: data that survived the previous GC
+** *mbuf_size*: all message buffer size
+* All sizes are in words
+
+
+Trace Flags
+-----------
+* *timestamp*
+** will add a time stamp on all messages
+** The TS format is +*{MegaSeconds, Seconds, Microseconds}*+ passed since January 1st, 1970 
+** TS format is the same as the one returned by +*erlang:now()*+
+** All trace messages will have an extra field, and be of the format +*{trace_ts, \...}*+
+* *arity*
+** All tags returning *{Module, Function, Arguments}*  +  
+   will instead return *{Module, Function, Arity}*
+
+
+Trace Flags
+-----------
+++++
+<svg id="trace_flags_7" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#trace_flags_7");
+
+/*
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+*/
+
+s7.text(10,40,"1> Pid = ping:start().").addClass("code darkred bold");
+s7.text(10,80,"<0.31.0>").addClass("code");
+s7_g1 = s7.g(s7.text(10,120,"2> erlang:trace(Pid,true, [garbage_collection,timestamp]).").addClass("code darkred bold"),
+             s7.text(10,160,"1").addClass("code")).addClass("hide");
+s7_g2 = s7.g(s7.text(10,200,"3> ping:send(Pid).").addClass("code darkred bold"),
+             s7.text(10,240,"pong").addClass("code")).addClass("hide");
+s7_g3 = s7.g(s7.text(10,280,"4> flush().").addClass("code darkred bold"),
+             s7.text(10,320,"Shell got {trace_ts,<0.31.0>, gc_start,").addClass("code"),
+             s7.text(10,360,"   [{mbuf_size,0}, {recent_size,0},{stack_size,2}, ").addClass("code"),
+             s7.text(10,400,"{old_heap_size,0},{heap_size,231}],{998,578633,990000}} ").addClass("code"),
+             s7.text(10,440,"Shell got {trace_ts,<0.31.0>, gc_end,").addClass("code"),
+             s7.text(10,480,"      [{mbuf_size,0},{recent_size,228},{stack_size,2},").addClass("code"),
+             s7.text(10,520,"      {old_heap_size,0},{heap_size,228}],").addClass("code"),
+             s7.text(10,560,"       {998,578633,990001}}]}").addClass("code")).addClass("hide");
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_g1.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 2: {s7_g2.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 3: {s7_g3.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Trace Patterns
+--------------
+* *erlang:trace_pattern(MFA, MatchSpec, FlagList)*
+* Used to enable trace of functions through the *call* and *return_to* flags in the trace BIF
+* Functions can be local or exported
+* Trace messages will be of the type 
+** {trace, Pid, call, {M, F, A}}
+** {trace, Pid, return_to, {M, F, A}}
+* Returns the number of traced functions
+
+
+Trace Patterns
+--------------
+image::images/trace_patterns.png["Trace Patterns", auto, auto]
+
+* Tracing will be enabled on the intersection of the sets
+** The functions defined in MFA
+** The processes being traced through the pid specification in the trace BIF 
+
+
+Trace Patterns
+--------------
+* *erlang:trace_pattern(MFA, MatchSpec, FlagList)*
+* *MFA* is one of the following: 
+** {Module, Function, Arity}
+** {Module, Function, '_'}
+** {Module, '_', '_'}
+** {'_', '_', '_'} 
+** Formats of the type {'_', Function, '_'} are not allowed
+* *FlagList* defines the type of traced function
+** *global* traces only exported functions (default)
+** *local* traces both local and exported functions
+
+
+Trace Patterns
+--------------
+* *erlang:trace_pattern(MFA, MatchSpec, FlagList)*
+* *MatchSpec* can take one of the following values
+** *true*, enabling the MFA
+** *false*, disabling the MFA
+** *Match Specification List*, allowing pattern definitions
+* Match Specification Lists are terms describing a program which tries to match a set of parameters
+** They are covered later on
+
+
+Trace Patterns
+--------------
+++++
+<svg id="trace_patterns_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#trace_patterns_1");
+
+s8.rect(10,15,1090,600).addClass("rect_code");
+
+s8.text(20,50,"1> erlang:trace(all, true, [call]).").addClass("code darkred bold");
+s8.text(20,90,"18").addClass("code");
+s8_g1 = s8.g(s8.text(20,130,"2> erlang:trace_pattern({ping, '_', '_'}, true, [local]).").addClass("code darkred bold"),
+             s8.text(20,170,"5").addClass("code")).addClass("hide");
+s8_g2 = s8.g(s8.text(20,210,"3> ping:start(Pid).").addClass("code darkred bold"),
+             s8.text(20,250,"<0.35.0>").addClass("code")).addClass("hide");
+s8_g3 = s8.g(s8.text(20,290,"4> ping:send(Pid).").addClass("code darkred bold"),
+             s8.text(20,330,"pong").addClass("code")).addClass("hide");
+s8_g4 = s8.g(s8.text(20,370,"5> flush().").addClass("code darkred bold"),
+             s8.text(20,410,"Shell got {trace,<0.35.0>,call,{ping,loop,[]}}").addClass("code"),
+             s8.text(20,450,"ok").addClass("code")).addClass("hide");
+
+s8.text(550,550,"The process receiving the trace messages cannot be traced").addClass("darkred bold middle");
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_g1.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 2: {s8_g2.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 3: {s8_g3.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 4: {s8_g4.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Trace BIFs
+----------
+* Trace BIF
+* Trace Flags
+* Trace Patterns

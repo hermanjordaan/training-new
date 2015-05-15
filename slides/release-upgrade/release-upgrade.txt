@@ -1,0 +1,309 @@
+Release Upgrade
+===============
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Release Upgrade
+---------------
+* Create a Release Upgrade
+* Create Application Upgrade Files
+* Create Release Upgrade Files
+* Install an Upgrade
+* Downgrade
+* Remove a Release
+
+
+Create a Release Upgrade
+------------------------
+* A Release Upgrade consists of:
+* A new version of some of the applications included in the release
+* Zero or more new applications
+* An application upgrade file for each application that has been changed
+* A Release Upgrade File
+
+
+FSM Example: *machine*
+----------------------
+image::images/fsm_example_machine.png["FSM Example: Machine", auto, 600]
+
+
+FSM Example: *initial state*
+----------------------------
+++++
+<div class="pre plain" style="line-height:1.5em;">
+<img src="images/initial_state.png" style="position:relative; float:right; height:200px; width:auto; margin-top:-60px;" />
+-module(coffee_fsm).
+-behaviour(gen_fsm).
+-version('1.2').
+-export([start_link/0, init/1]).
+-export([selection/2, payment/2, remove/2,<b>service/2</b>]).
+-export([americano/0, cappuccino/0, tea/0, espresso/0,
+         pay/1, cancel/0, cup_removed/0, 
+         <b>open/0, close/0, code_change/4</b>]). 
+
+start_link() ->
+    gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).
+init([]) ->  hw:reboot(),
+             hw:display("Make Your Selection", []),
+             {ok,  selection,  null}.
+</div>
+++++
+
+
+FSM Example: *client actions*
+-----------------------------
+++++
+<div class="pre plain" style="line-height:1.4em;">
+<span class="comment">%% Client Functions for Drink Selections</span>
+tea() -> gen_fsm:send_event(?MODULE,{selection,tea,100}).   
+espresso() ->
+    gen_fsm:send_event(?MODULE, selection,espresso,150}).
+americano() ->
+    gen_fsm:send_event(?MODULE,{selection,americano,100}).   
+cappuccino() ->
+    gen_fsm:send_event(?MODULE,{selection,cappuccino,150}).
+
+pay(Coin)     -> gen_fsm:send_event(?MODULE,{pay, Coin}).
+cancel()      -> gen_fsm:send_event(?MODULE,cancel).
+cup_removed() -> gen_fsm:send_event(?MODULE,cup_removed).
+<b>open()        -> gen_fsm:send_event(?MODULE, open).</b>
+<b>close()       -> gen_fsm:send_event(?MODULE, close).</b>
+</div>
+++++
+
+
+FSM Example: *selection state*
+------------------------------
+++++
+<img src="images/selection_state.png" style="position:absolute; height:450px; width:auto; top:80px; right:0;" />
+<div class="pre plain" style="line-height:1.5em;">
+<span class="comment">%% State: drink selection</span>
+selection({selection, Type, Price}, LoopData) ->
+      hw:display("Please pay:~w",[Price]),
+      {next_state, payment, {Type, Price, 0}};
+selection({pay, Coin}, LoopData) ->
+      hw:return_change(Coin),
+      {next_state, selection, LoopData};
+<b>selection(open, LoopData) ->
+      hw:display("Open", []),
+      {next_state, service, LoopData};</b>
+selection(_Other, LoopData) ->  
+      {next_state, selection, LoopData}.
+</div>
+++++
+
+
+FSM Example: *service state*
+----------------------------
+++++
+<img src="images/service_state.png" style="position:absolute; height:auto; width:550px; top:100px; right:0;" />
+<div class="pre plain" style="line-height:1.5em; margin-top:190px;">
+<span class="comment">%% State: service</span>
+service(close, LoopData) ->
+  hw:reboot(),
+  hw:display("Make Your Selection", []),
+  {next_state, selection, LoopData};
+service({pay, Coin}, LoopData) ->
+  hw:return_change(Coin),
+  {next_state, service, LoopData};
+service(_Other, LoopData) ->
+  {next_state, service, LoopData).
+</div>
+
+++++
+
+FSM Example: *code change*
+--------------------------
+++++
+<div class="pre plain">
+<span class="comment">%% : Upgrade/Downgrade.</span>
+
+code_change({down, '1.1'}, service, LoopData, _Extra) ->
+  hw:reboot(),
+  hw:display("Make Your Selection", []),
+  {ok, selection, LoopData};
+code_change(_Vsn, State, LoopData, _Extra) ->
+  {ok, State, LoopData};
+</div>
+++++
+
+
+FSM Example: *application upgrade file*
+---------------------------------------
+++++
+<div class="pre plain" style="line-height:1.5em;">
+<span class="comment">%% File:coffee.appup</span>
+{"1.1",  % Current version
+<span class="comment">% Upgrade from</span>
+ [{"1.0", [{load_module, coffee_fsm}]}],
+<span class="comment">% Downgrade to</span>
+ [{"1.0", [{load_module, coffee_fsm}]}]
+}.
+</div>
+<img src="images/app_upgrade_file.png" style="position:absolute; height:650px; width:auto; top:200px; right:0;" />
+
+++++
+
+
+Application Upgrade File
+------------------------
+....
+{Vsn,  
+  [{UpFromVsn1, InstructionsU1}, ...,
+   {UpFromVsnK, InstructionsUK}],
+  [{DownToVsn1, InstructionsD1}, ...,
+   {DownToVsnK,InstructionsDK}]}.
+ 
+ 
+....
+
+* The filename is *ApplicationName.appup*
+* *Vsn* is the version we are changing to/from
+* The first list of instructions are how to upgrade 
+* The second line describes how to downgrade
+* For each up/downgrade a list of actions is taken
+
+
+Application Upgrade File: *actions*
+-----------------------------------
+* *{update, coffee_sup, supervisor}*
+* High level Actions
+** Synchronised code replacement based on one module
+** All affected processes are suspended, modules reloaded and processes restarted
+* The example updates *coffee_sup* taking into account that it is a supervisor
+
+
+Application Upgrade File: *actions*
+-----------------------------------
+* *{load_module, coffee_fsm}*
+* Simple module modification
+** Simple addition or deletion of module without suspending any process
+* *{restart_application, coffee}* 
+* Add/Remove/Restart Application
+** Adding loads and starts the application
+** Remove stops and unloads the application
+** Restart stops, unloads, loads and starts the application
+
+
+Application Upgrade File: *actions*
+-----------------------------------
+* *{suspend, coffee_fsm}*
+* Low level actions
+** Building blocks to construct the higher level actions, such as stopping and resuming processes that are dependant on a specific module
+
+
+FSM Example: *release upgrade file*
+-----------------------------------
+[role="left"]
+....
+17> systools:make_relup("coffee-1.1", 
+      ["coffee-1.0"],  ["coffee-1.0"], 
+      [{path, ["c:/ ../lib/coffee*/ebin"]}]).
+....
+
+[role="right"]
+* Upgrade files can either be written manually or generated
+* The release upgrade file contains low level update actions
+
+[role="clear"]
+{empty}
+
+....
+{"1.1",
+ [{"1.0", [],
+   [{load_object_code,{coffee,"1.1",[coffee_fsm]}},
+    point_of_no_return,      {load,coffee_fsm,brutal_purge,brutal_purge}}]}],
+ [{"1.0", [],
+   [{load_object_code,{coffee,"1.0",[coffee_fsm]}},
+    point_of_no_return,
+    {load,{coffee_fsm,brutal_purge,brutal_purge}}]}]}.
+....
+
+
+Release Upgrade File
+--------------------
+* *systools:make_relup(Name, UpFrom, DownTo, [Opt])*
+* The *make_relup* function creates a *relup* upgrade file
+* *Name* is the name of the new version
+* *UpFrom* is the version to upgrade and *DownTo* is the version to downgrade to. Both are given so it is possible to revert to the previous version
+
+
+Release Upgrade File: *options*
+-------------------------------
+* *systools:make_relup(Name, UpFrom, DownTo, [Opt])*
+* The Options:
+** *{path, Dir}*: additional path to find the .app, .erl and .appup files
+** *restart_emulator*: if the emulator is to be restarted
+** *silent*: no output on the tty
+** *noexec*: silent and no *relup* file is generated
+
+
+Installing an Update
+--------------------
+....
+18> release_handler:unpack_release("coffee-1.1").
+{ok, "1.1"}
+19> release_handler:install_release("1.1"). 
+{ok, "1.0", ""}
+20> release_handler:make_permanent("1.1").
+ok
+ 
+....
+
+* Releases are installed using the *release_handler* provided by the SASL application
+* First the release is unpacked
+* The release is then installed
+* If successful the system is now running the new release. After reboot it will revert to the old version so we have to make the change permanent
+
+
+Downgrading an Update
+---------------------
+....
+21> release_handler:install_release("1.0").
+{ok, "1.0", ""}
+22> release_handler:make_permanent("1.0").
+ok
+ 
+ 
+ 
+....
+
+* To go back to the old version we have to reinstall it
+* The old release is made permanent
+
+
+Remove a Release
+----------------
+....
+23> release_handler:remove_release("1.1").
+ok
+ 
+ 
+ 
+ 
+ 
+....
+
+* Unused releases can be removed from the system
+* To be reinstalled version "1.1" has to be reloaded
+
+
+Release Upgrade
+---------------
+* Create a Release Upgrade
+* Create Application Upgrade Files
+* Create Release Upgrade Files
+* Install an Upgrade
+* Downgrade
+* Remove a Release

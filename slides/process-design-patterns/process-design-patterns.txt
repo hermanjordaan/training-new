@@ -140,25 +140,30 @@ s3.text(955,80,"Server").addClass("darkred");
 s3.path("M1000,100 l0,440").attr({"marker-end":marker_red}).addClass("line_darkred").attr({"stroke-width":"5px"});
 
 s3_g1 = s3.text(150,150,"{request, Pid, allocate}").addClass("code hide");
-s3_g2 = s3.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line hide");
+s3.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line");
+s3_g2 = s3.path("M980,170 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
 
 s3_g3 = s3.text(110,230,"{reply,{error,no_frequencies} or {ok,Frequency}}").addClass("code hide");
-s3_g4 = s3.path("M965,250 l-870,0").attr({"marker-end":marker}).addClass("line hide");
+s3.path("M965,250 l-870,0").attr({"marker-end":marker}).addClass("line");
+s3_g4 = s3.path("M85,250 l900,0").addClass("draw").attr({"strokeDasharray":900});
 
 s3_g5 = s3.text(120,360,"{request, Pid, {deallocate, Frequency}}").addClass("code hide");
-s3_g6 = s3.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line hide");
+s3.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line");
+s3_g6 = s3.path("M980,380 l-900,0").addClass("draw").attr({"strokeDasharray":900});
 
-s3_g7 = s3.text(120,440,"{reply, ok}").addClass("code hide");
-s3_g8 = s3.path("M965,460 l-870,0").attr({"marker-end":marker}).addClass("line hide");
+s3_g7 = s3.text(750,440,"{reply, ok}").addClass("code hide");
+s3.path("M965,460 l-870,0").attr({"marker-end":marker}).addClass("line");
+s3_g8 = s3.path("M85,460 l900,0").addClass("draw").attr({"strokeDasharray":900});
 
-s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 400, mina.linear, s3_anim2); }
-s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 800, mina.linear, s3_anim3); }
-s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 400, mina.linear, s3_anim4); }
-s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 800, mina.linear, s3_anim5); }
-s3_anim5 = function() { s3_g5.animate({"opacity":"1"}, 400, mina.linear, s3_anim6); }
-s3_anim6 = function() { s3_g6.animate({"opacity":"1"}, 800, mina.linear, s3_anim7); }
-s3_anim7 = function() { s3_g7.animate({"opacity":"1"}, 400, mina.linear, s3_anim8); }
-s3_anim8 = function() { s3_g8.animate({"opacity":"1"}, 800, mina.linear); }
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 375, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim3); }
+s3_anim3 = function() { setTimeout( function() { s3_g3.animate({"opacity":"1"}, 375, mina.linear, s3_anim4)}, 250) };
+s3_anim4 = function() { s3_g4.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim5); }
+s3_anim5 = function() { setTimeout( function() { s3_g5.animate({"opacity":"1"}, 375, mina.linear, s3_anim6)}, 250) };
+s3_anim6 = function() { s3_g6.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim7); }
+s3_anim7 = function() { setTimeout( function() { s3_g7.animate({"opacity":"1"}, 375, mina.linear, s3_anim8)}, 250) };
+s3_anim8 = function() { s3_g8.animate({"strokeDashoffset":"900"}, 625, mina.linear); }
 s3.click(function() { s3_anim1() });
 
 </script>
@@ -386,7 +391,7 @@ If Erlang Express, jump over this section.
 Event Handlers: *example*
 -------------------------
 
-//SVG
+image::images/event_handlers.png["Event Handlers: Example", auto, auto]
 
 * Alarm managers are implemented as event handlers
 

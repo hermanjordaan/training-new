@@ -1,0 +1,361 @@
+System Application Support Libraries
+====================================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+System Application Support Libraries
+------------------------------------
+* SASL Application
+* Error Logging
+* Report Browser
+* Alarm Handler
+* Other Topics
+
+
+SASL Application
+----------------
+* A generic infrastructure for large scale software projects
+** Reuse generic code
+** Start simple, add complexity when needed
+* Starts processes for event logging and alarm handling
+* Contains libraries facilitating common release tasks
+* SASL must be included in a minimal OTP release
+** A basic application
+
+Error Logging
+-------------
+....
+ 
+=PROGRESS REPORT==== 15-May-2005::13:24:35 ===
+         application: sasl
+          started_at: nonode@nohost
+ 
+ 
+....
+
+* SASL starts an event handler which receives events:
+** Supervisor reports
+** Progress reports
+** Error reports
+** Crash reports
+* Event variables state which handler is loaded
+** Default prints events to standard io
+** The format will vary depending on the OTP release
+
+
+Error Reports
+-------------
+....
+=ERROR REPORT==== 15-May-2005::13:51:24 ===
+Error in process <0.42.0> with exit value: {badarith,
+    [{erl_eval,eval_op,3},{shell,exprs,6},
+     {shell,eval_loop,3}]}
+ 
+ 
+....
+
+* Issued by behaviours upon abnormal termination
+* Users can generate them in their code
+** Use *error_logger:error_msg(String, Args)*
+** Too many user generated errors will hide serious issues
+* The format will change from release to release
+
+
+Error Reports
+-------------
+....
+1> error_logger:error_msg("Error in ~w. Division by zero!~n", [self()]).
+
+=ERROR REPORT==== 15-May-2005::13:56:18 ===
+Error in <0.48.0>. Division by zero!
+ok
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+....
+
+
+Supervisor Reports
+------------------
+++++
+<ul style="margin-bottom:15pt;"><li>Issued by supervisors upon abnormal child termination <img src="images/supervisor_reports.png" style="position:absolute; float:right; width:240px; height:auto; margin-top:-10px;" /></li></ul>
+++++
+
+// * Issued by supervisors upon abnormal child termination
+* The supervisor report will contain:
+** The name of the reporting supervisor
+** The phase of the child when the error occurred
+** *start_error*, *child_terminated*, *shutdown_error*
+* The reason for terminating
+* The child specification
+
+
+Progress Reports
+----------------
+++++
+<ul style="margin-bottom:15pt;"><li>Issued by supervisors upon starting or restarting a child <img src="images/progress_reports.png" style="position:absolute; float:right; width:auto; height:230px; margin-top:-30pt;" /></li></ul>
+++++
+
+// * Issued by supervisors upon starting or restarting a child
+* The progress report will contain:
+** The name of the reporting supervisor
+** The child specification
+* Issued by application masters when starting or restarting an application
+* The progress report will contain
+** The name of the application
+** The node on which it has been started
+
+
+Crash Reports
+-------------
+* Issued by processes started with the *proc_lib* library.
+** Includes all behaviours
+* A catch in the loop will trap all abnormal terminations
+** Excludes the reasons *normal* and *shutdown*
+* A crash report will contain:
+** Information on the crashed process, including exit reason, initial function and message queue
+** Information on linked processes not trapping exits
+
+
+Report Example
+--------------
+....
+=ERROR REPORT==== 15-May-2005::15:31:47 ===
+** Generic server test terminating 
+** Last message in was timeout
+** When Server state == []
+** Reason for termination == 
+** {badarith,[{test,handle_info,2},{proc_lib,init_p,5}]}
+{ok,<0.48.0>}
+ 
+ 
+ 
+....
+
+image::images/report_example_1.png["Report Example", auto, 220]
+
+
+Report Example
+--------------
+....
+=CRASH REPORT==== 15-May-2005::15:31:47 ===
+  crasher:
+    pid: <0.49.0>
+    registered_name: test
+    error_info: {badarith,[{test,handle_info,2}, ….
+    initial_call: {gen,init_it, [gen_server,<0.48.0>,
+                                <0.48.0>,
+{local,test},test,[],[]]}
+    ancestors: [<0.48.0>,<0.36.0>], ……
+ 
+....
+
+image::images/report_example_2.png["Report Example", auto, 260]
+
+
+Report Example
+--------------
+....
+=SUPERVISOR REPORT==== 15-May-2005::15:31:47 ===
+     Supervisor: {<0.48.0>,s}
+     Context:    child_terminated
+     Reason:     {badarith,[{test,handle_info,2},…]}
+     Offender:   [{pid,<0.49.0>}, {name,test},
+                  {mfa,{test,start_link,[]}}, {restart_type,permanent},
+                  {shutdown,5000}, {child_type,worker}]
+ 
+ 
+....
+
+image::images/report_example_3.png["Report Example", auto, 100]
+
+
+Report Example
+--------------
+....
+=PROGRESS REPORT==== 15-May-2005::15:31:47 ===
+          supervisor: {<0.48.0>,s}
+             started: [{pid,<0.49.0>},
+                       {name,test},
+                       {mfa,{test,start_link,[]}},
+                       {restart_type,permanent},
+                       {shutdown,5000},
+                       {child_type,worker}]
+ 
+ 
+....
+
+image::images/report_example_4.png["Report Example", auto, 220]
+
+
+Report Browser
+--------------
+* All event logging can be sent to wrap-around logs
+* Efficiently stores contents as binary files
+* Location, number of files and file size are configurable
+* Tools for browsing, searching and filtering are provided
+
+
+Report Browser
+--------------
+++++
+<div class="pre">{application, sasl,                            <span class="comment">%% SASL.app</span>
+   [{description, "SASL  CXC 138 11"},
+    ...
+    {env,[{error_logger_mf_dir, “/home/erlang/logs/sasl”},
+          {error_logger_mf_maxbytes, 20000},
+          {error_logger_mf_maxfiles, 5}]}]}.
+
+</div>
+++++
+
+* Started by configuring sasl environment variables
+** error_logger_mf_dir
+** error_logger_mf_maxbytes
+** error_logger_mf_maxfiles
+
+
+Report Browser
+--------------
+++++
+<div class="pre" style="font-size:0.75em; line-height:1.45em;"><b>20> rb:start().</b>
+rb: reading report...done.
+ok
+<b>21> rb:list().</b>
+  No   Type               Process   Date         Time
+  ==   ====               =======   ====         ====
+  12   progress           <0.86.0>  2005-05-15   17:07:13
+  11   progress           <0.21.0>  2005-05-15   17:07:13
+  10   progress           <0.86.0>  2005-05-15   17:07:17
+   9   error              <0.22.0>  2005-05-15   17:07:25
+   8   crash_report       test      2005-05-15   17:07:25
+   7   progress           <0.22.0>  2005-05-15   17:07:26
+   6   supervisor_report  <0.22.0>  2005-05-15   17:07:26
+   5   error              <0.22.0>  2005-05-15   17:07:26
+   4   crash_report       test      2005-05-15   17:07:26
+   3   progress           <0.22.0>  2005-05-15   17:07:26
+   2   supervisor_report  <0.22.0>  2005-05-15   17:07:26
+   1   supervisor_report  <0.22.0>  2005-05-15   17:07:26
+ok
+</div>
+++++
+
+
+Report Browser
+--------------
+++++
+<div class="pre" style="font-size:0.75em; line-height:1.45em;"><b>27> rb:show(1).</b>
+
+SUPERVISOR REPORT  <0.92.0>              2005-05 16:39:28
+=================================================================
+Reporting supervisor                     {<0.92.0>,s}
+
+Child process                                                                  
+   errorContext                          shutdown
+   reason                                reached_max_restart_intensity
+   pid                                   <0.94.0>
+   name                                  test
+   start_function                        {test,start_link,[]}
+   restart_type                          permanent
+   shutdown                              5000
+   child_type                            worker
+
+ok
+<b>28> rb:help().</b>
+
+</div>
+
+<svg id="report_browser_1" style="width:450px; height:80; position:relative; top:-125px; left:200px;" viewBox="0 0 450 80; preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#report_browser_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(290,30,"For help on the fly,").addClass("darkred").attr({"text-anchor":"middle"});;
+s1.text(290,65,"use rb:help()").addClass("darkred").attr({"text-anchor":"middle"});;
+s1.path("M140,40 c-40,-5 -80,10 -120,10").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg>
+
+++++
+
+
+Alarm Handler
+-------------
+* A simple event handler installed in SASL
+* Interfaces through the alarm_handler module
+** set_alarm({Id, Alarm}), clear_alarm(Id), get_alarms()
+* Users can swap this alarm handler
+** Use gen_event:swap_handler(alarm_handler, {alarm_handler,swap}, {new_handler,Args}).
+** Must handle events of the format {set_alarm, {Id, Alarm}} or {clear_alarm, Id}
+** Must be able to return active alarms through get_alarms().
+
+
+Alarm Handler
+-------------
+....
+28> alarm_handler:set_alarm({{subrack, 1}, fan_off}).
+ok
+=INFO REPORT==== 15-May-2005::17:31:59 ===
+    alarm_handler: {set,{{subrack,1},fan_off}}
+
+29> alarm_handler:get_alarms().                        
+[{{subrack,1},fan_off}]
+30> alarm_handler:clear_alarm({subrack, 1}).           
+ok
+=INFO REPORT==== 15-May-2005::17:32:33 ===
+    alarm_handler: {clear,{subrack,1}}
+
+31> alarm_handler:get_alarms().             
+[]
+....
+
+
+Other Topics
+------------
+* *overload:request() -> accept or reject*
+* The overload process indirectly regulates CPU usage
+* Based on configurable parameters
+** Maximum intensity
+** A weight
+* Fine tune and test to get the best throughput
+* If an overload occurs, an alarm *{overload, []}* is raised
+
+
+Other Topics
+------------
+* Release Handling is handled in SASL
+** Releases
+** Upgrades
+** Downgrades
+* Systools is a SASL library module
+** Contains functions to create boot scripts
+** Contains functions to create release packages
+
+
+System Application Support Libraries
+------------------------------------
+* SASL Application
+* Error Logging
+* Report Browser
+* Alarm Handler
+* Other Topics

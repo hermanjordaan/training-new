@@ -27,7 +27,7 @@ Overview: *concurrent Erlang I*
 Creating Processes
 ------------------
 ++++
-<svg id="creating_processes_1" style="height:600px; width:600px;" class="left">
+<svg id="creating_processes_1" style="height:600px; width:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s1 = Snap("#creating_processes_1");
@@ -80,7 +80,7 @@ spawn(timer, sleep, [10000]).
 Creating Processes
 ------------------
 ++++
-<svg id="creating_processes_2" style="height:600px; width:600px;" class="left">
+<svg id="creating_processes_2" style="height:600px; width:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s2 = Snap("#creating_processes_2");
@@ -128,7 +128,7 @@ spawn *can* actually fail (if you run out of processes). The R15 limit is 32768;
 Message Passing
 ---------------
 ++++
-<svg id="message_passing_1" style="height:600px; width:600px;" class="left">
+<svg id="message_passing_1" style="height:600px; width:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s3 = Snap("#message_passing_1");
@@ -181,7 +181,7 @@ Let them try out the command shell command i().
 Message Passing
 ---------------
 ++++
-<svg id="message_passing_2" style="height:600px; width:800px;" class="left">
+<svg id="message_passing_2" style="width:800px; height:600px;" viewBox="0 0 800 600" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s4 = Snap("#message_passing_2");
@@ -284,7 +284,7 @@ Receiving Messages
 Receiving Messages
 ------------------
 ++++
-<svg id="receiving_messages_2" style="height:650px; width:650px;" class="left">
+<svg id="receiving_messages_2" style="width:650px; height:650px;" viewBox="0 0 650 650" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s5 = Snap("#receiving_messages_2");
@@ -352,7 +352,7 @@ Have the students execute a receive statement in the shell.
 Receiving Messages
 ------------------
 ++++
-<svg id="receiving_messages_3" style="height:480px; width:1000px;">
+<svg id="receiving_messages_3" style="width:1000px; height:480px;" viewBox="0 0 1000 480" preserveAspectRatio="xMinYMin meet"">
 <script>
 
 var s6 = Snap("#receiving_messages_3");
@@ -402,7 +402,7 @@ s6.click(function() { s6_anim1() });
 Receiving Messages: *selective*
 -------------------------------
 ++++
-<svg id="receiving_messages_selective" style="height:700px; width:600px;" class="left">
+<svg id="receiving_messages_selective" style="width:600px; height:700px;" viewBox="0 0 600 700" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s7 = Snap("#receiving_messages_selective");
@@ -471,7 +471,7 @@ s7.click( function() {
 Receiving Messages: *non-selective*
 -----------------------------------
 ++++
-<svg id="receiving_messages_non_selective" style="height:700px; width:600px;" class="left">
+<svg id="receiving_messages_non_selective" style="width:600px; height:700px;" viewBox="0 0 600 700" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s8 = Snap("#receiving_messages_non_selective");
@@ -536,7 +536,7 @@ s8.click( function() {
 Receiving Messages
 ------------------
 ++++
-<svg id="receiving_messages_6" style="height:500px; width:1100px;">
+<svg id="receiving_messages_6" style="width:1100px; height:500px;" viewBox="0 0 1100 500" preserveAspectRatio="xMinYMin meet">
 <script>
 
 var s9 = Snap("#receiving_messages_6");
@@ -691,7 +691,7 @@ Registered Processes
 --------------------
 
 ++++
-<svg id="registered_processes_2" style="height:250px; width:860px;" class="left">
+<svg id="registered_processes_2" style="width:860px; height:250px;" viewBox="0 0 860 250" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
 
 var s10 = Snap("#registered_processes_2");
@@ -749,7 +749,7 @@ Message Passing
 ---------------
 
 ++++
-<svg id="message_passing_3" style="height:400px; width:600px;" class="left">
+<svg id="message_passing_3" style="width:600px; height:400px;" viewBox="0 0 600 400" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
   
 var s11 = Snap("#message_passing_3");
@@ -787,7 +787,7 @@ Timeouts
 --------
 
 ++++
-<svg id="timeouts_1" style="height:600px; width:600px;" class="left">
+<svg id="timeouts_1" style="width:600px; height:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
 <script>
   
 var s12 = Snap("#timeouts_1");
@@ -863,7 +863,6 @@ Timeouts
 
 Timeouts
 --------
-
 ++++
 <div class="left" style="width: 600px;">
 <div class="pre">send_after(Time, Msg) ->
@@ -899,7 +898,7 @@ Timeouts
 --------
 
 ++++
-<svg id="timeouts_2" style="height:640px; width:640px;" class="left">
+<svg id="timeouts_2" style="width:640px; height:640px;" viewBox="0 0 640 640" preserveAspectRatio="xMinYMin meet" class="left">
 <style type="text/css">
     .msgtext {fill:#fff; font-size:16pt;}
     .msgrect {fill:#888;}

@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Release Handling</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Release Handling</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_release_handling"><h2>Release Handling</h2><div class="ulist"><ul><li><p>Releases</p></li><li><p>Release Resource Files</p></li><li><p>Creating a Release</p></li><li><p>Starting a Release</p></li><li><p>Creating a Release Package</p></li><li><p>Release Directory Structure</p></li></ul></div></section>
+<section id="_releases"><h2>Releases</h2><div class="ulist"><ul><li><p>A Release contains a system comprising</p><div class="ulist"><ul><li><p>A set of user applications</p></li><li><p>the OTP applications they use</p></li><li><p>The Erlang runtime system</p></li></ul></div></li><li><p>Every Erlang system runs a release</p></li><li><p>The minimal and default release contains the kernel and stdlib applications</p></li><li><p>A release is defined by a <strong>Release resource file</strong></p></li></ul></div></section>
+<section id="_fsm_example_supervisor"><h2>FSM Example: supervisor</h2><div class="literalblock"><div class="content"><pre>-module(coffee_sup).
+-behaviour(supervisor).
+-export([start/2, stop/1, init/1]).
+
+start(normal, Args) -&gt;
+    supervisor:start_link(?MODULE, Args).
+
+init(none) -&gt;
+    {ok, {{one_for_one, 2, 5000},
+         [{coffee_fsm, {coffee_fsm, start_link, []},
+           permanent, 500, worker, [coffee_fsm, hw]}]}}.
+ stop(_) -&gt; ok.
+ </pre></div></div></section>
+<section id="_fsm_example_strong_application_strong"><h2>FSM Example: <strong>application</strong></h2><div class="left">
+<div class="pre"><span class="comment">%% File: coffee.app</span>
+
+{application, coffee,
+ [{id,          "coffee"},
+  {vsn,         "1.0"},
+  {modules,     [coffee_sup,                   coffee_fsm,                   hw]},
+  {registered,  [coffee_fsm]},
+  {applications,[kernel,                  stdlib]},
+  {mod,         {coffee_sup,                  none}}}
+ ]}.
+
+
+</div></div>
+<div class="ulist right"><ul><li><p>The FSM example extended with a supervisor and made into an application</p></li></ul></div>
+<div class="imageblock" style=""><div class="content"><img src="images/fsm_example.png" alt="Application" width="350" height="auto"></div></div></section>
+<section id="_fsm_example_strong_release_resource_file_strong"><h2>FSM Example: <strong>release resource file</strong></h2><svg id="fsm_example_release_resource_file_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#fsm_example_release_resource_file_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(380,160,"%% File: coffee-1.0.rel").addClass("code").attr({"fill":"#4B5056"});
+s1.text(380,200,"{release, ").addClass("code");
+s1.text(380,240," {\"coffee\", \"1.0\"},").addClass("code");
+s1.text(380,280," {erts, \"5.5\"}, ").addClass("code");
+s1.text(380,320," [{kernel, \"2.11\"}, ").addClass("code");
+s1.text(380,360,"  {stdlib, \"1.14\"}, ").addClass("code");
+s1.text(380,400,"  {coffee, \"1.0\"}]}.").addClass("code");
+
+s1_g3 = s1.g(s1.text(880,220,"Release").addClass("darkred"),
+          s1.path("M865,210 Q680,160 645,200").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g2 = s1.g(s1.text(820,320,"Runtime version").addClass("darkred"),
+             s1.path("M870,290 C830,250 650,305 595,286").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g1 = s1.g(s1.text(260,520,"Applications").addClass("darkred"),
+             s1.path("M450,510 Q560,505 575,430").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_release_resource_file"><h2>Release Resource File</h2><div class="literalblock"><div class="content"><pre> 
+ 
+    {release, {Name,Vsn}, {erts, EVsn},
+     [{Application1, AppVsn1}, ...
+      {ApplicationN, AppVsnN}]}.
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>The resource file is named ReleaseName.rel</p></li><li><p>Name is the name of the Release</p></li><li><p>Vsn is the version of the Release</p></li><li><p>EVsn is the version of the Erlang runtime system</p></li><li><p>ApplicationN and AppVsnN are the names and versions of the applications</p></li></ul></div></section>
+<section id="_creating_a_release"><h2>Creating a Release</h2><div class="literalblock"><div class="content"><pre>1&gt; systools:make_script("coffee-1.0",
+1&gt;       [{path, "/home/.../coffee-1.0/ebin"]}]).
+ok
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>From the resource files, generates the <strong>coffee-1.0.boot</strong> and readable <strong>coffee-1.0.script</strong> files</p></li><li><p>The <strong>coffee-1.0.boot</strong> file is used to start the release</p></li></ul></div></section>
+<section id="_creating_a_release_2"><h2>Creating a Release</h2><div class="ulist"><ul><li><p><strong>systools:make_script(Name, [Opt])</strong>.</p></li><li><p><strong>Name</strong> is the name of the release</p></li><li><p>Options:</p><div class="ulist"><ul><li><p><strong>no_module_tests</strong>: omits object code up to date test</p></li><li><p><strong>{path,[Dir]}</strong>: add paths to search for files</p></li><li><p><strong>local</strong>: the system installed locally and not in <strong>$ROOT</strong></p></li><li><p><strong>{variables,[Var]}</strong>: replaces path-prefixes with variables</p></li><li><p><strong>exref, {exref,[App]}</strong>: test with the xref tool.</p></li><li><p><strong>silent</strong>: Warnings are returned rather than printed</p></li></ul></div></li></ul></div></section>
+<section id="_starting_a_release"><h2>Starting a Release</h2><div class="literalblock"><div class="content"><pre>erl -boot_var Var Dir -boot File -init_debug
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Starts Erlang using the boot script found in <strong>FILE.boot</strong></p></li><li><p>If <strong>Var</strong> is present in the script, it is replaced with <strong>Dir</strong></p></li><li><p><strong>init_debug</strong> causes the system to print debug information whilst running the boot script</p></li></ul></div></section>
+<section id="_creating_a_release_3"><h2>Creating a Release</h2><div class="literalblock"><div class="content"><pre>1&gt; systools:make_tar("coffee-1.0",
+1&gt;       [{path, "/home/.../coffee-1.0/ebin"]}]).
+ok
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Creates the <strong>coffee-1.0.tar.gz</strong> package</p><div class="ulist"><ul><li><p>Contains all files in the release directory structure</p></li><li><p>Contains everything needed to run the release</p></li></ul></div></li><li><p>Can be unpacked on target</p><div class="ulist"><ul><li><p>Might need local configuration</p></li></ul></div></li></ul></div></section>
+<section id="_creating_a_release_package"><h2>Creating a Release Package</h2><div class="ulist"><ul><li><p><strong>systools:make_tar(Name, [Opt])</strong>.</p></li><li><p><strong>Name</strong> is the name of the release</p></li><li><p>Options:</p><div class="ulist"><ul><li><p><strong>{erts, Dir}</strong> is given to include the runtime system</p></li><li><p>Accepts all options of <strong>make_script</strong></p></li></ul></div></li></ul></div></section>
+<section id="_release_directory_structure"><h2>Release Directory Structure</h2><div class="imageblock" style=""><div class="content"><img src="images/release_dir_structure.png" alt="Release Directory Structure" width="auto" height="380"></div></div>
+<div class="ulist"><ul><li><p>lib: application directories</p></li><li><p>erts-5.5/bin: Erlang runtime system executables</p></li><li><p>releases: contains AppName.rel and boot file in Vsn/start.boot</p></li><li><p>bin: top-level Erlang runtime system executables</p></li></ul></div></section>
+<section id="_release_handling_2"><h2>Release Handling</h2><div class="ulist"><ul><li><p>Releases</p></li><li><p>Release Resource Files</p></li><li><p>Creating a Release</p></li><li><p>Starting a Release</p></li><li><p>Creating a Release Package</p></li><li><p>Release Directory Structure</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

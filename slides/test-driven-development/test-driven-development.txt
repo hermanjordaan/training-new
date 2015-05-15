@@ -1,0 +1,359 @@
+What is Test-Driven            Development?
+===========================================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+What is Test-Driven Development?
+--------------------------------
+* Concepts Behind TDD
+* Advantages and Disadvantages of TDD
+* Terminology
+* Case Studies
+
+
+Concepts Behind TDD
+-------------------
+* Testing is as old as programming itself. Useful to:
+** Document behaviours
+** Demonstrate that a program has the required properties
+* Testing was traditionally done after writing code
+* Test-Driven Development dictates that tests should be written before the code
+* Writing tests before the code is not used for testing, but for design
+
+
+Concepts Behind TDD: *it's design*
+----------------------------------
+* Tests represent the specification to be implemented
+* Testing before writing code asks the developer to think about interfaces and how to use the code
+* Ensures that the application is written for testability
+* Ensures that parts of the application are modular and reusable
+* Tests are a side effect of test-driven development
+
+
+Concepts Behind TDD: *practices*
+--------------------------------
+image::images/practices.png[Practices, auto, 620]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Describe how some projects start with an assumption that you know more about the solution than the others. The type on the right is more frequently used by XP practitioners who let design emerge from the tests. On the left, we can assume existing applications forcing the design in certain directions.
+
+They are not the only ways to do TDD, but the most common ones
+--
+
+
+Concepts Behind TDD: *practices*
+--------------------------------
+++++
+<div style="text-align:center; margin-top:100px">
+<svg id="concepts_behind_tdd_practices_1" style="width:770px; height:420px;" viewBox="0 0 770 420" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#concepts_behind_tdd_practices_1");
+
+var arrow = s1.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+var f_Shadow = s1.filter(Snap.filter.shadow(-2, 4, 2));
+
+s1.rect(400,50,280,60).addClass("shape lightgrey").attr({filter:f_Shadow});
+s1.text(540,90,"Write Test").addClass("darkred middle");
+s1_g1 = s1.g(s1.path("M540,110 l0,73").addClass("line").attr({"marker-end":marker}),
+             s1.rect(400,190,280,60).addClass("shape lightgrey").attr({filter:f_Shadow}),
+             s1.text(540,230,"Run Test").addClass("darkred middle")).addClass("hide");
+s1_g2 = s1.g(s1.path("M540,250 l0,73").addClass("line").attr({"marker-end":marker}),
+             s1.rect(400,330,280,60).addClass("shape lightgrey").attr({filter:f_Shadow}),
+             s1.text(540,370,"Write Code").addClass("darkred middle"),
+             s1.text(560,302,"FAIL").addClass("code bold").attr({"font-size":"19pt"}),
+             s1.path("M680,360 A30,30 0 0,0 687,220").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s1_g3 = s1.g(s1.path("M400,250 305,325").addClass("line").attr({"marker-end":marker}),
+             s1.text(280,290,"PASS").addClass("code bold").attr({"font-size":"19pt"}),
+             s1.rect(20,330,280,60).addClass("shape lightgrey").attr({filter:f_Shadow}),
+             s1.text(150,370,"Refactor").addClass("darkred middle")).addClass("hide");
+
+s1_g4 = s1.g(s1.path("M160,330 Q210,240 400,220").addClass("line"),
+             s1.text(260,210,"PASS").addClass("code bold").attr({"font-size":"19pt"}),
+             s1.path("M400,220 C300,200 300,100 393,80").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 4: {s1_g4.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Write test: what your code should look like, how you want to call it. The difference between implementing from the user's side vs. from the programmer's side
+
+Write code: the simplest thing that can work, elegant or not
+Refactor: make the test that passes the code work better. Similar to Joe's saying - make it work, measure, then optimise
+
+Do not write a new test before you got the previous feature working -- might prompt a question on mock processes?
+--
+
+
+Concepts Behind TDD: *practices*
+--------------------------------
+* Avoid writing all tests at once
+* Write a to-do list with tasks that should be completed
+* Take one element at a time and write a test for it
+* Once the test pass, think about adding more
+* When this is done, move on to the next element on the to-do list
+
+[NOTE.speaker]
+[role="speaker"]
+--
+For larger projects, mention that using a To-Do list rather and writing the tests one by one is preferred to writing all the tests at once
+--
+
+
+Concepts Behind TDD: *example*
+------------------------------
+*Specification*::
+The function *lists:delete* should be able to accept any proper list and any element that might or might not be in the list. If the element is in  the list, remove the first instance of it and return the new list without it. Leave the list untouched otherwise.  +  
+{empty}  +  
+The function *lists:delete* should be rewritten using test-driven development.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+The test is a trivial example, but the concepts can be applied to a broader spectrum of functions.
+--
+
+
+Concepts Behind TDD: *example*
+------------------------------
+....
+-module(remove).
+-compile(export_all).
+
+remove_empty_test() ->
+    [] = remove(a, []).
+ 
+ 
+....
+
+* Code for removing elements from an empty list will not pass the test (or compile)
+* The first test case forces us to see what our API will be:  *remove(Item, List) -> List*.
+* The first test verifies that a list without the element in it will not be changed.
+
+
+Concepts Behind TDD: *example*
+------------------------------
+[role="left"]
+....
+remove(_Elem, []) -> [].
+
+remove_empty_test() ->
+    [] = remove(a, []).
+
+remove_elem_test() ->
+    [] = remove(a, [a]).
+ 
+ 
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* The test succeeded with the basic *remove/2* implementation
+* A new test can be written on some part of the specification
+* Running this test should fail because the *remove_elem_test/0* case hasn't been accounted for when writing *remove/2*
+
+
+Concepts Behind TDD: *example*
+------------------------------
+[role="left"]
+....
+remove(_Elem, []) -> [];
+remove(Elem, [Elem|_]) -> []. 
+
+remove_empty_test() ->
+    [] = remove(a, []).
+
+remove_elem_test() ->
+    [] = remove(a, [a]).
+
+remove_list_test() ->
+    [1,2] = remove(3, [1,3,2]).
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* Both tests now succeed.
+* The test *remove_list_test/0* is added to make sure the function can handle multiple elements in a list
+* The new test fails, back to the drawing board.
+
+
+Concepts Behind TDD: *example*
+------------------------------
+[role="left"]
+....
+remove(_Elem, []) -> [];
+remove(Elem, [Elem|T]) -> T;
+remove(Elem, [H|T]) ->
+    [H | remove(Elem, T)].
+...
+
+remove_elem_test() ->
+    [] = remove(a, [a]).
+
+remove_list_test() ->
+    [1,2] = remove(3, [1,3,2]).
+
+remove_one_test() ->
+    [a,b,c,b,d] = remove(b, [a,b,b,c,b,d]).
+ 
+....
+
+[role="right"]
+* The new implementation of *remove/2* passes the test
+* The *remove_one_test/0* test is added to make sure elements are only removed once in the list
+* The new *remove/2* passes the test without any change.
+* The spec is now implemented.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that more tests might be needed for edge cases (if any).
+Mention that the set of tests now let the programmer change the function to a tail recursive one with *confidence* that his program's behaviour will remain the same.
+--
+
+
+Terminology
+-----------
+*Test Case*::
+Set of conditions or variables under which a tester will determine whether an application or software system is working correctly or not.
+
+*Unit Test*::
+A *Unit* is the smallest testable part of an application. *Unit tests* are test cases ideally independent from other unit tests.  +  
+Allow each independent part of a program code to be confirmed as respecting the specification.
+
+
+Terminology
+-----------
+*Integration Testing*::
+Software modules or units are combined and tested as a group. Allows to test for requirements in performance, reliability and functionality
+
+*System Testing*::
+Black box testing of all components of an application to verify requirement compliance
+
+*Acceptance Testing*::
+Formal testing conducted to enable a user, customer or some other entity to determine whether to accept a system or component
+
+
+Advantages and Disadvantages
+----------------------------
+[role="left comparison darkred"]
+Pros::
+* Users of TDD mention needing a debugger less often.
+* The programmer needs to establish an interface before the implementation
+* Development times typically shorter due to eliminating bugs earlier
+* Modular software/code
+* Different code paths better covered
+
+[role="right comparison darkred"]
+Cons::
+* Difficult to use with programs that need functional tests to work (GUIs, databases, etc.)
+* Tests become a maintenance overhead
+* Bad tests can share the same blind spots as the code and errors will go undetected
+* Reduces flexibility by requiring to change tests when changing code
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Add: training overhead
+--
+
+
+Advantages and Disadvantages: *tips*
+------------------------------------
+* Try to avoid testing a module's private functions
+** They are not part of the design
+** Testing them brings an overhead in maintenance
+** They should be tested by the TDD unit tests; otherwise the tests are either incomplete or useless code has been developed
+* Different developers should write the tests and code
+** Pair programming or code reviews can also be used to help
+
+[NOTE.speaker]
+[role="speaker"]
+--
+The rules about private functions are not absolute: in some cases, it's worth adding a maintenance cost for the sake of testing complex code correctly. Case by Case basis
+--
+
+
+Case Studies: *Yenduri-Perkins*
+-------------------------------
+2 groups of 9 graduate students, same academic level, no restrictions in work areas or tools available
+
+[role="table1"]
+[cols="^2,^1,^1",options="header"]
+|============================================
+|                           | TDD | Test-Last
+| Number of Test cases      | 629 | 211
+| Bugs in unit tests        | 74  | 109
+| Bugs in integration tests | 13  | 15
+| Bugs in acceptance tests  | 14  | 31
+| Total person hours spent  | 928 | 1245
+|============================================
+
+[NOTE.speaker]
+[role="speaker"]
+--
+link to paper: http://ucmss.com/books/LFS/CSREA2006/SER4458.pdf
+--
+
+
+Case Studies: *ITEA*
+--------------------
+* Survey of 13 previous studies about TDD: 3 in an industrial context, 4 in a semi-industrial context and 6 in an academic context
+* All industrial studies report improved software quality. 
+* No semi-industrial or academic study reported decreased quality, although half of them reported indications towards improvement
+
+[NOTE.speaker]
+[role="speaker"]
+--
+http://www.agile-itea.org/public/deliverables/ITEA-AGILE-D2.7_v1.0.pdf - Test driven development: empirical body of evidence - Siniaalto
+--
+
+
+Case Studies: *ITEA*
+--------------------
+* Development time varied between a 16% increase or "Significantly decreased project lead-time" in both industrial and semi-industrial contexts
+* Two of the academic studies reported no difference in developer productivity and two others reported gains in productivity
+* Lack of good empirical metrics for productivity makes it harder to measure.
+
+
+What is Test-Driven Development?
+--------------------------------
+* Concepts Behind TDD
+* Advantages and Disadvantages of TDD
+* Terminology
+* Case Studies

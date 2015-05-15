@@ -1,0 +1,407 @@
+ejabberd Architecture
+=====================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Overview
+--------
+* Refresh on Erlang and Mnesia
+* Architecture overview
+* Data flow
+* Authentication
+* Cluster environment
+
+
+Erlang highlights
+-----------------
+* *processes*
+** lightweight, separate threads of execution
+** scheduled within the VM
+** share nothing architecture
+** asynchronous message passing
+** identified by PID
+** contains node information
+
+[NOTE.speaker]
+[role="speaker"]
+--
+300 words of memory/process
+several millions of processes running inside of a single VM
+SMP
+processes mailbox, selective receive
+--
+
+
+Mnesia highlights
+-----------------
+* *Mnesia*
+** distributed key-value storage
+** data replication
+** fault tolerance
+** table types
+** table backends
+** possible table fragmentation
+** can query with relationships (QLC)
+
+[NOTE.speaker]
+[role="speaker"]
+--
+storing Erlang tuples
+updates are propagated to all nodes having replica of the data, reads are performed locally
+we can continue operating even if one of the nodes failed
+sets, ordered sets, bags, duplicate bags
+ram_copies, disc_copies, disc_only_copies
+fragmentation might be useful when handling large data that must be persisted
+local_content flag
+--
+
+
+ejabberd highlights
+-------------------
+* scalable XMPP server
+* implemented in Erlang
+* open-sourced
+** https://github.com/processone/ejabberd
+* very good support for XEPs
+
+
+Architecture: *general overview*
+--------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* listeners
+** listening on the incoming connections
+** exposing services to the outside world
+** supported:
+** c2s (client to server)
+** encrypted c2s
+** s2s (server to server)
+** XMPP compontents
+** BOSH (XMPP over HTTP)
+** WebSockets
+** STUN (NAT traversal)
+
+[NOTE.speaker]
+[role="speaker"]
+--
+synchronous accept loop
+traffic throttling doable
+several services available on a single port - e.g. BOSH and web interface
+not necessarily XMPP traffic (see: HTTP)
+--
+
+
+Architecture: *general overview*
+--------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* receivers
+** handling sockets
+** parsing the incoming data
+** linked-in driver: expat
+** SAX model
+** syntactic data manipulation
+
+[NOTE.speaker]
+[role="speaker"]
+--
+level of abstraction on top of TCP stream
+does not understand what the messages mean
+changing data stream into Erlang messages, internal XML representation
+--
+
+
+Architecture: *general overview*
+--------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* session process
+** keeping session data
+** presence lists
+** privacy settings
+** session state (authentication, encryption, ...)
+** finite state machine
+** understands the meaning of the stanzas
+** semantic operations on the data
+
+[NOTE.speaker]
+[role="speaker"]
+--
+session process per resource, not per user
+very generic, although implementing only very basic functionality
+monitoring receiver process - terminating when socket has been closed and opposite
+additional processes might be spawned for some extra features, such as encryption/compression
+--
+
+
+Architecture: *general overview*
+--------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* router
+** library module
+** domain routing
+** special subdomains for extra functionality
+** MUC
+** gateways
+** federation
+** local routes
+
+[NOTE.speaker]
+[role="speaker"]
+--
+action: either sending a message to a next process or calling a configured MF
+in the case of no routes, s2s fallback is called
+black/white-listing s2s domains
+--
+
+Architecture: *general overview*
+--------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* session manager
+** library module
+** still running in the sender’s process context
+** mapping between full JIDs and PIDs
+** cluster health monitoring
+** sending messages directly to the processes/IQ handlers
+** session constraints
+
+[NOTE.speaker]
+[role="speaker"]
+--
+registering/removing new mappings
+broadcasting messages
+direct Mnesia access
+constraints: max sessions per user, kick out the same session logged in twice
+no health check on the recipient (fire and forget approach)
+--
+
+
+Architecture: *general overview*
+--------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* Mnesia session table
+** holding mappings between JIDs and PIDs
+** transient data
+** read-intensive data
+** ram_copies only
+** for performance reasons replicated everywhere in the cluster
+** additional data kept
+** session creation timestamp
+** client’s IP
+** authentication method
+
+[NOTE.speaker]
+[role="speaker"]
+--
+relatively small (comparing to e.g. rosters/offline handlers)
+frequently updated
+session_counter - unnecessary table implemented
+easy way to determine number of authenticated users
+--
+
+Architecture: *dataflow*
+------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Alice sends a message to Bob, message is delivered to receiver process (holding user’s socket)
+--
+
+
+Architecture: *dataflow*
+------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+expat parser transforms XML stanza into Erlang’s internal representation
+--
+
+
+Architecture: *dataflow*
+------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+receiver sends a message to user’s session process
+--
+
+
+Architecture: *dataflow*
+------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+session process applies router rules on the message and finds out that the message recipient is located in the current server
+session manager is responsible for delivering the message: lookup on the session table is performed and Bob’s PID is found
+--
+
+
+Architecture: *dataflow*
+------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+message is delivered to Bob’s session process
+session process transforms it back to the textual representation and forwards to receiver process
+--
+
+
+Architecture: *dataflow*
+------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+receiver pushes the messages to Bob’s client application
+--
+
+
+Architecture: *authentication*
+------------------------------
+* several methods allowed
+** PLAIN, DIGEST, DIGEST-MD5, ANONYMOUS
+* vast number of backends supported
+** Mnesia, ODBC, LDAP, PAM, external scripts
+* easy integration with external services
+** caching layers, web services
+
+
+Architecture: *clustered environment*
+-------------------------------------
+[role="left"]
+image::images/placeholder.png[Placeholder, auto, auto]
+
+[role="right"]
+* fully connected mesh of nodes
+* dedicated TCP connection between the nodes
+* nodes share the same magical cookie
+* epmd
+
+[NOTE.speaker]
+[role="speaker"]
+--
+no security between the links
+there were some attempts to use SSL for connectivity layer
+net_ticktime parameter
+hidden nodes
+not designed for geographically scattered machines
+--
+
+
+Architecture: *clustered environment*
+-------------------------------------
+[role="left"]
+....
+node(Pid) -> nodename@nodehost
+
+
+
+LocalPid ! message.
+RemotePid ! message.
+ 
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* Pid contains information about the node where the process lives
+* message passing is transparent from the programmer’s point of view
+** no changes in the code
+** ... unless someone is using node names/hacks explicitly
+
+[NOTE.speaker]
+[role="speaker"]
+--
+pitfall: we do not know where do we send a message
+it’s much faster to perform a bulk operations, instead of sending hundreds of messages between processes
+--
+
+
+Architecture: *clustered ejabberd*
+----------------------------------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+* Mnesia replication
+* load balancing done externally
+
+[NOTE.speaker]
+[role="speaker"]
+--
+open-source software load-balancing: haproxy, LVS
+hardware load-balancing: F5 (BigIP)
+--
+
+
+Architecture: *clustered ejabberd*
+----------------------------------
+[role="left comparison darkred"]
+Pros::
+{empty}
+
+[role="right comparison darkred"]
+Cons::
+* slower Mnesia replication
+* more difficult debugging
+* maintainability
+* local traffic is faster than remote traffic
+
+++++
+<div class="left" style="top:-200pt;">
+<div class="pre">-module(example).
+
+%% Type your code here
+
+function(Mod, Fun, Arg) ->
+    Mod:Fun(Arg).
+
+</div></div>
+++++
+
+
+
+Overview
+--------
+* Refresh on Erlang and Mnesia
+* Architecture overview
+* Data flow
+* Authentication
+* Cluster environment

@@ -1,0 +1,544 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Mnesia</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Mnesia</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_mnesia"><h2>Mnesia</h2><div class="ulist"><ul><li><p>Mnesia</p><div class="ulist"><ul><li><p>Introduction</p></li><li><p>Data Model</p></li><li><p>Starting Mnesia</p></li><li><p>Creating Tables</p></li><li><p>Transactions</p></li><li><p>Reading, Writing and Deleting</p></li><li><p>Object Manipulations</p></li><li><p>Locks</p></li></ul></div></li><li><p>Advanced Mnesia II &amp; III</p></li></ul></div></section>
+<section id="_introduction"><h2>Introduction</h2><div class="ulist"><ul><li><p>Mnesia is a relational database</p></li><li><p>Query List Comprehensions for complex searches</p></li><li><p>Handles transactions and dirty operations</p></li><li><p>Can be distributed across many nodes</p><div class="ulist"><ul><li><p>Location transparency is preserved</p></li></ul></div></li><li><p>Dynamic reconfiguration during runtime</p></li><li><p>Tightly connected to Erlang</p><div class="ulist"><ul><li><p>Runs in the same address space and is accessed through Erlang functions</p></li></ul></div></li></ul></div></section>
+<section id="_introduction_2"><h2>Introduction</h2><div class="ulist"><ul><li><p>Table properties include location transparency, replication and persistence</p></li><li><p>Tables can be reconfigured on a node basis during runtime</p><div class="ulist"><ul><li><p>Replicated across several nodes</p></li><li><p>Migrated to other nodes</p></li><li><p>Made persistent / ram only / both</p></li></ul></div></li><li><p>Database Nodes can be added and removed dynamically</p></li></ul></div></section>
+<section id="_introduction_strong_when_to_use_mnesia_strong"><h2>Introduction: <strong>when to use Mnesia</strong></h2><div class="ulist"><ul><li><p>Data replication requirements for:</p><div class="ulist"><ul><li><p>Speed</p></li><li><p>Fault Tolerance</p></li><li><p>Distributed applications</p></li></ul></div></li><li><p>Applications requirements on atomic transactions</p><div class="ulist"><ul><li><p>including distributed transactions</p></li></ul></div></li><li><p>Soft real-time requirements</p></li><li><p>Complex data searches</p></li></ul></div>
+<div style="text-align:right; color:forestgreen; font-size:60pt; margin:-20pt 300pt 0 0;">✓ Yes</div></section>
+<section id="_introduction_strong_when_not_to_use_mnesia_strong"><h2>Introduction: <strong>when not to use Mnesia</strong></h2><div class="ulist"><ul><li><p>Storage of plain text or binary data</p></li><li><p>Applications storing gigabytes of data</p></li><li><p>Applications with hard real-time requirements</p></li><li><p>Applications that only need a lookup dictionary</p><div class="ulist"><ul><li><p>Use DETS and ETS tables</p></li></ul></div></li><li><p>Applications that need disk logging facilities</p><div class="ulist"><ul><li><p>Use the disk_log library</p></li></ul></div></li></ul></div>
+<div style="text-align:right; color:darkred; font-size:60pt; margin:-20pt 300pt 0 0;">× No</div></section>
+<section id="_introduction_strong_work_flow_strong"><h2>Introduction: <strong>work flow</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/workflow.png" alt="Workflow" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Create a Schema that will reside on disk</p></li><li><p>Create tables, storing persistent tables on disk for restarts</p></li><li><p>Insert, read and delete objects, and create new tables</p></li></ul></div></section>
+<section id="_data_model"><h2>Data Model</h2><div class="imageblock" style=""><div class="content"><img src="images/data_model_1.png" alt="Data model" width="auto" height="260"></div></div>
+<div class="ulist"><ul><li><p>Mnesia organises its data as a set of tables</p></li><li><p>Each table contains Erlang records of the same type</p><div class="ulist"><ul><li><p>The table name is by default the record type</p></li></ul></div></li><li><p>Each record instance is called an object</p></li><li><p>Each object has an Object Identifier, also called an OID</p><div class="ulist"><ul><li><p>The OID is the tuple <strong>{TableName, Key}</strong></p></li></ul></div></li></ul></div></section>
+<section id="_data_model_2"><h2>Data Model</h2><div class="imageblock" style=""><div class="content"><img src="images/data_model_2.png" alt="Data model" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Employee and Department are <strong>entities</strong></p></li><li><p>Works at and Manages are <strong>relations</strong></p></li><li><p>Relations between entities are modeled as tables</p></li></ul></div></section>
+<section id="_data_model_3"><h2>Data Model</h2><div class="pre">
+<span class="comment">%%% File    : employee.hrl</span>
+<span class="comment">%%% Description : Record Definitions for the employee DB.</span>
+-record(employee, {emp_no,        <span class="comment">%Employee Number, int()</span>
+                   name,          <span class="comment">%Name, str()</span>
+                   salary}).      <span class="comment">%Monthly Salary, int()</span>
+-record(department, {dept_id,     <span class="comment">%Dept. ID, str()</span>
+                     name,        <span class="comment">%Dept. Name, str()</span>
+                     location}).  <span class="comment">%Location, str()</span>
+
+-record(works_at, {emp_no,        <span class="comment">%Employee Number, int()</span>
+                   dept_id}).     <span class="comment">%Dept. ID, str()</span>
+-record(manages, {dept_id,        <span class="comment">%Dept. ID, str()</span>
+                  emp_no}).       <span class="comment">%Employee Number, int()</span>
+
+</div></section>
+<section id="_schema"><h2>Schema</h2><div class="ulist"><ul><li><p>Mnesia&#8217;s configuration is defined in the schema</p></li><li><p>It is a special table containing information on other tables</p><div class="ulist"><ul><li><p>Table name, storage, type, location, etc.</p></li></ul></div></li><li><p>Is manipulated only through Schema related functions</p><div class="ulist"><ul><li><p>Allow creation/deletion/duplication/migration of tables</p></li></ul></div></li><li><p>In distributed Systems, the schema is duplicated on all mnesia nodes</p></li></ul></div></section>
+<section id="_schema_2"><h2>Schema</h2><div class="ulist"><ul><li><p><strong>mnesia:create_schema(NodeList)</strong></p></li><li><p>Initialises a new, empty schema</p></li><li><p>Must be called before starting Mnesia</p></li><li><p>All DB nodes must be started and connected</p><div class="ulist"><ul><li><p>Mnesia must not be running on any of them</p></li><li><p>Old schemas must have been deleted</p></li></ul></div></li><li><p>Creates a directory <strong>Mnesia.NodeName/</strong> for every node</p><div class="ulist"><ul><li><p>Stores schema information and persistent tables</p></li><li><p>Directory name and location is configurable</p></li></ul></div></li></ul></div></section>
+<section id="_starting_mnesia"><h2>Starting Mnesia</h2><div class="ulist"><ul><li><p><strong>application:start(mnesia)</strong></p></li><li><p>Starts mnesia as an application</p></li><li><p>can also be started by including it in the rel file</p></li><li><p>If a schema has been created, it will load it</p></li><li><p>If no schema exists, a volatile one is created</p><div class="ulist"><ul><li><p>All configurations will be lost between restarts</p></li></ul></div></li><li><p>Local tables are created or loaded</p></li><li><p>Replicated tables are copied from disk or some other node (the most recent copy is chosen)</p></li></ul></div></section>
+<section id="_starting_mnesia_strong_creating_tables_strong"><h2>Starting Mnesia: <strong>creating tables</strong></h2><div class="ulist"><ul><li><p><strong>mnesia:create_table(Name, OptionList)</strong></p></li><li><p>Called only in one of the nodes running mnesia</p></li><li><p><strong>Name</strong> is the record&#8217;s type</p></li><li><p><strong>OptionList</strong> is a list of tuples:</p><div class="ulist"><ul><li><p><strong>{type, set / ordered_set / bag}</strong></p></li><li><p><strong>{attributes, [RecordFields]}</strong>, use <strong>record_info(fields, RecordName)</strong></p></li><li><p><strong>{disc_copies, NodeList}</strong></p></li><li><p><strong>{disc_only_copies, NodeList}</strong></p></li><li><p><strong>{ram_copies, NodeList}</strong></p></li></ul></div></li></ul></div></section>
+<section id="_starting_mnesia_strong_creating_tables_strong_2"><h2>Starting Mnesia: <strong>creating tables</strong></h2><svg id="fsm_example_release_resource_file_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#fsm_example_release_resource_file_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.rect(10,10,1100,600).addClass("rect_code")
+s1.text(15,40,"%%% File    : employee.erl").addClass("code");
+s1.text(15,80,"%%% Description : Mnesia Example").addClass("code");
+s1.text(15,120,"-module(employee).").addClass("code");
+s1.text(15,160,"-export([create_tables/0, ...]).").addClass("code");
+s1.text(15,200,"-include(\"employee.hrl\").").addClass("code");
+s1.text(15,240,"").addClass("code");
+s1.text(15,280,"create_tables() ->").addClass("code");
+s1.text(15,320,"  Opts = [{type, set}, {disc_copies, [node()]}, ").addClass("code");
+s1.text(15,360,"          {ram_copies, nodes()}],").addClass("code");
+s1.text(15,400,"  {atomic, ok} = mnesia:create_table(employee, ").addClass("code");
+s1.text(15,440,"                 [{attributes,").addClass("code");
+s1.text(15,480,"                   record_info(fields, employee)}|Opts]),").addClass("code");
+s1.text(15,520,"  ...").addClass("code");
+
+s1.text(800,200,"Assumes the call is made").addClass("darkred").attr({"text-anchor":"middle"});
+s1.text(800,235,"from the O&M node").addClass("darkred").attr({"text-anchor":"middle"});
+
+s1.path("M760,245 l-20,40").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg></section>
+<section id="_starting_mnesia_strong_creating_tables_strong_3"><h2>Starting Mnesia: <strong>creating tables</strong></h2><div class="literalblock"><div class="content"><pre>  {atomic, ok} = mnesia:create_table(department,
+                 [{attributes,
+                   record_info(fields,department)}|Opts]),
+  {atomic, ok} = mnesia:create_table(works_at,
+                 [{attributes,
+                   record_info(fields, works_at)}|Opts]),
+  {atomic, ok} = mnesia:create_table(manages,
+                 [{attributes,
+                   record_info(fields, manages)}|Opts]).
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_starting_mnesia_strong_creating_tables_strong_4"><h2>Starting Mnesia: <strong>creating tables</strong></h2><div class="pre">
+<b>1> mnesia:create_schema([node()|nodes()]).</b>
+ok
+<b>2> application:start(mnesia).</b>
+ok
+<b>3> employee:create_tables().</b>
+{atomic,ok}
+4>
+ 
+ 
+ 
+ 
+ 
+ 
+</div></section>
+<section id="_transactions"><h2>Transactions</h2><div class="ulist"><ul><li><p><strong>mnesia:transaction(Fun)</strong></p></li><li><p>Transactions protect read, write and delete operations</p></li><li><p>Must be encapsulated in funs</p></li><li><p>Transactions return <strong>{atomic,Val}</strong> when successful</p></li><li><p>Return <strong>{aborted, Reason}</strong> upon failure</p><div class="ulist"><ul><li><p>Should not happen unless <strong>mnesia:abort/1</strong> is called within the fun</p></li><li><p>Transaction failures should not occur</p></li><li><p>Log them and treat them as bugs</p></li></ul></div></li></ul></div></section>
+<section id="_object_manipulation"><h2>Object Manipulation</h2><div class="literalblock centered"><div class="content"><pre>mnesia:write(Record)
+mnesia:read({TableName, Key})
+mnesia:delete({TableName, Key})</pre></div></div>
+<div class="ulist"><ul><li><p><strong>write/1</strong> and <strong>delete/1</strong> return <strong>ok</strong></p></li><li><p><strong>read/1</strong> returns:</p><div class="ulist"><ul><li><p><strong>[]</strong> if the element does not exist</p></li><li><p><strong>[Record]</strong> if it exists and the table is a <strong>set</strong> or <strong>ordered_set</strong></p></li><li><p><strong>[Record|Records]</strong> if the table is a <strong>bag</strong></p></li></ul></div></li><li><p>Changes are reflected on all nodes</p></li><li><p>If tables are persistent, changes will survive a restart</p></li></ul></div></section>
+<section id="_object_manipulation_2"><h2>Object Manipulation</h2><div class="pre"><span class="comment">%% Creates a department object and inserts it in the  
+%% department table.
+%% No duplication checks. Old departments with the same ID  
+%% are deleted.</span>
+
+create_department(DeptId, Name, Location) ->
+    F = fun() ->
+           mnesia:write(#department{dept_id = DeptId,
+                            name = Name,
+                            location = Location})
+        end,
+    mnesia:transaction(F).
+
+
+
+</div></section>
+<section id="_object_manipulation_3"><h2>Object Manipulation</h2><div class="pre"><span class="comment">%% Creates employee object & its relation to a department.
+%% Only check is for department existence. No duplication.</span>
+create_employee(EmpNo, Name, Salary, DeptId) ->
+    F = fun() -> case mnesia:read({department, DeptId}) of
+            [] ->  {error, no_department};
+            [DeptRec] ->
+                mnesia:write(#employee{emp_no = EmpNo,
+                                       name = Name,
+                                       salary = Salary}),
+                mnesia:write(#works_at{emp_no = EmpNo,
+                                       dept_id = DeptId})
+        end
+   end,
+   mnesia:transaction(F).
+
+</div></section>
+<section id="_object_manipulation_4"><h2>Object Manipulation</h2><div class="pre">
+<span class="comment">%% Creates an employee - department manager relation.
+%% Checks ensure that the employee and department exist.</span>
+create_manager(EmpNo, DeptId) ->
+    F = fun() ->
+       case {mnesia:read({department, DeptId}),
+             mnesia:read({employee, EmpNo})} of
+           {[DeptRec], [EmpRec]} ->     <span class="comment">% Valid Indata</span>
+               mnesia:write(#manages{dept_id = DeptId,
+                                     emp_no = EmpNo});
+           _Other -> 	                <span class="comment">% Invalid Indata</span>
+               {error, indata}
+           end
+        end,
+    mnesia:transaction(F).
+
+</div></section>
+<section id="_object_manipulation_5"><h2>Object Manipulation</h2><div class="literalblock"><div class="content"><pre>print_employee(EmpNo) -&gt;
+   F = fun()-&gt;
+     case mnesia:read({employee, EmpNo}) of
+        [] -&gt; mnesia:abort({error, instance});
+        [EmpRec] -&gt;
+           [WorksAtRec] = mnesia:read({works_at, EmpNo}),
+           DeptId = WorksAtRec#works_at.dept_id,
+           [DeptRec] = mnesia:read({department, DeptId}),
+           [ManagesRec] = mnesia:read({manages, DeptId}),
+           MgrEmpNo = ManagesRec#manages.emp_no,
+           [MgrRec] = mnesia:read({employee, MgrEmpNo}),
+           #employee{name=Name, salary=Salary} = EmpRec,
+           ...
+ </pre></div></div></section>
+<section id="_object_manipulation_6"><h2>Object Manipulation</h2><div class="literalblock"><div class="content"><pre>            ...
+            #department{name = Dept,
+                        location = DeptLoc} = DeptRec,
+            #employee{name = MgrName} = MgrRec,
+            [Name, EmpNo, Salary, Dept, DeptLoc, MgrName]
+      end
+   end,
+   {atomic, Args} = mnesia:transaction(F),
+   io:format("Name:~s, Id:~p, Salary:~p, Dept:~s,~n"
+             "Loc:~s, Mgr:~s~n",
+             Args).
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_object_manipulation_7"><h2>Object Manipulation</h2><div class="pre"><b>4> employee:create_department("KI/ES", "Erlang Systems", "Kista").</b>
+{atomic,ok}
+<b>5> employee:create_employee(1, "Henrik", 100000, "KI/ES").</b>
+{atomic,ok}
+<b>6> employee:create_employee(2, "Francesco", 0, "KI/ES").</b>
+{atomic,ok}
+<b>7> employee:create_manager(1, "KI/ES").</b>
+{atomic,ok}
+<b>8> employee:print_employee(2).</b>
+Name:Francesco, Id:2, Salary:0, Dept:Erlang Systems,
+Loc:Kista, Mgr:Henrik
+ok
+
+</div></section>
+<section id="_transactions_strong_example_strong"><h2>Transactions: <strong>example</strong></h2><svg id="transactions_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#transactions_example_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(330,40,"Manager").addClass("darkred bold").attr({"text-anchor":"middle"});
+s2.text(100,80,"[Rec] = mnesia:read({employee, 2}),").addClass("code");
+s2.text(100,120,"NewPay= 100 + Rec#employee.salary,").addClass("code");
+s2.text(100,160,"mnesia:write(Rec#employee{salary = NewPay}).").addClass("code");
+
+s2.text(330,440,"CEO").addClass("darkred bold").attr({"text-anchor":"middle"});
+s2.text(100,480,"[Rec] = mnesia:read({employee, 2}),").addClass("code");
+s2.text(100,520,"NewPay= 150 + Rec#employee.salary,").addClass("code");
+s2.text(100,560,"mnesia:write(Rec#employee{salary = NewPay}).").addClass("code");
+
+s2_c1 = s2.circle(70,80,14).addClass("shape darkred").addClass("hide");
+s2_c2 = s2.circle(70,480,14).addClass("shape darkred").addClass("hide");
+
+s2_r1 = s2.g(s2.rect(860,200,100,62,15).addClass("shape darkred"),
+             s2.text(910,242,"0").addClass("white").attr({"text-anchor":"middle"}));
+s2_r2 = s2.g(s2.rect(860,270,100,62,15).addClass("shape darkred"),
+             s2.text(910,312,"100").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+s2_r3 = s2.g(s2.rect(860,340,100,62,15).addClass("shape darkred"),
+             s2.text(910,382,"150").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+
+s2_p1 = s2.path("M910,190 Q900,60 725,75").addClass("line_darkred").attr({"marker-end":marker}).addClass("hide");
+s2_p2 = s2.path("M970,230 C1050,230 1060,410  980,450  C950,470 800,475 740,470").addClass("line_darkred").attr({"marker-end":marker}).addClass("hide");
+s2_p3 = s2.path("M610,180 845,295").addClass("line_darkred").attr({"marker-end":marker}).addClass("hide");
+s2_p4 = s2.path("M855,540 900,420").addClass("line_darkred").attr({"marker-end":marker}).addClass("hide");
+
+s2_anim1 = function() {s2_c1.animate({"opacity":"1"}, 375, mina.linear);
+                       s2_c2.animate({"opacity":"1"}, 375, mina.linear, s2_anim2)};
+s2_anim2 = function() {s2_p1.animate({"opacity":"1"}, 375, mina.linear);
+                       s2_p2.animate({"opacity":"1"}, 375, mina.linear)};
+s2_anim3 = function() {s2_c1.animate({"transform":"t0 40"}, 375, mina.linear);
+                       s2_c2.animate({"transform":"t0 40"}, 375, mina.linear);
+                       s2_p1.animate({"opacity":"0"}, 375, mina.linear);
+                       s2_p2.animate({"opacity":"0"}, 375, mina.linear)}
+s2_anim4 = function() {s2_c1.animate({"transform":"t0 80"}, 375, mina.linear, s2_anim5)};
+s2_anim5 = function() {s2_p3.animate({"opacity":"1"}, 375, mina.linear, s2_anim6)};
+s2_anim6 = function() {s2_r1.animate({"opacity":"0"}, 375, mina.linear);
+                       s2_r2.animate({"opacity":"1"}, 375, mina.linear)}
+s2_anim7 = function() {s2_p3.animate({"opacity":"0"}, 375, mina.linear);
+                       s2_c2.animate({"transform":"t0 80"}, 375, mina.linear, s2_anim8)};
+s2_anim8 = function() {s2_p4.animate({"opacity":"1"}, 375, mina.linear, s2_anim9)};
+s2_anim9 = function() {s2_r2.animate({"opacity":"0"}, 375, mina.linear);
+                       s2_r3.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim3(); s2_counter++; break};
+    case 3: {s2_anim4(); s2_counter++; break};
+    case 4: {s2_anim7(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_transactions_2"><h2>Transactions</h2><div class="imageblock" style=""><div class="content"><img src="images/transactions.png" alt="Transactions" width="1000" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Transactions protect data from concurrent activities</p></li><li><p>Locks are used to protect the objects being manipulated</p></li><li><p>A transaction will either commit or abort</p><div class="ulist"><ul><li><p>If it commits, changes are reflected on all nodes</p></li><li><p>If it aborts, no changes are made on any of the nodes</p></li></ul></div></li></ul></div></section>
+<section id="_transactions_3"><h2>Transactions</h2><div class="literalblock"><div class="content"><pre>raise_salary(EmpNo, Amount) -&gt;
+    F = fun() -&gt;
+            case mnesia:read({employee, EmpNo}) of
+                [] -&gt;
+                    {error, indata};
+                [EmpRec] -&gt;
+                    Pay = Amount + EmpRec#employee.salary,
+                    mnesia:write(EmpRec#employee{salary =
+                                                 Pay})
+           end
+         end,
+   mnesia:transaction(F).
+ 
+ </pre></div></div></section>
+<section id="_transactions_4"><h2>Transactions</h2><div class="pre plain">
+<b>9> spawn(employee, raise_salary, [2, 100]),
+9> spawn(employee, raise_salary, [2, 150]).</b>
+<0.131.0>
+<b>10> employee:print_employee(2).</b>
+Name:Francesco, Id:2, Salary:250, Dept:Erlang Systems,
+Loc:Kista, Mgr:Henrik
+ok
+</div>
+
+<svg id="transactions_example_2" style="width:420px; height:220px; position:relative; left:400px;" viewBox="0 0 420 220" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#transactions_example_2");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3_c1 = s3.circle(50,50,18).addClass("shape darkred").addClass("hide");
+s3_c2 = s3.circle(50,160,18).addClass("shape darkred").addClass("hide");
+
+s3_p1 = s3.path("M290,40 Q170,0 80,40").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s3_p2 = s3.path("M75,60 C115,115 250,100 285,100").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s3_p3 = s3.path("M290,120 Q130,110 85,145").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s3_p4 = s3.path("M75,170 Q190,200 280,175").addClass("line").attr({"marker-end":marker}).addClass("hide");
+
+s3_r1 = s3.g(s3.rect(300,20,96,56,15).addClass("shape darkred"),
+             s3.text(347,60,"0").addClass("white").attr({"text-anchor":"middle"}));
+s3_r2 = s3.g(s3.rect(300,83,96,56,15).addClass("shape darkred"),
+             s3.text(347,123,"100").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+s3_r3 = s3.g(s3.rect(300,146,96,56,15).addClass("shape darkred"),
+             s3.text(347,186,"150").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+
+s3_anim1 = function() {s3_c1.animate({"opacity":"1"}, 375, mina.linear);
+                       s3_c2.animate({"opacity":"1"}, 375, mina.linear)};
+s3_anim2 = function() {s3_p1.animate({"opacity":"1"}, 300, mina.linear, s3_anim3)};
+s3_anim3 = function() {s3_p2.animate({"opacity":"1"}, 300, mina.linear, s3_anim4)};
+s3_anim4 = function() {s3_c1.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_p1.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_p2.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_r1.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_r2.animate({"opacity":"1"}, 750, mina.linear)};
+s3_anim5 = function() {s3_p3.animate({"opacity":"1"}, 300, mina.linear, s3_anim6)};
+s3_anim6 = function() {s3_p4.animate({"opacity":"1"}, 300, mina.linear, s3_anim7)};
+s3_anim7 = function() {s3_c2.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_p3.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_p4.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_r2.animate({"opacity":"0"}, 500, mina.linear);
+                       s3_r3.animate({"opacity":"1"}, 750, mina.linear)};
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim2(); s3_counter++; break};
+    case 3: {s3_anim5(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_transactions_strong_properties_strong"><h2>Transactions: <strong>properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Atomicity</strong></dt><dd><p>A Transaction is performed in its entirety or not performed at all</p></dd><dt class="hdlist1"><strong>Consistency Preservation</strong></dt><dd><p>A Transaction will take a database from a consistent state to another</p></dd><dt class="hdlist1"><strong>Isolation</strong></dt><dd><p>Updates are not visible until the transaction has committed</p></dd><dt class="hdlist1"><strong>Durability or Permanency</strong></dt><dd><p>Once a transaction has committed, changes are considered permanent</p></dd></dl></div></section>
+<section id="_locks"><h2>Locks</h2><div class="imageblock" style=""><div class="content"><img src="images/locks.png" alt="Locks" width="1000" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Locks are put on objects being manipulated</p></li><li><p>If a lock is already set by another transaction, all other locks are released and the fun is re-executed</p></li><li><p>Transactions have to be pure, as they might be executed many times</p></li></ul></div></section>
+<section id="_locks_2"><h2>Locks</h2><div class="dlist"><dl><dt class="hdlist1"><strong>Read Lock</strong></dt><dd><p>Set only on local object</p></dd><dt class="hdlist1"><strong>Write Lock</strong></dt><dd><p>Set on all replicas of the object</p></dd><dt class="hdlist1"><strong>Table Locks</strong></dt><dd><p>Set by user on whole table</p></dd><dt class="hdlist1"><strong>Sticky Locks</strong></dt><dd><p>Used for distributed replicas</p></dd></dl></div></section>
+<section id="_locks_3"><h2>Locks</h2><div class="ulist"><ul><li><p>Atomicity and isolation are achieved through locks</p></li><li><p>Locks on objects are put automatically in transactions</p></li><li><p>Sticky locks are used for distributed tables</p><div class="ulist"><ul><li><p>Set on distributed tables which are not manipulated</p></li><li><p>Expensive to set up, but efficient to maintain</p></li><li><p>Common when nodes are used for redundancy and standby</p></li></ul></div></li></ul></div></section>
+<section id="_mnesia_2"><h2>Mnesia</h2><div class="ulist"><ul><li><p>Mnesia</p><div class="ulist"><ul><li><p>Introduction</p></li><li><p>Data Model</p></li><li><p>Starting Mnesia</p></li><li><p>Creating Tables</p></li><li><p>Transactions</p></li><li><p>Reading, Writing and Deleting</p></li><li><p>Object Manipulations</p></li><li><p>Locks</p></li></ul></div></li><li><p>Advanced Mnesia II &amp; III</p></li></ul></div></section>
+<section id="_mnesia_3"><h2>Mnesia</h2><div class="ulist"><ul><li><p>Mnesia</p></li><li><p>Advanced Mnesia I</p><div class="ulist"><ul><li><p>Matching</p></li><li><p>Dirty functions</p></li><li><p>Indexing</p></li></ul></div></li><li><p>Advanced Mnesia II</p></li></ul></div></section>
+<section id="_matching"><h2>Matching</h2><div class="ulist"><ul><li><p><strong>mnesia:match_object(RecordPattern)</strong></p></li><li><p>Matches the elements in the table with the <strong>RecordPattern</strong></p></li><li><p><strong>RecordPattern</strong> is a record whose fields are set to</p><div class="ulist"><ul><li><p><em>_</em>, which matches to anything</p></li><li><p>Bound to Erlang data types</p></li></ul></div></li><li><p>Returns a list of elements matching the pattern</p></li><li><p>If the key is a wild card, all elements will be examined</p></li><li><p>Use <strong>#RecordType{_ = '_'}</strong> to set the wild cards</p></li></ul></div></section>
+<section id="_matching_2"><h2>Matching</h2><div class="pre">manages(EmpNo) ->
+    F = fun() ->
+      mnesia:match_object(#manages{emp_no = EmpNo, _='_'})
+    end,
+    {atomic, DeptRecs} = mnesia:transaction(F),
+    lists:map(fun(#manages{dept_id = Dept}) -> Dept end,
+              DeptRecs).
+
+<b>11> employee:create_department("AV/SF", "OTP", "Alvsjo").</b>
+{atomic,ok}
+<b>12> employee:create_manager(1, "AV/SF").</b>
+{atomic,ok}
+<b>13> employee:manages(1).</b>
+["KI/ES","AV/SF"]
+</div></section>
+<section id="_matching_3"><h2>Matching</h2><div class="ulist"><ul><li><p><strong>mnesia:select(Table, MatchSpec)</strong></p></li><li><p>Low level match of objects based on match specifications</p></li><li><p>Match Specifications are:</p><div class="ulist"><ul><li><p>A program implemented as a set of Erlang Terms</p></li><li><p>Limited in functionality</p></li><li><p>Efficiently implemented in the Run Time System</p></li><li><p>Ugly!</p></li></ul></div></li><li><p>More efficient and powerful than <strong>match_object</strong></p></li><li><p>Use select before modifying objects (efficiency)</p></li></ul></div></section>
+<section id="_dirty_functions"><h2>Dirty Functions</h2><div class="literalblock centered"><div class="content"><pre>mnesia:dirty_write(Record)
+mnesia:dirty_read({Table, Key})
+mnesia:dirty_delete({Table, Key})
+mnesia:dirty_match_object(Record)
+mnesia:dirty_select(Table, MatchSpec)</pre></div></div>
+<div class="ulist"><ul><li><p>Dirty operations can be executed outside of a transaction</p></li><li><p>They do not lock objects or tables</p></li><li><p>Are more efficient as processing overhead is reduced</p><div class="ulist"><ul><li><p>The best option where performance is an issue</p></li></ul></div></li><li><p>Atomicity and isolation properties are lost</p></li></ul></div></section>
+<section id="_dirty_functions_2"><h2>Dirty Functions</h2><svg id="dirty_functions_1" style="width:1100px; height:310px;" viewBox="0 0 1100 310" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#dirty_functions_1");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.rect(10,10,1090,280).addClass("rect_code");
+
+s4.text(20,50,"19> mnesia:dirty_delete({manages, \"AV/SF\"}).").addClass("code");
+s4.text(20,90,"ok").addClass("code");
+s4.text(20,130,"20> mnesia:dirty_read({manages, \"AV/SF\"}).").addClass("code");
+s4.text(20,170,"[]").addClass("code");
+s4.text(20,210,"21> employee:manages(1).").addClass("code");
+s4.text(20,250,"[\"KI/ES\"]").addClass("code");
+
+s4.text(800,220,"Note the execution outside").addClass("darkred").attr({"text-anchor":"middle"});
+s4.text(800,255,"the scope of a transaction").addClass("darkred").attr({"text-anchor":"middle"});
+
+s4.path("M870,180 Q910,65 810,40").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Many operations do not need to execute in a transaction</p></li><li><p>Many reads where data is not manipulated can be dirty</p></li><li><p>Data manipulation which is serialised can be dirty</p><div class="ulist"><ul><li><p>If a single process does all the data manipulation, no transactions are needed</p></li></ul></div></li></ul></div></section>
+<section id="_indexing"><h2>Indexing</h2><div class="imageblock left" style=""><div class="content"><img src="images/indexing.png" alt="Indexing" width="auto" height="auto"></div></div>
+<div class="ulist right"><ul><li><p>If the key is not known, all objects must be searched</p><div class="ulist"><ul><li><p>Can be a time consuming operation for large tables</p></li></ul></div></li><li><p>Mnesia has indexing capabilities to improve data retrieval</p><div class="ulist"><ul><li><p>Allows secondary keys to be defined</p></li><li><p>Speeds up matching and data retrieval when using these keys</p></li></ul></div></li></ul></div></section>
+<section id="_indexing_2"><h2>Indexing</h2><div class="literalblock centered"><div class="content"><pre>mnesia:add_table_index(Table, Attribute)
+mnesia:create_table(Name, [{index, AttributeList}, ...])
+mnesia:index_read(Table, Key, Attribute)</pre></div></div>
+<div class="ulist"><ul><li><p>Creates a mapping between primary and secondary keys</p><div class="ulist"><ul><li><p>The mapping is stored as an ETS internal table</p></li></ul></div></li><li><p><strong>index_read/3</strong> is used to look up data using secondary keys</p></li><li><p>If defined, <strong>match_object/1</strong> will use indexes by default</p></li></ul></div></section>
+<section id="_indexing_3"><h2>Indexing</h2><svg id="indexing_1" style="width:1100px; height:550px;" viewBox="0 0 1100 550" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#indexing_1");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(10,120,"22> mnesia:add_table_index(manages, emp_no).").addClass("code darkred bold");
+s5.text(10,160,"{atomic, ok}").addClass("code");
+s5.text(10,200,"23> mnesia:index_read(manages, 1, emp_no).").addClass("code darkred bold");
+s5.text(10,240,"** exited: {aborted,no_transaction} **").addClass("code");
+s5.text(10,280,"24> F = fun() -> mnesia:index_read(manages, 1, emp_no)").addClass("code darkred bold");
+s5.text(10,320,"end.").addClass("code darkred bold");
+s5.text(10,360,"#Fun&lt;erl_eval.19.280769&gt;").addClass("code");
+s5.text(10,400,"25> mnesia:transaction(F).").addClass("code darkred bold");
+s5.text(10,440,"{atomic,[{manages,\"KI/ES\",1}]}").addClass("code");
+
+s5_g1 = s5.g(s5.text(930,30,"Executing outside").addClass("darkred").attr({"text-anchor":"middle"}),
+             s5.text(930,65,"of a transaction").addClass("darkred").attr({"text-anchor":"middle"}),
+             s5.path("M930,80 Q930,200 770,205").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s5_g2 = s5.g(s5.text(870,410,"Tuple representation").addClass("darkred").attr({"text-anchor":"middle"}),
+             s5.text(870,445,"of records").addClass("darkred").attr({"text-anchor":"middle"}),
+             s5.path("M750,435 485,400").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s5.click(function() {s5_g1.animate({"opacity":"1"}, 500, mina.linear), 1500;
+                     setTimeout( function() {s5_g2.animate({"opacity":"1"}, 500, mina.linear)}, 625)});
+
+</script>
+</svg></section>
+<section id="_advanced_mnesia_i"><h2>Advanced Mnesia I</h2><div class="ulist"><ul><li><p>Mnesia</p></li><li><p>Advanced Mnesia I</p><div class="ulist"><ul><li><p>Matching</p></li><li><p>Dirty Functions</p></li><li><p>Indexing</p></li></ul></div></li><li><p>Advanced Mnesia II</p></li></ul></div></section>
+<section id="_advanced_mnesia_ii"><h2>Advanced Mnesia II</h2><div class="ulist"><ul><li><p>Mnesia</p></li><li><p>Advanced Mnesia I</p></li><li><p>Advanced Mnesia II</p><div class="ulist"><ul><li><p>Maintenance</p></li><li><p>Other Issues</p></li><li><p>External Interfaces</p></li><li><p>Table Visualizer</p></li></ul></div></li></ul></div></section>
+<section id="_maintenance"><h2>Maintenance</h2><div class="ulist"><ul><li><p>Debug traces are set using:</p><div class="ulist"><ul><li><p><strong>mnesia:set_debug_level(Level)</strong></p></li></ul></div></li><li><p>Possible levels are:</p><div class="ulist"><ul><li><p><strong>none</strong> no trace outputs at all (default)</p></li><li><p><strong>verbose</strong> traces important system events</p></li><li><p><strong>debug</strong> traces all of the above events + debug system events</p></li><li><p><strong>trace</strong> traces all of the above events and subscribes to all mnesia table events (use with care)</p></li></ul></div></li><li><p>Events are sent to the Mnesia Event Manager in the format:</p><div class="ulist"><ul><li><p><strong>{mnesia_info, Format, Args}</strong></p></li></ul></div></li><li><p>Processes can subscribe to events using:</p><div class="ulist"><ul><li><p><strong>mnesia:subscribe(EventCategory)</strong></p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>The event types which a process can subscribe to are described in the Mnesia User&#8217;s Guide. Examples are:
+- system
+- activity
+- {table, TableName, simple},
+- &#8230;&#8203;</p></div></aside></section>
+<section id="_maintenance_2"><h2>Maintenance</h2><div class="ulist"><ul><li><p>Mnesia information is printed using mnesia:info()</p><div class="ulist"><ul><li><p>It includes memory consumption</p></li><li><p>Locks, Transactions</p></li><li><p>Etc.</p></li></ul></div></li><li><p>Mnesia schema information can be printed using:</p><div class="ulist"><ul><li><p><strong>mnesia:schema()</strong></p></li><li><p><strong>mnesia:schema(Table)</strong></p></li></ul></div></li></ul></div></section>
+<section id="_maintenance_3"><h2>Maintenance</h2><div class="ulist"><ul><li><p>For system information:</p><div class="ulist"><ul><li><p>use <strong>mnesia:system_info(Key)</strong></p></li><li><p>Provides all imaginable information on the state of Mnesia</p></li><li><p>If <strong>Key = all</strong>, returns all available information</p></li></ul></div></li><li><p>For table information:</p><div class="ulist"><ul><li><p>use <strong>mnesia:table_info(Table, Key)</strong></p></li><li><p>Provides all imaginable information on the table</p></li><li><p>If <strong>Key = all</strong>, returns all available information</p></li></ul></div></li></ul></div></section>
+<section id="_maintenance_4"><h2>Maintenance</h2><div class="pre"><b>26> mnesia:schema(employee).</b>
+-- Properties for employee table ---
+access_mode         -> read_write
+active_replicas     -> [nonode@nohost]
+arity               -> 4
+attributes          -> [emp_no,name,salary]
+checkpoints         -> []
+commit_work         -> []
+cookie              -> {{1082,19859,503000},nonode@nohost}
+disc_copies         -> [nonode@nohost]
+disc_only_copies    -> []
+frag_properties     -> []
+index               -> []
+...
+</div></section>
+<section id="_maintenance_5"><h2>Maintenance</h2><div class="literalblock"><div class="content"><pre>load_by_force       -&gt; false
+load_node           -&gt; nonode@nohost
+load_order          -&gt; 0
+load_reason         -&gt; local_only
+local_content       -&gt; false
+master_nodes        -&gt; []
+memory              -&gt; 333, ...
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_maintenance_6"><h2>Maintenance</h2><div class="literalblock centered"><div class="content"><pre>mnesia:change_table_copy_type(Tab, Node, NewType)
+mnesia:transform_table(Tab, Fun, NewAttributes)
+mnesia:move_table_copy(Tab, From, To)
+mnesia:add_table_copy(Tab, From, Type)
+mnesia:del_table_copy(Tab, Node)</pre></div></div>
+<div class="ulist"><ul><li><p>Manipulating the Schema can be done during runtime</p></li><li><p>Transform table is used during software upgrade</p><div class="ulist"><ul><li><p>Handles changes in record structure</p></li></ul></div></li><li><p>All tables can be accessed during the schema updates</p><div class="ulist"><ul><li><p>No inconsistencies will occur</p></li></ul></div></li></ul></div></section>
+<section id="_other_issues_strong_startup_strong"><h2>Other Issues: <strong>startup</strong></h2><div class="ulist"><ul><li><p><strong>mnesia:wait_for_tables(TableList, Timeout)</strong></p><div class="ulist"><ul><li><p>Loading of tables from disk or remote nodes is asynchronous</p></li><li><p>If an operation is executed when loading, an error occurs</p></li><li><p>Use wait for table when accessing tables at startup</p></li></ul></div></li><li><p><strong>mnesia:force_load_table(Table)</strong></p><div class="ulist"><ul><li><p>Force-load tables because of hardware or network faults</p></li><li><p>If the remote node eventually comes up, you might have an inconsistent database</p></li></ul></div></li></ul></div></section>
+<section id="_other_issues_strong_startup_parameters_strong"><h2>Other Issues: <strong>startup parameters</strong></h2><div class="literalblock"><div class="content"><pre>erl -mnesia debug verbose -mnesia dir /home/db/backup</pre></div></div>
+<div class="ulist"><ul><li><p>Mnesia configuration parameters can be provided at startup</p></li><li><p>Parameters include:</p><div class="ulist"><ul><li><p><strong>dir</strong> for schema and database backup location</p></li><li><p><strong>debug</strong> for the debug level</p></li><li><p><strong>autorepair</strong> flag to try and fix corrupt or badly closed files</p></li><li><p><strong>backup</strong> to define the mnesia callback module used in backups</p></li></ul></div></li><li><p>See the mnesia manual pages for all the other parameters</p></li></ul></div></section>
+<section id="_other_issues_strong_partitioned_networks_strong"><h2>Other Issues: <strong>partitioned networks</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/partitioned_networks.png" alt="Partitioned Networks" width="750" height="auto"></div></div>
+<div class="ulist"><ul><li><p>If a network fault occurs, and the same distributed table is updated on both nodes, the table becomes inconsistent</p></li><li><p>Area of research, as no solution exists to the problem</p></li><li><p>One table has to be picked and copied to the other nodes</p><div class="ulist"><ul><li><p>Updates to the other nodes will be lost</p></li></ul></div></li><li><p>Set the node to copy the tables from using:</p><div class="ulist"><ul><li><p><strong>mnesia:set_master_node(Tab, Nodes)</strong></p></li></ul></div></li></ul></div></section>
+<section id="_other_issues_strong_functionality_strong"><h2>Other Issues: <strong>functionality</strong></h2><div class="ulist"><ul><li><p>Tables can be fragmented</p><div class="ulist"><ul><li><p>Useful when dealing with huge amounts of data</p></li></ul></div></li><li><p>Checkpoints can be inserted in the database</p><div class="ulist"><ul><li><p>Guarantee the database is in a consistent state</p></li><li><p>May span a table of the whole database</p></li></ul></div></li><li><p>Ram tables can be dumped on disk</p><div class="ulist"><ul><li><p>Table can be accessed during the dump</p></li></ul></div></li><li><p>DB backups, including the schema, can be done</p></li></ul></div></section>
+<section id="_external_interfaces"><h2>External Interfaces</h2><div class="ulist"><ul><li><p>Tables can be connected to SNMP agents</p></li><li><p>By giving the snmp option when creating the tables, the table is turned into an ordered snmp table based on the MIB definitions</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>There was a CORBA interface before R12.</p></div></aside></section>
+<section id="_table_visualizer"><h2>Table Visualizer</h2><div class="ulist"><ul><li><p>A graphical tool used to examine ets and Mnesia tables</p><div class="ulist"><ul><li><p>It includes tables in connected nodes</p></li></ul></div></li><li><p>Allows creating and editing of tables</p></li><li><p>Polls the tables for changes</p><div class="ulist"><ul><li><p>Changes are visible through a colouring scheme</p></li></ul></div></li><li><p>Can view table information</p></li></ul></div></section>
+<section id="_table_visualizer_2"><h2>Table Visualizer</h2><div class="imageblock" style=""><div class="content"><img src="images/table_visualizer_1.png" alt="Table Visualizer" width="900" height="auto"></div></div>
+<div class="ulist"><ul><li><p>tv:start()</p></li></ul></div></section>
+<section id="_table_visualizer_3"><h2>Table Visualizer</h2><div class="imageblock" style=""><div class="content"><img src="images/table_visualizer_2.png" alt="Table Visualizer" width="750" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Click on the table to visualise it</p></li></ul></div></section>
+<section id="_mnesia_4"><h2>Mnesia</h2><div class="ulist left"><ul><li><p>Mnesia</p><div class="ulist"><ul><li><p>Introduction</p></li><li><p>Data Model</p></li><li><p>Starting Mnesia</p><div class="ulist"><ul><li><p>Creating tables</p></li></ul></div></li><li><p>Transactions</p></li><li><p>Object Manipulations</p></li><li><p>Locks</p></li></ul></div></li></ul></div>
+<div class="ulist right"><ul><li><p>Advanced Mnesia I</p><div class="ulist"><ul><li><p>Matching</p></li><li><p>Dirty Functions</p></li><li><p>Indexing</p></li></ul></div></li><li><p>Advanced Mnesia II</p><div class="ulist"><ul><li><p>Maintenance</p></li><li><p>Other Issues</p></li><li><p>External Interfaces</p></li><li><p>Table Visualizer</p></li></ul></div></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

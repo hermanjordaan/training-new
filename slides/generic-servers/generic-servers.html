@@ -396,32 +396,32 @@ s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 500, mina.linear, s7_anim
 s7_anim2 = function() { s7_g2.animate({"opacity":"1"}, 500, mina.linear, s7_anim3); }
 s7_anim3 = function() { s7_g3.animate({"opacity":"1"}, 500, mina.linear, s7_anim4); }
 s7_anim4 = function() { s7_g4.animate({"opacity":"1"}, 500, mina.linear); }
-6
+
 s7.click(function() { s7_anim1() });
 
 </script>
 </svg></section>
 <section id="_termination_3"><h2>Termination</h2><svg id="termination_2" style="width:1000px; height:420px;" viewBox="0 0 1000 420" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">.line2 {stroke: #4B5056;} .fill2 {fill: #4B5056;}</style>
+<style type="text/css">#termination_2 .line2 {stroke: #4B5056;} .fill2 {fill: #4B5056;}</style>
 <script>
 
-var s9 = Snap("#termination_2");
+var s8 = Snap("#termination_2");
 
-var arrow = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s9_g1 = s9.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform("t400 -80 r25");
+s8_g1 = s8.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform("t400 -80 r25");
 
-s9.circle(510,120,40).addClass("shape grey");
-s9_g2 = s9.path("M510,220 l0,80").addClass("line hide").attr({"marker-end":marker});
-s9_g3 = s9.g(s9.text(140,350,"Mod:terminate(Reason, State)").addClass("code"),
-		s9.path("M660,340 l100,0").addClass("line").attr({"marker-end":marker}),
-		s9.text(800,350,"Term").addClass("code")).addClass("hide");
+s8.circle(510,120,40).addClass("shape grey");
+s8_g2 = s8.path("M510,220 l0,80").addClass("line hide").attr({"marker-end":marker});
+s8_g3 = s8.g(s8.text(140,350,"Mod:terminate(Reason, State)").addClass("code"),
+    s8.path("M660,340 l100,0").addClass("line").attr({"marker-end":marker}),
+    s8.text(800,350,"Term").addClass("code")).addClass("hide");
 
-s9_anim1 = function() { s9_g1.animate({"opacity":"1"}, 750, mina.linear, s9_anim2); }
-s9_anim2 = function() { s9_g2.animate({"opacity":"1"}, 500, mina.linear, s9_anim3); }
-s9_anim3 = function() { s9_g3.animate({"opacity":"1"}, 500, mina.linear); }
-s9.click(function() { s9_anim1() });
+s8_anim1 = function() { s8_g1.animate({"opacity":"1"}, 750, mina.linear, s8_anim2); }
+s8_anim2 = function() { s8_g2.animate({"opacity":"1"}, 500, mina.linear, s8_anim3); }
+s8_anim3 = function() { s8_g3.animate({"opacity":"1"}, 500, mina.linear); }
+s8.click(function() { s8_anim1() });
 
 </script>
 </svg>

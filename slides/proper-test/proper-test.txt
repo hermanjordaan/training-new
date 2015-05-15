@@ -1,0 +1,1097 @@
+Property-Based Testing
+======================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Property-Based Testing
+----------------------
+* Principles
+* Using PropEr
+* Unit Tests Vs. Property-based Tests
+* Shrinking Strategies
+* Gathering Statistics
+* Other Tools
+
+
+Principles
+----------
+++++
+<div class="left">
+<div class="pre">sort([]) -> [];
+sort([H|T]) ->
+  sort([X || X <- T, X < H])
+  ++ [H] ++
+  sort([X || X <- T, X > H]).
+
+tests() ->
+  [1,2,3] = sort([1,3,2]),
+  true = sort([3,7,2]) =:= 
+         sort(sort([3,7,2])).
+
+%% fails with [1,1], but tests
+%% will <b>pass</b>!
+
+</div></div>
+++++
+
+[role="right"]
+* Writing good unit tests is difficult
+* Programmer assumptions can leave scenarios untested, even with 100% coverage
+* Corner cases are often forgotten or sometimes hard to predict
+
+
+Principles
+----------
+* Define properties and invariants that a tested function should satisfy in every use case
+* Let the test framework generate test data to run against all properties and invariants
+* Tests can be ran with thousands of different inputs, generated automatically
+* Helps uncovering corner cases and faulty specifications by dynamically generating more tests than what could be written by hand
+
+
+Using PropEr
+------------
+* PropEr is a property-based test framework inspired by QuickCheck
+* Uses *properties*, which are general tests or invariants that should be respected
+* Lets you define *generators*, giving you control of the distribution of the input generated for properties
+* Failing cases can be reduced to simple expressions that highlight why properties or invariants were broken. This is called *shrinking*.
+
+
+Using PropEr: *structure*
+-------------------------
+++++
+<div style="text-align:center; margin-top:100px;">
+<svg id="using_proper_structure_1" style="width:590px; height:410px;" viewBox="0 0 590 410" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#using_proper_structure_1");
+
+var arrow = s1.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.rect(10,10,260,60,12).addClass("shape line").attr({"stroke-width":"2px"});
+s1.text(140,50,"PropEr").addClass("middle");
+
+s1_g1 = s1.g(s1.path("M245,70 l0,73").addClass("line").attr({"marker-end":marker}),
+             s1.text(275,120,"Runs properties").addClass("darkred")).addClass("hide");
+
+s1_g2 = s1.g(s1.rect(10,150,260,60,12).addClass("shape line").attr({"stroke-width":"2px"}),
+             s1.text(140,190,"Properties").addClass("middle")).addClass("hide");
+
+s1_g3 = s1.g(s1.path("M245,210 l0,73").addClass("line").attr({"marker-end":marker}),
+             s1.text(275,260,"Use generators' data").addClass("darkred")).addClass("hide");
+
+s1_g4 = s1.g(s1.rect(10,290,260,60,12).addClass("shape line").attr({"stroke-width":"2px"}),
+             s1.text(140,330,"Generators").addClass("middle")).addClass("hide");
+
+s1_g5 = s1.g(s1.path("M270,310 C370,350 250,450 220,357").addClass("line").attr({"marker-end":marker}),
+             s1.text(450,360,"Can be built with").addClass("darkred middle"),
+             s1.text(450,395,"other generators").addClass("darkred middle")).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 375, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 375, mina.linear, s1_anim4); }
+s1_anim4 = function() { s1_g4.animate({"opacity":"1"}, 375, mina.linear, s1_anim5); }
+s1_anim5 = function() { s1_g5.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim3(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+++++
+
+
+Using PropEr
+------------
+* Test modules must include the *proper.hrl* header
+* 3 modules are available:
+** *proper* provides functions to write properties and tests.
+** *proper_gen* contains functions to write generators, used to create randomised input to test functions
+** *proper_symb* lets create generators, but also lets PropEr understand how the generator is built to better shrink results.
+* Much of the interface to the modules is accessible through macros in *proper.hrl*. Functions from the 3 modules are all automatically imported.
+
+
+Using Proper: *running tests*
+-----------------------------
+++++
+<svg id="using_proper_running_tests_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#using_proper_running_tests_1");
+
+var arrow = s2.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(10,40,"1> proper:module(demo).").addClass("code darkred bold");
+s2.text(10,80,"prop_one: ").addClass("code");
+s2.text(10,120,"........................................................").addClass("code");
+s2.text(10,160,"OK, passed 100 tests").addClass("code");
+s2.text(10,200,"prop_two: ").addClass("code");
+s2.text(10,240,"........................................................").addClass("code");
+s2.text(10,280,"OK, passed 100 tests").addClass("code");
+
+s2_g1 = s2.g(s2.text(735,68,"finds all functions of the module").addClass("darkred middle"),
+             s2.text(735,103,"beginning in prop_*").addClass("darkred middle"),
+             s2.path("M580,95 l-345,-38").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_g2 = s2.g(s2.text(735,350,"Runs randomised versions of the").addClass("darkred middle"),
+             s2.text(735,385,"test 100 times").addClass("darkred middle"),
+             s2.path("M535,320 l-290,-145").addClass("line_darkred").attr({"marker-end":marker}),
+             s2.path("M535,320 l-280,-30").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g1.animate({"opacity":"0"}, 250, mina.linear); s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Using PropEr: *running tests*
+-----------------------------
+++++
+<svg id="using_proper_running_tests_2" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#using_proper_running_tests_2");
+
+var arrow = s3.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(10,40,"1> proper:module(demo).").addClass("code darkred bold");
+s3.text(10,80,"prop_one: ").addClass("code");
+s3.text(10,120,"........................................................").addClass("code");
+s3.text(10,160,"OK, passed 100 tests").addClass("code");
+s3.text(10,200,"prop_two: ").addClass("code");
+s3.text(10,240,"........................................................").addClass("code");
+s3.text(10,280,"OK, passed 100 tests").addClass("code");
+s3.text(10,320,"2> proper:module(demo).").addClass("code darkred bold");
+s3.text(10,360,"prop_one: ").addClass("code");
+s3.text(10,400,"........................................................").addClass("code");
+s3.text(10,440,"OK, passed 100 tests").addClass("code");
+s3.text(10,480,"prop_two:").addClass("code");
+s3.text(10,520,".................................Failed! After 96 tests.").addClass("code");
+s3.text(10,560,"418").addClass("code");
+
+s3_g1 = s3.g(s3.text(735,68,"Randomised inputs means the").addClass("darkred middle"),
+             s3.text(735,106,"tests do not always give the").addClass("darkred middle"),
+             s3.text(735,144,"same results").addClass("darkred middle"),
+             s3.path("M795,154 l40,330").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g2 = s3.g(s3.text(660,330,"The faulty input is shown").addClass("darkred middle"),
+             s3.text(660,368,"after the failing case").addClass("darkred middle"),
+             s3.path("M660,378 l-575,165").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_g1.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 2: {s3_g1.animate({"opacity":"0"}, 375, mina.linear); s3_g2.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Using PropEr: *running tests*
+-----------------------------
+++++
+<div class="left w_700">
+<div class="pre"><b>3> proper:quickcheck(demo:prop_two()).</b>
+.....................................
+OK, passed 100 tests
+true
+
+<b>4> proper:quickcheck(proper:numtests(300, demo:prop_two())).</b>
+.........................................
+..........................Failed! After 162 tests.
+418
+false
+
+</div></div>
+++++
+
+[role="right w_400"]
+* The function *proper:quickcheck/1* allows to run each property individually
+* Using *proper:numtests/2* on a property allows to set the number of tests to be run, if necessary
+
+[NOTE.speaker]
+[role="speaker"]
+--
+At this point, have the students compile Accounts/quickcheck/demo.erl and try to run these functions and the examples before
+--
+
+
+Using PropEr: *properties*
+--------------------------
+++++
+<div class="left w_600">
+<div class="pre">prop_reverse() ->
+  <b>?FORALL(</b>Xs<b>,</b> list(int())<b>,</b>
+    lists:reverse(
+      lists:reverse(Xs)) == Xs<b>)</b>.
+
+prop_fib() ->
+  ?FORALL(I, nat(),
+   <b>?IMPLIES(</b>I > 2<b>,</b>
+    fib(I) =:= 
+    fib(I-1) + fib(I-2)<b>)</b>).
+
+prop_fail() ->
+  ?FORALL(I, nat(),
+   <b>?WHENFAIL(</b>io:format("Woops")<b>,</b>
+     I < 3<b>)</b>).
+
+</div></div>
+++++
+
+[role="right"]
+* The *?FORALL(Var, Generator, Prop)* macro tests that *Prop* is true for all values extracted from *Generator*.
+* The *?IMPLIES(Pre, Prop)* macro only tests *Prop* when the precondition *Pre* is successful.
+* *?WHENFAIL(Action, Prop)* will execute *Action* whenever *Prop* fails.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Might want to describe the \'fails/1' function for tests that should fail at some point
+Get the students to do the related exercise on writing properties.
+--
+
+
+Using PropEr: *generators*
+--------------------------
+....
+1> proper_gen:sample(proper_gen:int()).
+7 -9 3 1 3 15 -15 -4 16 6 5
+ok
+2> proper_gen:sample(proper_gen:choose(1,100)).
+88 35 52 35 41 97 4 9 26 54 59
+ok
+ 
+....
+
+* Generators denote a set of values that can be created
+* Generators can control the probability distribution of values that will be created
+* They contain a mechanism to shrink values if a test fails
+* The function *proper_gen:sample/1* prints 11 random values from a generator.
+
+
+Using PropEr: *generators*
+--------------------------
+*binary(), binary(Size)*::
+Returns binaries of random or *Size* size (in bytes). the functions *bitstring()* and *bitstring(Size)* do the same, but in bits.
+
+*bool()*::
+Creates a random boolean
+
+*char()*::
+Creates a random character
+
+*choose(Min,Max)*::
+Selects integer values in the range of *Min* to *Max*.
+
+
+Using PropEr: *generators*
+--------------------------
+*default(X, Generator)*::
+Adds a default value to a generator. It should be chosen about half the time.
+
+*elements(List)*::
+Chooses values from *List*.
+
+*int()*::
+Generates small integers. The generator *largeint/0* should be used for larger integers.
+
+*list(Generator)*
+Generates lists of elements returned by *Generator*.
+
+
+Using PropEr: *generators*
+--------------------------
+*nat()*::
+Generates small natural numbers
+
+*real()*::
+Generates real numbers
+
+*shuffle(List)*
+Returns a shuffled version of the *List* list.
+
+*vector(Length, Generator)*::
+Generates vectors of length *Length* with values obtained from *Generator* to fill it.
+
+
+Using PropEr: *generators*
+--------------------------
+*resize(N, Generator)*::
+If Generator calls other generators like *int/0* and *nat/0*, and changes the range of results obtained to tend towards *N*.
+
+*frequency([{Weight, Generator}])*::
+Selects an element from a generator chosen randomly with probability proportional to its weight. Weights should be non-negative integers.
+
+*oneof([Generator])*::
+Generates a value using a randomly chosen generator from the list.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+After this slide, let the students take on the generators exercise
+--
+
+
+Using PropEr: *generator macros*
+--------------------------------
+++++
+<div class="left">
+<div class="pre">zip() ->
+  <b>?LET(</b>{L1,L2}, 
+       {vector(10,nat()),
+        vector(10,binary())}<b>,</b>
+        lists:zip(L1,L2)<b>)</b>.
+
+even() ->
+  <b>?SUCHTHAT(</b>L<b>,</b> list(nat())<b>,</b>
+            each_even(L)<b>)</b>.
+
+<b>recurse()</b> ->
+  <b>?LAZY(</b>oneof(
+    [[], [int()|<b>recurse()</b>]]
+  )<b>)</b>.
+
+</div></div>
+++++
+
+[role="right"]
+* *?LET(Pat, G1, G2)* will take values created by *G1*, will assign them in *Pat* and use them with *G2* to create a new generator.
+* *?SUCHTHAT(X, G, Pre)* will take values from *G*, assign them to *X* and only return them if the precondition *Pre* is true.
+* *?LAZY(Gen)* allows to evaluate *Gen* in constant time and get termination
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Do the exercise on Generator Macros, followed by the exercise on protocol testing
+--
+
+PropEr: *tests as specifications*
+---------------------------------
+[role="left w_600"]
+....
+prop_alphanumeric() ->
+  ?FORALL(S, string(),
+    ?IMPLIES(S =/= "",
+     is_alphanumeric(slug(S)))).
+
+
+prop_no_dash_sequence() ->
+  ?FORALL(S, string(),
+   ?IMPLIES(S =/= "",
+    begin
+      Slug = slug(S),
+      has_no_dash_sequence(Slug)
+    end)).
+
+ 
+....
+
+[role="right"]
+* "Design a piece of code that allows its users to 'sluggify' a string
+* A slug should contain only alphanumeric characters and hyphens (*—*)
+* A slug should not contain consecutive hyphens
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that TDD properties can be translated into QuickCheck properties to be used in a TDD concept. The exercise on TDD with quickcheck can be given.
+--
+
+
+Unit Tests vs. Property-based Tests
+-----------------------------------
+[role="left comparison darkred"]
+Unit Tests::
+* Unit Tests require the programmer to think of all corner cases and explicitly formulate them
+* Tests are static and repeatable
+* Tests are usually more verbose because you need more to cover all of the code. Makes it hard to write tests first.
+
+[role="right comparison darkred"]
+Property-based Tests::
+* Property-based tests might eventually hit corner cases the programmer hadn't planned for  
+* There is no guarantee that  a specific input will be provided all the time
+* Badly written generators might cause tests to run for a long time before generating interesting data
+
+
+Unit Tests vs. Property-based Tests
+-----------------------------------
+[role="left"]
+....
+swap([A,B|Rest]) ->
+    [B,A|swap(Rest)];
+swap(L) when is_list(L) -> L.
+
+unit_test() ->
+    "" = swap(""),
+    "c" = swap("c"),
+    "abab" = swap("baba"),
+    "ababc" = swap("babac"),
+    ok.
+ 
+....
+
+[role="right"]
+* Unit tests describe what *swap/1* does explicitly with example input and output
+* The function is simple; we assume the tests cover it well.
+
+
+Unit Tests vs. Property-based Tests
+-----------------------------------
+[role="left"]
+....
+swap([A,B|Rest]) ->
+    [B,A|swap(Rest)];
+swap(L) when is_list(L) -> L.
+
+prop_swap() ->
+    numtests(1000,
+     ?FORALL(L, list(char()),
+      is_swapped(L,swap(L)))).
+
+is_swapped([A,B|Xs],[B,A|Ys]) ->
+    is_swapped(Xs,Ys);
+is_swapped(L,L) when length(L) =< 1 -> 
+    true;
+is_swapped(_,_) -> false.
+ 
+....
+
+[role="right"]
+* The implementation of *is_swapped/2* is similar to *swap/1*.
+* Both implementations could be wrong, no simple way to know it but to add more tests
+
+
+Unit Tests vs. Property-based Tests
+-----------------------------------
+* Tests for many different inputs without too much code
+* It is probable that property-based tests will uncover more corner cases
+* Assumptions about the code had to be formalised rather than expressed through examples
+* Will give better code coverage
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Do the exercises the slug properties
+--
+
+
+Shrinking Strategies: *symbolic calls*
+--------------------------------------
+++++
+<div class="pre">prop_x() -> ?FORALL(D, <b>dict()</b>, some_failing_property(D)).
+
+<b>dict()</b> ->
+  ?LAZY(
+    oneof([dict:new(),
+           ?LET(D,dict(), dict:store(int(), int(), D))])).
+
+</div>
+++++
+
+
+* Generates a random dictionary
+* When the property test fails, the resulting dictionary is output to the screen
+
+
+Shrinking Strategies: finding an error
+--------------------------------------
+++++
+<svg id="shrinking_strategies_finding_an_error_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#shrinking_strategies_finding_an_error_1");
+
+var arrow = s4.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.text(10,40,"6> proper:quickcheck(dict_test:prop_x()).").addClass("code");
+s4.text(10,80,"..........................................................").addClass("code");
+s4.text(10,120,"...............................Failed! Reason: ").addClass("code");
+s4.text(10,160,"{dict,4,16,16,8,80,48,").addClass("code");
+s4.text(10,200,"      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},").addClass("code");
+s4.text(10,240,"      {{[],[],[],[],[],[],[],[],[],[],[],").addClass("code");
+s4.text(10,280,"        [[0|-8],[-8|0],[-5|9],[-4|-9]],").addClass("code");
+s4.text(10,320,"        [],[],[],[]}}}").addClass("code");
+s4.text(10,360,"After 67 tests.").addClass("code");
+s4.text(10,400,"false").addClass("code");
+
+s4.path("M620,405 l-110,-105").addClass("line_darkred").attr({"marker-end":marker});
+s4.text(750,410,"Reading the data").addClass("darkred middle");
+s4.text(750,445,"structure is not easy").addClass("darkred middle");
+
+</script>
+</svg>
+++++
+
+
+Shrinking Strategies: *finding an error*
+----------------------------------------
+* The data structure contains the information on why it failed
+* It doesn't tell us how the failing condition was obtained
+* Some cases are difficult to track
+** Being able to see what calls were made to build the dictionary could help
+** PropEr provides a way to list and shrink the calls that were made named *symbolic calls*.
+
+
+Shrinking Strategies: *symbolic calls*
+--------------------------------------
+*Symbolic call*::
+A call of the form *{call, Module, Function, ArgList]}*. The call is not evaluated until the *eval/1* function is called.
+
+*eval(Call)*::
+Evaluates the symbolic call *Call*.
+
+*eval(PropList, Call)*::
+Evaluates the symbolic call *Call* with the variable definitions in *PropList*. The call *eval([{x,7}], {call, erlang, is_number,[{var,x}]})* evaluates to *true*.
+
+
+Shrinking Strategies: *symbolic calls*
+--------------------------------------
+++++
+<div class="pre">prop_x() -> 
+  ?FORALL(D, dict(), some_failing_property(<b>eval(</b>D<b>)</b>)).                                                                                            
+dict() ->                                                                  
+  ?LAZY(                                                                 
+    oneof([<b>{call, dict, new, []}</b>,
+           <b>{call, dict, store, [</b>int(), int(), dict()<b>]}</b>])).
+
+</div>
+++++
+
+* By using a symbolic generator, *?LET* is no longer needed
+* A call *eval(Gen)* is required in order to use the symbolic generator in an actual test
+* The calls with *{call, Mod, Fun, [Args]}* are reduced to a single expression when the tests run, but can be expanded if it fails
+
+
+Shrinking Strategies: *symbolic calls*
+--------------------------------------
+++++
+<svg id="shrinking_strategies_symbolic_calls_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#shrinking_strategies_symbolic_calls_1");
+
+var arrow = s5.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(10,40,"1> proper:quickcheck(dict_test:prop_x()).").addClass("code darkred bold");
+s5.text(10,80,"...................Failed! After 20 tests.").addClass("code");
+s5.text(10,120,"{call,dict,store,").addClass("code");
+s5.text(10,160,"      [5,1,").addClass("code");
+s5.text(10,200,"       {call,dict,store,[6,2,{call,dict,store,[6,-3,").addClass("code");
+s5.text(10,240,"        {call,dict,new,[]}]}]}]}").addClass("code");
+s5.text(10,280,"Shrinking.......(7 times)").addClass("code");
+
+s5.text(10,360,"{call,dict,store,").addClass("code");
+s5.text(10,400,"      [1,0,").addClass("code");
+s5.text(10,440,"       {call,dict,store,[1,0,{call,dict,store,[6,0,").addClass("code");
+s5.text(10,480,"        {call,dict,new,[]}]}]}]}").addClass("code");
+s5.text(10,520,"false").addClass("code");
+
+s5_g1 = s5.g(s5.text(800,320,"Likely the problem value!").addClass("darkred middle"),
+             s5.path("M800,330 l35,75").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s5.click( function() {s5_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Emphasise the call stack being shrunken by QuickCheck. Easy to go through the calls manually to inspect random cases.
+Mention that symbolic calls are a good way to use side-effecting functions in generators
+
+Exercise on symbolic representation here
+--
+
+
+Symbolic Calls: *example*
+-------------------------
+++++
+<svg id="symbolic_calls_example_1" style="width:600px; height:650px;" viewBox="0 0 600 650" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s6 = Snap("#symbolic_calls_example_1");
+
+var arrow = s6.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.rect(10,5,600,635).addClass("rect_code");
+
+s6.text(20,40,"-module(zipper_lists).").addClass("code");
+s6.text(20,79,"...").addClass("code");
+s6.text(20,118,"new() -> {[], []}.").addClass("code");
+s6.text(20,157,"insert(V,{L,R})-> {L,[V|R]}.").addClass("code");
+
+s6.text(20,235,"prev({[], _Post}) -> undefined;").addClass("code");
+s6.text(20,274,"prev({[H|T], Post}) ->").addClass("code");
+s6.text(20,313,"    {T,[H|Post]}.").addClass("code");
+s6.text(20,352,"").addClass("code");
+s6.text(20,391,"next({_Pre, []}) -> undefined;").addClass("code");
+s6.text(20,430,"next({Pre, [H|T]}) ->").addClass("code");
+s6.text(20,469,"    {[H|Pre], T}.").addClass("code");
+s6.text(20,508,"").addClass("code");
+s6.text(20,547,"current({_, []}) -> undefined;").addClass("code");
+s6.text(20,586,"current({_, [Current|_]}) ->").addClass("code");
+s6.text(20,625,"    {ok,Current}.").addClass("code");
+
+s6_g1_1 = s6.g(s6.circle(150.5,263,15).addClass("line_darkred").attr({"stroke-width":"2.5px"}),
+             s6.path("M145,277 C126,350 150,350 165,324").addClass("line_darkred").attr({"marker-end":marker}));
+
+s6_g1_2 = s6.g(s6.circle(238.25,419,15).addClass("line_darkred").attr({"stroke-width":"2.5px"}),
+             s6.path("M243,433 C275,510 160,510 140,480").addClass("line_darkred").attr({"marker-end":marker}));
+
+s6_g1 = s6.g(s6_g1_1, s6_g1_2).addClass("hide");
+
+s6.click( function() {s6_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* A zipper list is a list that can be navigated from left to right and from right to left
+* The history of seen element is moved from one of the two lists to the other
+** This allows a simple way to browse back and forth within the structure
+
+
+Symbolic Calls: *example*
+-------------------------
+++++
+<div class="pre"><span class="comment">%% Generates random movement through the zipper</span>
+move(Z) ->
+  ?LAZY(frequency([
+    {1, Z},
+    {3, ?LET(Zip, move(Z), {call, ?MODULE, prev, [Zip]})},
+    {3, ?LET(Zip, move(Z), {call, ?MODULE, next, [Zip]})}
+  ])).
+
+</div>
+++++
+
+
+* The generator accepts an existing zipper and will build a symbolic list of calls that represent someone browsing through the data structure
+
+
+Symbolic Calls: *example*
+-------------------------
+....
+%% Test going to the next point
+prop_next() ->
+    Z = {[3,2,1], [4,5,6]},
+    ?FORALL(Move, move(Z),
+        is_tuple(current(eval(Move)))).
+ 
+....
+
+The property tests that the random movement is possible
+
+++++
+<div class="pre">2> proper:module(zipper_lists).
+prop_next: ........Failed! After 9 tests.
+{call,zipper_lists,<b>next</b>,
+   [{call,zipper_lists,<b>next</b>,
+      [{call,zipper_lists,<b>next</b>,[{[3,2,1],<b>[4,5,6]</b>}]}]}]}
+[prop_next]
+
+</div>
+++++
+
+
+Symbolic Calls: *example*
+-------------------------
+++++
+<svg id="symbolic_calls_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#symbolic_calls_example_2");
+
+var arrow = s7.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.text(40,40,"2> proper:module(zipper_lists).").addClass("code");
+s7.text(40,80,"prop_next: ........Failed! After 9 tests.").addClass("code");
+s7.text(40,120,"{call,zipper_lists,next,").addClass("code");
+s7_g4_g3 = s7.text(40,120,"                   next").addClass("code darkred bold");
+s7.text(40,160,"   [{call,zipper_lists,next,").addClass("code");
+s7_g3_g3 = s7.text(40,160,"                       next").addClass("code darkred bold");
+s7.text(40,200,"      [{call,zipper_lists,next,[{[3,2,1],[4,5,6]}]}]}]}").addClass("code");
+s7_g2_g3 = s7.text(40,200,"                          next").addClass("code darkred bold");
+s7.text(40,240,"[prop_next]").addClass("code");
+
+s7_g4_g4 = s7.text(447,107,"3").addClass("darkred bold").attr({"font-size":"17"});
+s7_g3_g4 = s7.text(517,145,"2").addClass("darkred bold").attr({"font-size":"17"});
+s7_g2_g4 = s7.text(564,180,"1").addClass("darkred bold").attr({"font-size":"17"});
+
+s7_g1_g1 = s7.text(620,330,"{[3,2,1], [4,5,6]}").addClass("code");
+s7_g2_g1 = s7.text(620,380,"{[4,3,2,1], [5,6]}").addClass("code");
+s7_g3_g1 = s7.text(620,430,"{[5,4,3,2,1], [6]}").addClass("code");
+s7_g4_g1 = s7.text(613,480,"{[6,5,4,3,2,1], []}").addClass("code");
+
+s7_g2_g2 = s7.text(965,350,"1").addClass("darkred bold");
+s7_g3_g2 = s7.text(965,400,"2").addClass("darkred bold");
+s7_g4_g2 = s7.text(965,450,"3").addClass("darkred bold");
+
+s7_g1_g2 = s7.text(260,320,"We can use the symbolic calls to").addClass("darkred middle");
+s7_g1_g3 = s7.text(260,355,"find the reason why the test failed").addClass("darkred middle");
+
+s7_g5 = s7.g(s7.text(60,540,"The call to current/1 fails").addClass("darkred"),
+             s7.path("M435,532 850,532 Q900,530 908,498").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s7_g1 = s7.g(s7_g1_g1, s7_g1_g2, s7_g1_g3).addClass("hide");
+s7_g2 = s7.g(s7_g2_g1, s7_g2_g2, s7_g2_g3, s7_g2_g4).addClass("hide");
+s7_g3 = s7.g(s7_g3_g1, s7_g3_g2, s7_g3_g3, s7_g3_g4).addClass("hide");
+s7_g4 = s7.g(s7_g4_g1, s7_g4_g2, s7_g4_g3, s7_g4_g4).addClass("hide");
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_g1.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 2: {s7_g2.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 3: {s7_g3.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 4: {s7_g4.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 5: {s7_g5.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Remind students that without symbolic calls, it is hard to know why something failed
+--
+
+
+Shrinking Strategies
+--------------------
+* A test for the function *string:tokens/2*
+* Assumes that a tokenised string will be split in one more parts than there are token, e.g. *"axf da"* with the token *" "* gives *["axf", "da"]*.
+* The character and the string are generated randomly
+* Using *begin ... end* allows to use many expressions as the proposition.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+string:tokens/2 can take more than one character in its list, but we'll focus on using only one for now
+--
+
+
+Shrinking Strategies
+--------------------
+++++
+<svg id="shrinking_strategies_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#shrinking_strategies_1");
+
+var arrow = s8.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s8.text(10,40,"prop_split() ->").addClass("code");
+s8.text(10,80,"  ?FORALL({C,S}, {char(),          (list(char()))},").addClass("code");
+s8.text(10,80,"                          non_empty").addClass("code darkred bold");
+s8.text(10,120,"      length(string:tokens(S,[C])) == count(C,S)).").addClass("code");
+
+s8.text(10,200,"count(Char, [Char]) -> 0; ").addClass("code");
+s8.text(10,240,"count(Char,String) -> count(Char,String, {Char,1}).").addClass("code");
+
+s8.text(10,320,"count(_, [], {_,N}) -> N;").addClass("code");
+s8.text(10,360,"count(C, [C], {_,N}) -> N;").addClass("code");
+s8.text(10,400,"count(C, [C|T], Acc = {C,_}) -> count(C, T, Acc);").addClass("code");
+s8.text(10,440,"count(C, [C|T], {_Prev,N}) -> count(C, T, {C,N+1});").addClass("code");
+s8.text(10,480,"count(C, [H|T], {_,N}) -> count(C, T, {H,N}).").addClass("code");
+
+s8_g1 = s8.g(s8.text(520,195,"String is token").addClass("darkred"),
+             s8.path("M510,188 l-163,-2").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s8_g2 = s8.g(s8.text(490,300,"Last character is token").addClass("darkred"),
+             s8.path("M480,292 l-250,53").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s8_g3 = s8.g(s8.text(610,355,"Two in a row").addClass("darkred"),
+             s8.path("M600,345 l-383,45").addClass("line_darkred").attr({"marker-end":marker}),
+             s8.path("M600,345 l-162,42").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s8_g4 = s8.g(s8.text(970,350,"Must count").addClass("darkred middle"),
+             s8.text(970,385,"this one!").addClass("darkred middle"),
+             s8.path("M885,365 l-57,52").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s8_g5 = s8.g(s8.text(280,530,"Regular character").addClass("darkred"),
+             s8.path("M270,520 l-72,-30").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_g1.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 2: {s8_g1.animate({"opacity":"0"}, 250, mina.linear); s8_g2.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 3: {s8_g2.animate({"opacity":"0"}, 250, mina.linear); s8_g3.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 4: {s8_g3.animate({"opacity":"0"}, 250, mina.linear); s8_g4.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 5: {s8_g4.animate({"opacity":"0"}, 250, mina.linear); s8_g5.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Not 100% necessary to explain what this does. Can just mention that you have a solution to the proposition and that we want to know how reliable it is
+--
+
+
+Shrinking Strategies
+--------------------
+....
+1> proper:module(str).                                      
+prop_split: ....................................................................................................
+OK, passed 100 tests
+ 
+....
+
+* The tests pass
+* No certainty as to what tests are passing
+* Finding out what they are can help generate more meaningful input for each test
+
+
+Gathering Statistics
+--------------------
+....
+prop_split() ->
+  ?FORALL({C,S}, {char(), non_empty(list(char()))},
+    collect({[C],S},
+      length(string:tokens(S,[C])) == count(C,S))).
+ 
+ 
+....
+
+using *collect/2* allows to find what kind of results are obtained: 
+
+....
+1% {[254],[141,186]}
+1% {[252],[153,229]}
+1% {[251],[166]}
+...
+1% {[249],[253,221,169,104]}
+1% {[249],[32]}
+ 
+....
+
+
+Gathering Statistics
+--------------------
+++++
+<div class="pre">prop_split() ->
+  ?FORALL({C,S}, {char(), non_empty(list(char()))},
+    collect(<b>num_tokens</b>(C,S),
+      length(string:tokens(S,[C])) == count(C,S))).
+
+<b>num_tokens</b>(C,S) -> length([1 || X <- S, C == X]).
+
+</div>
+++++
+
+*num_tokens/2* lets us know how many times a token appears: 
+
+++++
+<div class="pre"><svg id="gathering_statistics_1" style="width:1000px; height:250px;" viewBox="0 0 1000 250" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#gathering_statistics_1");
+
+var arrow = s9.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s9.text(10,40,"1> proper:quickcheck(str:prop_split()).").addClass("code");
+s9.text(10,80,"..........................................................").addClass("code");
+s9.text(10,120,"..........................................").addClass("code");
+s9.text(10,160,"OK, passed 100 tests").addClass("code");
+s9.text(10,200,"99% 0").addClass("code darkred bold");
+s9.text(10,240,"1% 1").addClass("code darkred bold");
+
+s9_g1 = s9.g(s9.text(510,210,"Almost always tests").addClass("darkred middle"),
+             s9.text(510,245,"the same case!").addClass("darkred middle"),
+             s9.path("M390,225 l-262,-32").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s9.click( function() {s9_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg></div>
+++++
+
+
+Gathering Statistics
+--------------------
+....
+prop_split() ->
+  ?FORALL({C,S}, str_token(),
+    collect(num_tokens(C,S),
+      length(string:tokens(S,[C])) == count(C,S))).
+
+str_token() -> {$a,non_empty(list(choose($a, $m)))}.
+....
+
+Using generator *str_token/0* to make repetitions more probable:
+
+++++
+<div class="pre"><svg id="gathering_statistics_2" style="width:1080px; height:250px;" viewBox="0 0 1080 250" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#gathering_statistics_2");
+
+s10.text(10,40,"1> proper:quickcheck(proper:numtests(1000,str:prop_split())).").addClass("code");
+s10.text(10,80,"...........................").addClass("code");
+s10.text(10,120,"Failed! After 27 tests.").addClass("code");
+s10.text(10,160,"{97,\"bka\"}").addClass("code");
+s10.text(10,200,"Shrinking..(2 times)").addClass("code");
+s10.text(10,240,"{97,\"aa\"}").addClass("code");
+
+s10_g1 = s10.g(s10.text(850,140,"New errors are ").addClass("darkred middle"),
+               s10.text(850,180,"found!").addClass("darkred middle")).attr({"font-size":"26pt"}).addClass("hide");
+
+s10.click( function() {s10_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg></div>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Explain the probabilities behind the new choice in generator to make things easier to follow
+--
+
+
+Gathering Statistics
+--------------------
+++++
+<svg id="gathering_statistics_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s11 = Snap("#gathering_statistics_3");
+
+var arrow = s11.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s11.text(10,40,"count(Char, String) ->").addClass("code");
+s11.text(10,80,"    case drop_ends(Char, String) of").addClass("code");
+s11.text(10,120,"      [] -> 0;").addClass("code");
+s11.text(10,160,"      S  -> count(Char, S, {Char, 1})").addClass("code");
+s11.text(10,200,"    end.").addClass("code");
+
+s11.text(10,280,"drop_ends(C, S) ->").addClass("code");
+s11.text(10,320,"    Same = fun(X) -> C == X end,").addClass("code");
+s11.text(10,360,"    S2 = lists:dropwhile(Same, S),").addClass("code");
+s11.text(10,400,"    lists:dropwhile(Same, lists:reverse(S2)).").addClass("code");
+
+s11.text(10,480,"%% Same count as earlier").addClass("code");
+s11.text(10,520,"count(_, [], {_,N}) -> ...").addClass("code");
+
+s11_g1 = s11.g(s11.text(730,240,"Fixes the problem of many").addClass("darkred middle"),
+               s11.text(730,275,"tokens at the beginning or").addClass("darkred middle"),
+               s11.text(730,310,"end of string").addClass("darkred middle"),
+               s11.path("M535,250 l-271,-158").addClass("line_darkred").attr({"marker-end":marker}),
+               s11.path("M535,250 l-182,15").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s11.click( function() {s11_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Don't need to go into the details, just mention that this is a fix that solves the problem s the code had. Important things in next slide
+--
+
+
+Gathering Statistics
+--------------------
+[role="left"]
+....
+82> proper:quickcheck(proper:numtests(1000,str:prop_split())).
+.......................................................................................
+OK, passed 1000 tests
+69% 0
+22% 1
+5% 2
+1% 3
+0% 5
+0% 4
+....
+
+[role="right"]
+* The bugs are fixed
+* The distribution of tests is now saner
+* The distribution of the input's randomness helps focus tests on finding new bugs or making the appearance of a bug more frequent
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Distribution is not perfect, but much more reliable.
+Suggest doing the advanced exercises?
+IF the students want to see another real-world use case, you can guide them through the min-binary heap exercise and solution.
+--
+
+
+Other Tools
+-----------
+*PropEr*::
+Also QuickCheck-inspired. Distributed under GPL Version 3 or later. 
+
+*QuickCheck*::
+comes in a commercial version, or a free closed source version called QuickCheck Mini.
+
+*Triq*::
+API modelled closely after QuickCheck, but the latter has many features not found in Triq (reporting, management, C integration, better shrinking). Under the Apache license. 
+
+[NOTE.speaker]
+[role="speaker"]
+--
+QuickCheck: http://quviq.com/
+Triq: https://github.com/krestenkrab/triq
+Proper: https://github.com/manopapad/proper
+--
+
+
+Property-Based Testing
+----------------------
+* Principles
+* Using PropEr
+* Unit Tests Vs. Property-based Tests
+* Shrinking Strategies
+* Gathering Statistics
+* Other Tools

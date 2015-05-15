@@ -1,0 +1,339 @@
+Mobile Frequency Server
+=======================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Client Server Models
+--------------------
+++++
+<svg id="client_server_models_1" style="width:620px; height:600px;" viewBox="0 0 620 600" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s1 = Snap("#client_server_models_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(410,60,"Clients").addClass("code darkred bold");
+s1.circle(100,50,40).addClass("shape grey");
+s1.circle(300,100,40).addClass("shape grey");
+s1.circle(460,200,40).addClass("shape grey");
+s1.circle(560,350,40).addClass("shape grey");
+
+s1.circle(70,500,40).addClass("shape darkred");
+s1.text(20,580,"Server").addClass("code darkred bold");
+
+s1.text(100,330,"request").addClass("code");
+s1.path("M410,215 l-307.5,240").attr({"marker-end":marker}).addClass("line");
+
+s1.text(270,420,"reply").addClass("code");
+s1.path("M120,490 l310,-245").attr({"marker-end":marker}).addClass("line");
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* Processes can be used to implement client server solutions
+* A server is usually responsible for providing a service or handling a resource
+* Clients are the processes which use these resources
+
+
+Client Server Models
+--------------------
+++++
+<div style="text-align:center;">
+<svg id="client_server_models_2" style="width:840px; height:240px;" viewBox="0 0 840 240" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#client_server_models_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(50,40,"Client").addClass("code darkred bold");
+s2.circle(100,100,40).addClass("shape grey");
+
+s2_g1_1 = s2.text(250,60,"{request, Request}").addClass("code");
+s2_g1_2 = s2.path("M160,80 l500,0").attr({"marker-end":marker}).addClass("line");
+
+s2_g2_1 = s2.text(285,160,"{reply, Reply}").addClass("code");
+s2_g2_2 = s2.path("M665,120 l-500,0").attr({"marker-end":marker}).addClass("line");
+
+s2.text(672,40,"Server").addClass("code darkred bold");
+s2.circle(725,100,40).addClass("shape darkred");
+
+s2_g1 = s2.g(s2_g1_1, s2_g1_2).addClass("hide");
+s2_g2 = s2.g(s2_g2_1, s2_g2_2).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 500, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 500, mina.linear); }
+s2.click(function() { s2_anim1() });
+
+</script>
+</svg>
+</div>
+++++
+
+* Clients make requests to the server through message passing
+* Message passing is often hidden in functional interfaces
+* If the client using the service needs a reply to the request, the call to the server has to be *synchronous*
+* If the client does not need a reply, the call to the server can be *asynchronous*
+
+
+A Server Example
+----------------
+[role="left w_600"]
+image::images/server_example.png["A Server Example", auto, auto]
+
+[role="right w_500"]
+* The following server is responsible for allocating and de-allocating frequencies on behalf of mobile phones
+
+
+A Server Example
+----------------
+++++
+<svg id="server_example_2" style="width:1070px; height:570px;" viewBox="0 0 1070 570" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#server_example_2");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s3.text(20,80,"Client");
+s3.path("M60,100 l0,440").attr({"marker-end":marker}).addClass("line").attr({"stroke-width":"5px"});
+
+s3.text(955,80,"Server").addClass("darkred");
+s3.path("M1000,100 l0,440").attr({"marker-end":marker_red}).addClass("line_darkred").attr({"stroke-width":"5px"});
+
+s3_g1 = s3.text(150,150,"{request, Pid, allocate}").addClass("code hide");
+s3.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line");
+s3_g2 = s3.path("M980,170 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+
+s3_g3 = s3.text(110,230,"{reply,{error,no_frequencies} or {ok,Frequency}}").addClass("code hide");
+s3.path("M965,250 l-870,0").attr({"marker-end":marker}).addClass("line");
+s3_g4 = s3.path("M85,250 l900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s3_g5 = s3.text(120,360,"{request, Pid, {deallocate, Frequency}}").addClass("code hide");
+s3.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line");
+s3_g6 = s3.path("M980,380 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s3_g7 = s3.text(750,440,"{reply, ok}").addClass("code hide");
+s3.path("M965,460 l-870,0").attr({"marker-end":marker}).addClass("line");
+s3_g8 = s3.path("M85,460 l900,0").addClass("draw").attr({"strokeDasharray":900});
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 375, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim3); }
+s3_anim3 = function() { setTimeout( function() { s3_g3.animate({"opacity":"1"}, 375, mina.linear, s3_anim4)}, 250) };
+s3_anim4 = function() { s3_g4.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim5); }
+s3_anim5 = function() { setTimeout( function() { s3_g5.animate({"opacity":"1"}, 375, mina.linear, s3_anim6)}, 250) };
+s3_anim6 = function() { s3_g6.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim7); }
+s3_anim7 = function() { setTimeout( function() { s3_g7.animate({"opacity":"1"}, 375, mina.linear, s3_anim8)}, 250) };
+s3_anim8 = function() { s3_g8.animate({"strokeDashoffset":"900"}, 625, mina.linear); }
+s3.click(function() { s3_anim1() });
+
+</script>
+</svg>
+++++
+
+
+A Server Example
+----------------
+[role="plain"]
+....
+-module(frequency).
+-export([start/0, stop/0,  allocate/0, deallocate/1]).
+-export([init/0]).
+
+start() ->
+    register(frequency, spawn(frequency, init, [])).
+
+init() ->
+    Frequencies = {get_frequencies(), []},
+    loop(Frequencies).
+
+get_frequencies() -> [10,11,12,13,14,15].
+
+....
+
+
+A Server Example
+----------------
+[role="plain"]
+....
+stop()           -> call(stop).
+allocate()       -> call(allocate).
+deallocate(Freq) -> call({deallocate, Freq}).
+
+%% We hide all message passing and the
+%% message protocol in functional interfaces.
+call(Message) ->
+    frequency ! {request, self(), Message},
+    receive 
+	     {reply, Reply} -> Reply
+    end.
+
+reply(Pid, Message) ->
+    Pid ! {reply, Message}.
+....
+
+
+A Server Example
+----------------
+[role="left w_800"]
+....
+loop(Frequencies) ->
+  receive
+    {request, Pid, allocate} ->
+       {NewFrequencies,Reply} =
+          allocate(Frequencies,Pid),  
+       reply(Pid, Reply),
+       loop(NewFrequencies);
+    {request, Pid , {deallocate, Freq}} ->
+       NewFrequencies =
+          deallocate(Frequencies, Freq),
+       reply(Pid, ok),
+       loop(NewFrequencies);
+    {request, Pid, stop} ->
+       reply(Pid, ok)
+    end.
+....
+
+[role="right w_300"]
+* Frequency data in loop variable
+* Messages are explicit
+** request
+** pid of sender
+** service required
+* Loop again with updated frequency data
+
+
+A Server Example
+----------------
+[role="left w_800"]
+....
+%% Help functions used to allocate and
+%% deallocate frequencies.
+
+allocate({[], Allocated}, Pid) ->
+    {{[], Allocated},
+          {error, no_frequency}};
+allocate({[Freq|Free], Allocated}, Pid) ->
+    {{Free, [{Freq, Pid}|Allocated]},
+     {ok, Freq}}.
+
+deallocate({Free, Allocated}, Freq) ->
+    NewAllocated =
+      lists:keydelete(Freq, 1, Allocated),
+    {[Freq|Free],  NewAllocated}.
+....
+
+[role="right w_300"]
+* A pair of lists models free and allocated frequencies.
+* Return the new pair plus a message with the result.
+* Deallocation succeeds, assuming the Freq was already allocated.
+
+
+Finite State Machines
+---------------------
+++++
+<svg id="finite_state_machines_1" style="width:580px; height:400px; margin-right:50pt;" viewBox="0 0 580 400" preserveAspectRatio="xMinYMin meet" class="left">
+<style type="text/css">svg {font-size:20pt;}</style>
+<script>
+
+var s4 = Snap("#finite_state_machines_1");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s4.circle(110,200,40).addClass("shape grey");
+s4.text(60,290,"State 1").addClass("darkred bold");
+
+s4.circle(510,200,40).addClass("shape grey");
+s4.text(460,290,"State 2").addClass("darkred bold");
+
+s4_g1_1 = s4.path("M70,200 c-40,-20 -20,-70 25,-44").attr({"marker-end":marker}).addClass("line_darkred");
+s4_g1_2 = s4.text(15,135,"Event 1");
+
+s4_g2_1 = s4.path("M137,170 q160,-90 338,0").attr({"marker-end":marker}).addClass("line_darkred");
+s4_g2_2 = s4.text(260,165,"Event 2");
+
+s4_g3_1 = s4.path("M483,230 q-170,90 -338,0").attr({"marker-end":marker}).addClass("line_darkred");
+s4_g3_2 = s4.text(260,255,"Event 3");
+
+s4_g1 = s4.g(s4_g1_1, s4_g1_2).addClass("hide");
+s4_g2 = s4.g(s4_g2_1, s4_g2_2).addClass("hide");
+s4_g3 = s4.g(s4_g3_1, s4_g3_2).addClass("hide");
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_g1.animate({"opacity":"1"}, 600, mina.linear); s4_counter++; break};
+    case 2: {s4_g2.animate({"opacity":"1"}, 600, mina.linear); s4_counter++; break};
+    case 3: {s4_g3.animate({"opacity":"1"}, 600, mina.linear); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* Processes can be used to implement finite state machines
+* Each state is represented as a tail recursive function
+* Each event is represented as an incoming message
+* Each state transition is achieved by calling the function denoting the new state
+
+
+Finite State Machines: *example*
+--------------------------------
+
+[role="plain left w_400"]
+....
+idle() ->
+   receive
+      {A, incoming} ->
+         start_ringing(),
+         ringing(A);
+      {A, off_hook} ->
+         start_tone(),
+         dial(A)
+   end.
+....
+
+[role="right w_700"]
+image::images/fsm_example.png["FSM Example", auto, auto]
+
+
+Event Handlers
+--------------
+* Processes can be used to implement event handlers
+* A handler will receive a specific type of event
+** Alarms
+** Equipment state changes
+** Errors
+* When an event is received, one or more functions are applied on the event
+* Some or all of these actions can be enabled and disabled during run time
+
+
+Event Handlers: *example*
+-------------------------
+image::images/event_handlers.png["Event Handlers: Example", auto, auto]
+
+* Alarm managers are implemented as event handlers

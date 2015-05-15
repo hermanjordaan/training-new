@@ -1,0 +1,327 @@
+Query List Comprehensions
+=========================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Query List Comprehensions
+-------------------------
+* Query Handles
+* Evaluation
+* Cursors
+
+
+Introduction
+------------
+* QLC provides an[other] interface to query tables
+* Works for Mnesia, ETS and DETS tables
+** Can easily be used on proprietary data types
+* Similar to List Comprehensions
+** Variables in patterns may not be reused in expressions
+* Intended as a replacement of Mnemosyne
+* QLCs evaluate to Query Handles that are evaluated
+
+
+Query List Comprehensions
+-------------------------
+++++
+<svg id="query_list_comprehensions_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#query_list_comprehensions_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(150,240,"Handle = qlc:q([X || X <- mnesia:table(employee),").addClass("code");
+s1.text(150,280,"                X#employee.salary > 50000]).").addClass("code");
+
+s1_g1 = s1.g(s1.text(100,130,"Query Generator").addClass("darkred"),
+             s1.path("M210,145 l150,60").addClass("line_darkred").attr({"marker-end":marker}));
+s1_g2 = s1.g(s1.text(390,130,"Template").addClass("darkred"),
+             s1.path("M450,145 l-10,50").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g3 = s1.g(s1.text(685,130,"Generator").addClass("darkred"),
+             s1.path("M763,145 l0,55").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g4 = s1.g(s1.text(540,400,"Filter").addClass("darkred"),
+             s1.path("M575,370 l25,-70").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"0"}, 250, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim3 = function() { s1_g2.animate({"opacity":"0"}, 250, mina.linear, s1_anim4); }
+s1_anim4 = function() { s1_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim5 = function() { s1_g3.animate({"opacity":"0"}, 250, mina.linear, s1_anim6); }
+s1_anim6 = function() { s1_g4.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim3(); s1_counter++; break};
+    case 3: {s1_anim5(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Query List Comprehensions
+-------------------------
+....
+qlc:q([Template || Generator1, ..., GeneratorN,
+                   Filter1, ..., FilterN]).
+ 
+ 
+ 
+ 
+ 
+....
+
+* *Template* is a valid Erlang expression
+** May not contain function calls
+* Generators of the form *Pattern \<- ListExpression*
+** ListExpression evaluates to a list or a query handle
+* Filters are functions returning *true* or *false*
+* Must include *qlc.hrl* in the code. Use:
+** *-include_lib("stdlib/include/qlc.hrl").*
+
+
+Query List Comprehensions
+-------------------------
+....
+qlc:q([Template || Generator1, ..., GeneratorN,
+                   Filter1, ..., FilterN]).
+ 
+ 
+ 
+ 
+ 
+....
+
+* Options:
+** *{max_lookup, Max}* limits the number of keys looked up (rare)
+** *cache | {cache, bool()}*: caching of evaluation results in an ETS table, used for sub-queries
+** *unique | {unique, bool()}*: duplicate answers are removed
+
+
+QLC: *example*
+--------------
+++++
+<div class="pre">
+<b>15> Q = qlc:q([ X || X <- mnesia:table(employee),
+                     X#employee.salary >= 50000])</b>.
+{qlc_handle,{qlc_lc,#Fun&lt;erl_eval.20.26901802&gt;
+{qlc_opt,false,false,-1}}}
+<b>16> Q1 = qlc:q([X#employee.name||
+                X <- mnesia:table(employee),                                                                 
+                X#employee.salary < 10000]).</b>
+{qlc_handle,{qlc_lc,#Fun&lt;erl_eval.20.26901802&gt;,
+               {qlc_opt,false,false,-1}}}
+
+
+
+
+</div>
+++++
+
+Query Handles
+-------------
+[role="centered"]
+....
+qlc:append(QH1, QH2)
+qlc:sort(QH [,Options])
+mnesia:table(Table [,Options])
+....
+
+* *append/2* returns a handle that returns the answer to QH1 followed by those returned by QH2
+* *sort/1-2* sorts the answers to QH1 in lexicographic order
+* *table/1-2* returns the elements in the table
+
+
+Query Handles: *example*
+------------------------
+++++
+<div class="pre"><b>17> Rich = qlc:q([X || X <- mnesia:table(employee), 
+                    X#employee.salary > 50000]),
+    Poor = qlc:q([X || X <- mnesia:table(employee), 
+                      X#employee.salary < 10000]),
+    RichAndPoor = qlc:sort(qlc:append(Rich, Poor)).</b>
+{qlc_handle, ... }
+
+
+
+
+
+
+
+</div>
+++++
+
+
+Evaluation
+----------
+++++
+<svg id="evaluation_1" style="width:1100px; height:280px;" viewBox="0 0 1100 280" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#evaluation_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.rect(10,10,1090,250).addClass("rect_code")
+s2.text(540,150,"mnesia:transaction(fun() -> qlc:eval(Query) end).").addClass("code").attr({"text-anchor":"middle"});
+
+s2_g1 = s2.g(s2.text(420,50,"Query Evaluator").addClass("darkred"),
+             s2.path("M530,65 l130,50").addClass("line_darkred").attr({"marker-end":marker}));
+
+s2.click(function(){s2_g1.animate({"opacity":"0"}, 375, mina.linear)})
+
+</script>
+</svg>
+++++
+
+* Evaluates a Query Handle in a Mnesia transaction
+* Returns all the answers in a list
+** In the format *{atomic, [Answer]}*
+
+
+Evaluation: *Example*
+---------------------
+++++
+<div class="pre"><b>17> Rich = qlc:q([X || X <- mnesia:table(employee), 
+                    X#employee.salary > 50000]),
+    Poor = qlc:q([X || X <- mnesia:table(employee), 
+                      X#employee.salary < 10000]),
+    RichAndPoor = qlc:sort(qlc:append(Rich, Poor)).</b>
+{qlc_handle, ... }
+<b>18> mnesia:transaction(fun() -> qlc:eval(RichAndPoor)
+end).</b>
+   {atomic,[#employee{emp_no = 1,  
+                      name = "Henrik", 
+                      salary = 100000},
+            #employee{emp_no = 2, 
+                      name = "Francesco", 
+                      salary = 250}]}
+
+</div>
+++++
+
+
+Evaluation
+----------
+[role="centered"]
+....
+qlc:eval(QueryHandle)
+qlc:eval(QueryHandle, Options)
+....
+
+* Returns the list of all the answers to the query handle
+* The options:
+** *cache_all, {cache_all, bool()}*: cache results of sub queries that might be reevaluated
+** *unique_all, {unique_all, bool()}*: remove duplicates
+
+
+Cursors
+-------
+++++
+<svg id="cursors_1" style="width:1100px; height:280px;" viewBox="0 0 1100 280" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#cursors_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.rect(10,10,1090,250).addClass("rect_code")
+s3.text(540,150,"mnesia:transaction(fun() -> qlc:cursor(Query) end).").addClass("code").attr({"text-anchor":"middle"});
+
+s3_g1 = s3.g(s3.text(438,50,"Query Cursor").addClass("darkred"),
+             s3.path("M530,65 l130,50").addClass("line_darkred").attr({"marker-end":marker}));
+
+s3.click(function(){s3_g1.animate({"opacity":"0"}, 375, mina.linear)})
+
+</script>
+</svg>
+++++
+
+* Creates a query cursor in a Mnesia transaction
+* Returns *{atomic, [Cursor]}*
+
+
+Cursors
+-------
+* The cursor functions returns a cursor that can be used to iterate over the answers to the query
+* The Cursor is a process that is spawned
+* The options:
+** *cache_all, {cache_all, bool()}* – cache results of sub queries that might be reevaluated
+** *unique_all, {unique_all, bool()}* – remove duplicates
+** *{spawn_opts, SpawnOpts}* – *erlang:spawn_opt* arguments for memory management
+
+
+Cursors
+-------
+[role="centered"]
+....
+qlc:next_answers(Cursor [, NumberOfAnswers])
+qlc:delete_cursor(Cursor)
+....
+
+* *next_answers/1-2* returns a list of some or all of the answers. *NumberofAnswers* determines how many answers are returned, default 10
+* *delete_cursor/1* deletes the cursor
+* The functions can only be invoked by the owner of the cursor
+
+
+Cursors: *example*
+------------------
+++++
+<svg id="cursors_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#cursors_example_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.rect(10,15,1090,600).addClass("rect_code")
+
+s3.text(20,50,"15> All = qlc:q([X | | X <- mnesia:table(employee)]). ").addClass("code darkred bold");
+s3.text(20,90,"{qlc_handle, ...}").addClass("code");
+s3.text(20,130,"16> mnesia:transaction(fun() -> qlc:cursor(All) end).").addClass("code darkred bold");
+s3.text(20,170,"{atomic, {qlc_cursor, {<0.110.0>, <0.107.0>}}}").addClass("code");
+s3.text(20,210,"17> mnesia:transaction(").addClass("code darkred bold");
+s3.text(20,250,"           fun() -> C = qlc:cursor(All), ").addClass("code darkred bold");
+s3.text(20,290,"                        qlc:next_answers(C, 1),").addClass("code darkred bold");
+s3.text(20,330,"                        qlc:next_answers(C, 2),").addClass("code darkred bold");
+s3.text(20,370,"                        qlc:next_answers(C, all_remaining) ").addClass("code darkred bold");
+s3.text(20,410,"           end).").addClass("code darkred bold");
+s3.text(20,450,"{atomic, [#employee{emp_no = 4, name = \"Klas\", 45000},").addClass("code");
+s3.text(20,490,"          #employee{emp_no = 5, name = \"Ola\", 45000}]}").addClass("code");
+
+s3_g1 = s3.g(s3.text(870,230,"Times out").addClass("darkred"),
+             s3.path("M892,195 l-30,-35").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s5.click(function() {s5_g1.animate({"opacity":"1"}, 500, mina.linear), 1500;
+                     setTimeout( function() {s5_g2.animate({"opacity":"1"}, 500, mina.linear)}, 625)});
+
+</script>
+</svg>
+++++
+
+
+Query List Comprehensions
+-------------------------
+* Query Handles
+* Evaluation
+* Cursors

@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Parse Transforms</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Parse Transforms</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_the_problem"><h2>The Problem</h2><div class="ulist"><ul><li><p>Sometimes you need to work with code during compilation</p></li><li><p>Macros provide a very restricted way of doing this</p><div class="ulist"><ul><li><p>Using -ifdef and defining macros when running the compiler gives a limited control of compilation</p></li></ul></div></li><li><p>To get full control you need Parse Transforms</p></li></ul></div></section>
+<section id="_macros"><h2>Macros</h2><div class="literalblock"><div class="content"><pre>-ifdef(debug).
+-define(SYS_DEBUG(Format, Args), io:format(Format, Args).
+-endif.
+-define(SYS_DEBUG(Format, Args), ok).
+-endif.
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Can control <em>which</em> macro definition is used</p><div class="ulist"><ul><li><p>But only by checking which macros have been defined</p></li></ul></div></li><li><p>Cannot generate code, only use static code alternatives</p></li></ul></div></section>
+<section id="_parse_transforms"><h2>Parse Transforms</h2><div class="ulist"><ul><li><p>Work on the full Abstract Syntax Tree of the module to generate a new AST</p></li><li><p>Allow you to make any changes to the code</p><div class="ulist"><ul><li><p>As long as the resultant AST is valid</p></li></ul></div></li><li><p>Allow running multiple parse transforms</p><div class="ulist"><ul><li><p>So each transform need only do one thing</p></li></ul></div></li><li><p>Can be complex to code</p></li></ul></div></section>
+<section id="_parse_transforms_strong_compiler_sequence_strong"><h2>Parse Transforms: <strong>compiler sequence</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/compiler_sequence.png" alt="Compiler Sequence" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Parse transforms are run <em>after</em> the code has been parsed but <em>before</em> the code is checked</p></li><li><p>Parse transforms can only transform already syntactically correct Erlang code</p></li></ul></div></section>
+<section id="_parse_transforms_strong_invoking_strong"><h2>Parse Transforms: <strong>invoking</strong></h2><div class="literalblock"><div class="content"><pre>-module(foo).
+
+%% Declare parse transforms.
+
+-compile([{parse_transform,bar_transform}]).
+ 
+ </pre></div></div>
+<div class="paragraph"><p><br>
+</p></div>
+<div class="literalblock"><div class="content"><pre>-module(bar_transform).
+
+-export([parse_transform/2]).
+
+parse_transform(Forms, Options) -&gt;
+    forms(Forms, Options).
+ 
+ </pre></div></div></section>
+<section id="_abstract_syntax"><h2>Abstract Syntax</h2><div class="ulist"><ul><li><p>Top level forms</p><div class="ulist"><ul><li><p><code>{attribute,LINE,module,Module}.</code></p></li><li><p><code>{attribute,LINE,export,[{Fun,Arity},&#8230;&#8203;]}.</code></p></li><li><p><code>{attribute,LINE,import,{Module,[{Fun,Arity},&#8230;&#8203;]}.</code></p></li><li><p><code>{attribute,LINE,record,{Name,[Field,&#8230;&#8203;]}.</code></p></li><li><p><code>{attribute,LINE,Attribute,Value}.</code></p></li><li><p><code>{function,LINE,Name,Arity,[Clause,&#8230;&#8203;]}.</code></p></li></ul></div></li><li><p>Expressions</p><div class="ulist"><ul><li><p><code>{op,LINE,Operator,Arg}</code></p></li><li><p><code>{op,LINE,Operator,Lhs,Rhs}</code></p></li><li><p><code>{case,LINE,Expression,[Clause,&#8230;&#8203;]}</code></p></li><li><p><code>{clause,LINE,[Pattern],Guard,[Expression,&#8230;&#8203;]}</code></p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Everything at the top level is a <strong>form</strong></p></div></aside></section>
+<section id="_abstract_syntax_2"><h2>Abstract Syntax</h2><div class="ulist"><ul><li><p>Data constructors</p><div class="ulist"><ul><li><p><code>{cons,LINE,Head,Tail}</code></p></li><li><p><code>{nil,LINE}</code></p></li><li><p><code>{tuple,LINE,[Element,&#8230;&#8203;]}</code></p></li></ul></div></li><li><p>Atomic literals</p><div class="ulist"><ul><li><p><code>{integer,LINE,Int}</code></p></li><li><p><code>{float,LINE,Float}</code></p></li><li><p><code>{string,LINE,Chars}</code></p></li><li><p><code>{atom,LINE,Atom}</code></p></li><li><p><code>{var,LINE,Name}</code></p></li></ul></div></li></ul></div></section>
+<section id="_abstract_syntax_3"><h2>Abstract Syntax</h2><div class="ulist"><ul><li><p>For a complete description of the Erlang Abstract Syntax</p><div class="ulist"><ul><li><p><a href="http://erlang.org/doc/apps/erts/absform.html" class="bare">http://erlang.org/doc/apps/erts/absform.html</a></p></li></ul></div></li><li><p>The erl_id_trans.erl module is an identity transformation</p><div class="ulist"><ul><li><p><a href="http://erlang.org/doc/man/erl_id_trans.html" class="bare">http://erlang.org/doc/man/erl_id_trans.html</a></p></li></ul></div></li></ul></div></section>
+<section id="_parse_transform_tools"><h2>Parse Transform Tools</h2><div class="ulist"><ul><li><p>erl_syntax</p><div class="ulist"><ul><li><p>libraries for building abstract syntax</p></li></ul></div></li><li><p>parse_trans</p><div class="ulist"><ul><li><p>tools for writing parse_transforms</p></li></ul></div></li><li><p>exprecs</p><div class="ulist"><ul><li><p>tool for building module interface to records</p></li><li><p><a href="https://github.com/uwiger/parse_trans" class="bare">https://github.com/uwiger/parse_trans</a></p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>erl_syntax is part of the standard release</p></div></aside></section>
+<section id="_parse_trans"><h2>Parse_trans</h2><div class="ulist"><ul><li><p>Abstracts away traversing the AST, done by parse_trans</p><div class="ulist"><ul><li><p>Only need to specify which syntax elements to work with and what they should be transformed to</p></li></ul></div></li><li><p><code>parse_trans:plain_transform(TransFun, Forms)</code></p><div class="ulist"><ul><li><p><code><em>TransFun</em></code> is applied to every syntax element, returns</p></li><li><p><code><em>NewForm</em></code> - transform element to a new element</p></li><li><p><code><em>continue</em></code> - treat this element in the general way</p></li><li><p><code><em>{done,NewForm}</em></code> - abort all future transformation</p></li><li><p><code><em>{error,Reason}</em></code> - generate an error</p></li></ul></div></li></ul></div></section>
+<section id="_parse_trans_2"><h2>Parse_trans</h2><div class="literalblock"><div class="content"><pre>parse_transform(Forms, _Options) -&gt;
+    parse_trans:plain_transform(fun do_transform/1, Forms).
+
+%% gproc(Name) ! Msg becomes gproc:send(Name, Msg).
+
+do_transform({op,LINE,’!’,{call,_,{atom,_,gproc},[Name]},Msg)-&gt;
+    [NewName] = parse_trans:plain_trans(fun do_transform/1,
+                                        [Name]),
+    [NewMsg] = parse_trans:plain_trans(fun do_transform/1,
+                                       [Msg]),
+    Func = {remote,LINE,{atom,LINE,gproc},{atom,LINE,send}},
+    {call,LINE,Func,[NewName,NewMsg]};
+do_transform(_Form) -&gt;
+    continue.</pre></div></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

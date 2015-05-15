@@ -1,0 +1,1415 @@
+Maintenance and Debugging
+=========================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Maintenance and Debugging
+-------------------------
+* Code Coverage
+* Refactoring with Wrangler
+* Trace Tool Builder Extended
+* Log Analysis with Exago
+* Type Checking Erlang
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Have the students building the PLT before starting the course:
+$ dialyzer --build_plt --apps kernel stdlib erts
+Should take less than 10 minutes with HiPE, up to 1 hour without it.
+--
+
+
+Code Coverage
+-------------
+* Measure of the degree to which source code has been tested
+* Can tell what lines (or branches) of code have or have not been tested
+* Higher coverage means more confidence in the test cases of a project
+* 100% coverage doesn't guarantee that all possible inputs have been verified
+
+
+Code Coverage: *cover module*
+-----------------------------
+* Counts coverage based on executable lines of code: blank lines, function heads, patterns in *case ... end* and *receive ... end* are not counted
+* Coverage analysis requires modules to be *cover compiled*. 
+* No file is modified, each time a function is called, information is kept in an internal database
+* Coverage analysis can be ran on multiple nodes at once
+* Can be integrated to Common Test
+
+
+Code Coverage: cover compiling
+------------------------------
+*compile_module(Module '::' atom() | string())*::
+Compiles a single module for code coverage. A second argument containing compiling options can be passed.
+
+*compile_directory(Dir :: string())*::
+Compiles all modules found in *Dir* for code coverage.
+
+*compile_beam(Module :: atom() | string())*::
+Finds an existing *.beam* file and compiles it for code coverage. The module must have been compiled with *debug_info*.
+
+*compile_beam_directory(Dir :: string())*::
+Compiles all *.beam* files found in *Dir* for code coverage.
+
+
+Code Coverage: *example*
+------------------------
+....
+fifo_test() ->
+    {4, Queue} = pop(push(push(push(new(), 4),5),6)),
+    {5, _} = pop(Queue),
+    false = empty(Queue),
+    true = empty(new()).
+ 
+ 
+....
+
+* Will implement a First In First Out (FIFO) data structure, or a queue.
+* The first element *pushed* on the queue is the first one that can be *popped* from it.
+* A queue can be tested for emptiness.
+
+
+Code Coverage: *example*
+------------------------
+[role="plain"]
+....
+-module(fifo).
+-compile(export_all).
+
+new() -> {fifo, [], []}.
+
+push({fifo, In, Out}, X) -> {fifo, [X|In], Out}.
+
+pop({fifo, [], []}) -> erlang:error('empty fifo');
+pop({fifo, In, []}) -> pop({fifo, [], lists:reverse(In)});
+pop({fifo, In, [H|T]}) -> {H, {fifo, In, T}}.
+
+empty({fifo, [], []}) -> true;
+empty({fifo, _, _}) -> false.
+....
+
+
+Code Coverage: *example*
+------------------------
+++++
+<svg id="code_coverage_example" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#code_coverage_example");
+
+var arrow = s1.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(10,80,"1> c(fifo, [debug_info]).").addClass("code");
+s1.text(10,120,"{ok,fifo}").addClass("code");
+s1.text(10,160,"2> cover:start().").addClass("code");
+s1.text(10,200,"{ok,<0.38.0>}").addClass("code");
+s1.text(10,240,"3> cover:compile_module(fifo).").addClass("code");
+s1.text(10,280,"{ok,fifo}").addClass("code");
+s1.text(10,320,"4> fifo:fifo_test().").addClass("code");
+s1.text(10,360,"true").addClass("code");
+s1.text(10,400,"5> cover:analyse(fifo).").addClass("code");
+s1.text(10,440,"{ok,[{{fifo,new,0},{1,0}}, {{fifo,push,2},{1,0}},").addClass("code");
+s1.text(10,480,"     {{fifo,pop,1},{2,1}}, {{fifo,empty,1},{2,0}},").addClass("code");
+s1.text(10,520,"     {{fifo,fifo_test,0},{4,0}}]}").addClass("code");
+
+s1_g1 = s1.g(s1.text(680,40,"A list of nodes can be").addClass("darkred middle"),
+             s1.text(680,75,"passed for distributed").addClass("darkred middle"),
+             s1.text(680,110,"cover analysis").addClass("darkred middle"),
+             s1.path("M560,99 l-260,44").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g2 = s1.g(s1.text(560,300,"Lines Covered").addClass("darkred middle"),
+             s1.path("M560,310 l-178,105").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.path("M560,310 l195,100").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g3 = s1.g(s1.text(865,300,"Not covered").addClass("darkred middle"),
+             s1.path("M895,310 l-85,95").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.path("M895,310 l-63,139").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g4 = s1.g(s1.text(465,570,"Untested code!").addClass("darkred"),
+             s1.path("M455,560 l-40,-67").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.circle(404,469.5,18).addClass("line_darkred")).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g1.animate({"opacity":"0"}, 250, mina.linear); s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 3: {s1_g2.animate({"opacity":"0"}, 250, mina.linear); s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 4: {s1_g3.animate({"opacity":"0"}, 250, mina.linear); s1_g4.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Code Coverage: *example*
+------------------------
+Reports can be generated as files. Same test run with +cover:analyse_to_file(fifo, "index.html", [html]).+
+
+image::images/code_coverage_example_1.png["Code Coverage: Example", auto, auto]
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that by re-cover-compiling a module, you can have the stats dropped for it and start from scratch
+--
+
+
+Refactoring with Wrangler
+-------------------------
+* Available in ErlIDE and Emacs
+** The Emacs version is more advanced
+* Rename variables, modules and functions
+* Extract and generalise functions
+* Locate and remove code clones and duplicates
+* Supports EUnit, Common Test and Quickcheck, so tests are refactored automatically with the rest of the code
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Wrangler page and videos: http://www.cs.kent.ac.uk/projects/wrangler/Home.html 
+Use C^C C^R to start Wrangler in Emacs -- Instruction to start it in ErlIDE are already there.
+--
+
+
+Refactoring with Wrangler: *renaming*
+-------------------------------------
+....
+-module(s).
+-export([s/0, d/0]).
+
+s() -> register(p, spawn(s,l,[])).
+l() -> receive {Pid, M} -> Pid ! M, l().
+ 
+ 
+....
+
+Two modules calling each other. The function names are not clear
+
+....
+-module(c).
+-export([f/0]).
+
+f() -> s:s().
+ 
+ 
+ 
+....
+
+
+Refactoring with Wrangler: *renaming*
+-------------------------------------
+++++
+<svg id="refactoring_with_wrangler_renaming_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#refactoring_with_wrangler_renaming_1");
+
+var arrow = s2.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.image("images/renaming_1.png",450,30);
+s2.image("images/renaming_2.png",60,250);
+s2.image("images/renaming_3.png",60,396);
+
+s2_g1 = s2.g(s2.text(230,65,"Cursor at the beginning of").addClass("darkred middle"),
+             s2.text(230,100,"the function").addClass("darkred middle"),
+             s2.path("M325,85 l142,98").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_g2 = s2.g(s2.text(860,290,"Changes to be").addClass("darkred middle"),
+             s2.text(860,325,"applied").addClass("darkred middle"),
+             s2.path("M780,310 l-236,23").addClass("line_darkred").attr({"marker-end":marker}),
+             s2.path("M780,310 l-352,47").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_g3 = s2.g(s2.text(830,400,"Changes are made").addClass("darkred middle"),
+             s2.text(830,435,"in all modules of a").addClass("darkred middle"),
+             s2.text(830,470,"project").addClass("darkred middle"),
+             s2.path("M690,395 l-220,85").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g1.animate({"opacity":"0"}, 250, mina.linear); s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 3: {s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_g3.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Point out the 'Rename Variable Name...' option and how it works the same.
+Same for 'Rename Module Name...'
+--
+
+
+Refactoring with Wrangler: *extracting*
+---------------------------------------
+++++
+<svg id="refactoring_with_wrangler_extracting_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#refactoring_with_wrangler_extracting_1");
+
+s3.text(10,40,"loop_a").addClass("code darkred bold");
+s3.text(10,40,"      () ->").addClass("code");
+s3.text(10,82,"    receive").addClass("code");
+s3.text(10,124,"     stop -> ok;").addClass("code");
+s3.text(10,166,"     {msg,_Msg,0} ->       ();").addClass("code");
+s3.text(10,166,"                     loop_a").addClass("code darkred bold");
+s3.text(10,208,"     {msg,Msg,N} ->").addClass("code");
+s3.text(10,250,"           io:format(         ),").addClass("code");
+s3.text(10,250,"                     \"ping!~n\"").addClass("code darkred bold");
+s3.text(10,292,"           timer:sleep(500),").addClass("code");
+s3.text(10,334,"           a").addClass("code darkred bold");
+s3.text(10,334,"             ! {msg,Msg,N-1},").addClass("code");
+s3.text(10,376,"           loop_a").addClass("code darkred bold");
+s3.text(10,376,"                 ()").addClass("code");
+s3.text(10,418,"   end.").addClass("code");
+
+</script>
+</svg>
+++++
+
+
+Refactoring with Wrangler: *extracting*
+---------------------------------------
+++++
+<svg id="refactoring_with_wrangler_extracting_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#refactoring_with_wrangler_extracting_2");
+
+var arrow = s4.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.text(10,40,"loop_b").addClass("code darkred bold");
+s4.text(10,40,"      () ->").addClass("code");
+s4.text(10,82,"    receive").addClass("code");
+s4.text(10,124,"     stop -> ok;").addClass("code");
+s4.text(10,166,"     {msg,_Msg,0} ->       ();").addClass("code");
+s4.text(10,166,"                     loop_b").addClass("code darkred bold");
+s4.text(10,208,"     {msg,Msg,N} ->").addClass("code");
+s4.text(10,250,"           io:format(         ),").addClass("code");
+s4.text(10,250,"                     \"pong!~n\"").addClass("code darkred bold");
+s4.text(10,292,"           timer:sleep(500),").addClass("code");
+s4.text(10,334,"           b").addClass("code darkred bold");
+s4.text(10,334,"             ! {msg,Msg,N-1},").addClass("code");
+s4.text(10,376,"           loop_b").addClass("code darkred bold");
+s4.text(10,376,"                 ()").addClass("code");
+s4.text(10,418,"   end.").addClass("code");
+
+s4_g1 = s4.g(s4.text(800,390,"Select the expressions").addClass("darkred middle"),
+             s4.text(800,425,"to extract as a new").addClass("darkred middle"),
+             s4.text(800,460,"function").addClass("darkred middle"),
+             s4.path("M655,415 l-80,-64").addClass("line_darkred").attr({"marker-end":marker}),
+             s4.rect(190,220,380,125,5).addClass("line_darkred").attr({"stroke-width":"2px","stroke-dasharray":"3,4"})).addClass("hide");
+
+s4_g2 = s4.image("images/extracting_1.png",565,52).addClass("hide");
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_g1.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break};
+    case 2: {s4_g2.animate({"opacity":"1"}, 375, mina.linear); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Refactoring with Wrangler: *extracting*
+---------------------------------------
+++++
+<svg id="refactoring_with_wrangler_extracting_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#refactoring_with_wrangler_extracting_3");
+
+var arrow = s5.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(10,90,"loop_b").addClass("code darkred bold");
+s5.text(10,90,"      () ->").addClass("code");
+s5.text(10,132,"    receive").addClass("code");
+s5.text(10,174,"      stop -> ok;").addClass("code");
+s5.text(10,216,"      {msg,_Msg,0} ->       ();").addClass("code");
+s5.text(10,216,"                      loop_b").addClass("code darkred bold");
+s5.text(10,258,"      {msg,Msg,N} -> reply(Msg, N),        ()").addClass("code");
+s5.text(10,258,"                                     loop_b").addClass("code darkred bold");
+s5.text(10,300,"    end.").addClass("code");
+s5.text(10,342,"").addClass("code");
+s5.text(10,384,"reply(Msg, N) ->").addClass("code");
+s5.text(10,426,"    io:format(         ),").addClass("code");
+s5.text(10,426,"              \"pong!~n\"").addClass("code darkred bold");
+s5.text(10,468,"    timer:sleep(500),").addClass("code");
+s5.text(10,510,"    b").addClass("code darkred bold");
+s5.text(10,510,"     !{msg,Msg,N-1}.").addClass("code");
+
+s5_g1 = s5.g(s5.image("images/extracting_2.png",570,15),
+             s5.text(800,420,"Select expressions to").addClass("darkred middle"),
+             s5.text(800,455,"generalise as parameters").addClass("darkred middle"),
+             s5.text(800,490,"and apply for each of them").addClass("darkred middle"),
+             s5.path("M610,445 l-187,-28").addClass("line_darkred").attr({"marker-end":marker}),
+             s5.path("M610,455 l-498,45").addClass("line_darkred").attr({"marker-end":marker}),
+             s5.rect(252,396,161,40,5).addClass("line_darkred").attr({"stroke-width":"2px","stroke-dasharray":"3,4"}),
+             s5.rect(70,480,36,40,5).addClass("line_darkred").attr({"stroke-width":"2px","stroke-dasharray":"3,4"})).addClass("hide");
+
+s5.click( function() {s5_g1.animate({"opacity":"1"}, 375, mina.linear)})
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Intermediary functions will be created at each generalisation. This is to support potentially backwards incompatible code that was added before. Feel free to remove them if you're sure it won't cause problems.
+--
+
+
+Refactoring with Wrangler: *extracting*
+---------------------------------------
+++++
+<svg id="refactoring_with_wrangler_extracting_4" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#refactoring_with_wrangler_extracting_4");
+
+var arrow = s6.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.text(10,40,"loop_b").addClass("code darkred bold");
+s6.text(10,40,"      () ->").addClass("code");
+s6.text(10,80,"    receive").addClass("code");
+s6.text(10,120,"      stop -> ok;").addClass("code");
+s6.text(10,160,"      {msg,_Msg,0} ->       ();").addClass("code");
+s6.text(10,160,"                      loop_b").addClass("code darkred bold");
+s6.text(10,200,"      {msg,Msg,N} -> reply(Msg,N,\"pong!~n\", b), loop_b()").addClass("code");
+s6.text(10,200,"                                 \"pong!~n\"  b   loop_b").addClass("code darkred bold");
+s6.text(10,240,"    end.").addClass("code");
+
+s6.text(10,320,"reply(Msg,N,String, To) ->").addClass("code");
+s6.text(10,360,"    io:format(String),").addClass("code");
+s6.text(10,400,"    timer:sleep(500),").addClass("code");
+s6.text(10,440,"    To !{msg,Msg,N-1}.").addClass("code");
+
+s6_g1 = s6.g(s6.text(380,40,"Put cursor before reply/4").addClass("darkred"),
+             s6.path("M370,30 l-355,280").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s6_g2 = s6.image("images/extracting_3.png",500,250).addClass("hide");
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_g1.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 2: {s6_g2.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Refactoring with Wrangler: *extracting*
+---------------------------------------
+++++
+<svg id="refactoring_with_wrangler_extracting_5" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#refactoring_with_wrangler_extracting_5");
+
+s7.text(10,80,"loop_a() ->").addClass("code");
+s7.text(10,80,"loop_a     ").addClass("code darkred bold");
+s7.text(10,120,"   receive").addClass("code");
+s7.text(10,160,"      stop -> ok;").addClass("code");
+s7.text(10,200,"      {msg,_Msg,0} -> loop_a();").addClass("code");
+s7.text(10,200,"                      loop_a   ").addClass("code darkred bold");
+s7.text(10,240,"      {msg,Msg,N} -> reply(Msg, N, \"ping!~n\", a), loop_a()").addClass("code");
+s7.text(10,240,"                                   \"ping!~n\"  a   loop_a  ").addClass("code darkred bold");
+s7.text(10,280,"   end.").addClass("code");
+s7.text(10,320,"").addClass("code");
+s7.text(10,360,"loop_b() ->").addClass("code");
+s7.text(10,360,"loop_b     ").addClass("code darkred bold");
+s7.text(10,400,"   receive").addClass("code");
+s7.text(10,440,"      stop -> ok;").addClass("code");
+s7.text(10,480,"      {msg,_Msg,0} -> loop_b();").addClass("code");
+s7.text(10,480,"                      loop_b   ").addClass("code darkred bold");
+s7.text(10,520,"      {msg,Msg,N} -> reply(Msg,N,\"pong!~n\", b), loop_b()").addClass("code");
+s7.text(10,520,"                                 \"pong!~n\"  b   loop_b  ").addClass("code darkred bold");
+s7.text(10,560,"   end.").addClass("code");
+
+s7_g1 = s7.g(s7.text(750,40,"Wrangler automatically refactored").addClass("darkred middle"),
+             s7.text(750,75,"loop_a to benefit from the same").addClass("darkred middle"),
+             s7.text(750,110,"abstractions as loop_b").addClass("darkred middle")).addClass("hide");
+
+s7.click( function() {s7_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+++++
+
+
+Refactoring with Wrangler
+-------------------------
+* Wrangler can:
+** Rename variables, functions, modules and processes across entire projects
+** Generalise code and find where to apply the new abstractions it created
+** Find code clones and duplicates over files or projects
+
+
+Trace Tool Builder Extended: *tracing*
+--------------------------------------
+* Debugging concurrent programs with a step-by-step debugger is hard
+** Handles multiple processes with multiple tabs/windows
+** Difficult to represent parallel events
+** *after* clauses in **receive**s time out all the time
+* Tracing turns logging into debugging
+** Programs can be studied after their execution
+** No timer problems
+** Easy to distribute over many nodes
+
+
+Trace Tool Builder Extended: *TTB*
+----------------------------------
+* Trace Tool Builder is a base to build tracing tools for distributed systems
+* Low level API and low level logging based on the trace BIFs
+** Relatively complex usage
+** Lots of data to wade through without coherent organisation
+* Can trace processes, messages, function calls, inherit tracing settings, etc.
+* TTBE Extends TTB and integrates it to ErlIDE
+
+
+Trace Tool Builder Extended: *TTBE*
+-----------------------------------
+++++
+<svg id="trace_tool_builder_extended_ttbe_1" style="width:1100px; height:400px;" viewBox="0 0 1100 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#trace_tool_builder_extended_ttbe_1");
+
+/*
+var arrow = s8.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+*/
+
+s8.image("images/ttbe_functions-tab.png",60,20);
+s8_g1 = s8.image("images/ttbe_trace-browser.png",182,80).addClass("hide");
+s8_g2 = s8.image("images/ttbe_trace-tree.png",304,140).addClass("hide");
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_g1.animate({"opacity":"1"}, 250, mina.linear); s8_counter++; break};
+    case 2: {s8_g2.animate({"opacity":"1"}, 250, mina.linear); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Control panel for nodes, flags and functions to trace
+
+[%step]
+* Trace browser for past traces
+* Trace viewer for individual trace logs
+
+[NOTE.speaker]
+[role="speaker"]
+--
+ErlIDE works best on Linux and Windows with Erlang version R13B03 and R13B04
+--
+
+
+Trace Tool Builder Extended: *example*
+--------------------------------------
+++++
+<svg id="trace_tool_builder_extended_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#trace_tool_builder_extended_example_1");
+
+var arrow = s9.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s9.image("images/ttbe_console.png",105,110);
+s9_g3 = s9.image("images/ttbe_nodes-tab-empty.png",250,200).addClass("hide");
+s9_g4 = s9.image("images/ttbe_nodes-tab.png",250,200).addClass("hide");
+
+s9_g1 = s9.g(s9.text(75,90,"Start the ErlIDE console (-sname)").addClass("darkred"),
+             s9.path("M298,97 l-40,78").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s9_g2 = s9.g(s9.text(125,500,"Add it to the traced nodes").addClass("darkred"),
+             s9.path("M255,470 l201,-170").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s9_counter=1
+s9.click( function() {
+  switch(s9_counter) {
+    case 1: {s9_g1.animate({"opacity":"1"}, 375, mina.linear); s9_counter++; break};
+    case 2: {s9_g1.animate({"opacity":"0"}, 375, mina.linear);
+             s9_g2.animate({"opacity":"1"}, 375, mina.linear);
+             s9_g3.animate({"opacity":"1"}, 375, mina.linear);
+             s9_counter++; break};
+    case 3: {s9_g4.animate({"opacity":"1"}, 375, mina.linear); s9_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Trace Tool Builder Extended: *example*
+--------------------------------------
+++++
+<svg id="trace_tool_builder_extended_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#trace_tool_builder_extended_example_2");
+
+s9.image("images/ttbe_processes-tab.png",170,100);
+s9_g1 = s9.image("images/ttbe_processes-tab-select.png",245,245).addClass("hide");
+
+s9.text(210,45,"Set trace flags").addClass("darkred middle");
+s9.path("M210,55 l73,147").addClass("line_darkred").attr({"stroke-width":"2px"});
+s9.rect(165,202,560,27,15).addClass("line_darkred").attr({"stroke-width":"2px"});
+
+s9_g2 = s9.g(s9.path("M210,55 l425,295").addClass("line_darkred").attr({"stroke-width":"2px"}),
+             s9.rect(615,350,285,132,15).addClass("line_darkred").attr({"stroke-width":"2px"})).addClass("hide");
+
+s9_anim1 = function() {s9_g1.animate({"opacity":"1"}, 250, mina.linear, s9_anim2)};
+s9_anim2 = function() {setTimeout(function() {s9_g2.animate({"opacity":"1"}, 250, mina.linear)}, 375)};
+
+s9.click(function() {s9_anim1()});
+
+</script>
+</svg>
+++++
+
+
+Trace Tool Builder Extended: *example*
+--------------------------------------
+++++
+<svg id="trace_tool_builder_extended_example_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#trace_tool_builder_extended_example_3");
+
+var arrow = s10.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s10.image("images/ttbe_functions-tab.png",200,140);
+s10_g3 = s10.image("images/ttbe_functions-tab-stop.png",200,140).addClass("hide");
+
+s10_g1 = s10.g(s10.text(230,45,"Add functions to").addClass("darkred middle"),
+               s10.text(230,80,"the pattern list").addClass("darkred middle"),
+               s10.path("M230,90 l30,137").addClass("line_darkred").attr({"marker-end":marker}));
+
+s10_g2 = s10.g(s10.text(630,95,"Start the tracing node").addClass("darkred middle"),
+               s10.path("M630,105 l209,71").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s10_g4 = s10.g(s10.text(450,450,"Run the code, stop").addClass("darkred middle"),
+               s10.text(450,485,"the node when done").addClass("darkred middle"),
+               s10.path("M600,455 l243,-262").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s10_anim1 = function() {s10_g1.animate({"opacity":"0"}, 250, mina.linear); s10_g2.animate({"opacity":"1"}, 375, mina.linear)};
+s10_anim2 = function() {s10_g2.animate({"opacity":"0"}, 250, mina.linear); s10_g3.animate({"opacity":"1"}, 300, mina.linear, s10_anim3)};
+s10_anim3 = function() {s10_g4.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s10_counter=1
+s10.click( function() {
+  switch(s10_counter) {
+    case 1: {s10_anim1(); s10_counter++; break};
+    case 2: {s10_anim2(); s10_counter++; break};
+    case 3: {s10_anim3(); s10_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Trace Tool Builder Extended: *example*
+--------------------------------------
+++++
+<svg id="trace_tool_builder_extended_example_4" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s11 = Snap("#trace_tool_builder_extended_example_4");
+
+var arrow = s11.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s11.image("images/ttbe_trace-browser.png",145,110);
+
+s11_g1 = s11.g(s11.text(200,40,"Select the tracing").addClass("darkred middle"),
+               s11.text(200,75,"session").addClass("darkred middle"),
+               s11.path("M260,52 l35,154").addClass("line_darkred").attr({"marker-end":marker}));
+
+s11_g2 = s11.g(s11.image("images/ttbe_trace-tree.png",280,225).addClass(""),
+               s11.text(75,420,"Trace logs").addClass("darkred"),
+               s11.path("M230,410 l45,-20").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s11.click( function() { s11_g1.animate({"opacity":"0"}, 250, mina.linear);
+                        s11_g2.animate({"opacity":"1"}, 375, mina.linear)
+                      });
+
+</script>
+</svg>
+++++
+
+
+Log Analysis with Exago
+-----------------------
+* Code running in production is a continuous, permanent test.
+* Logs are often the only way to find why a bug happened in production
+* Logs can be problematic
+** What format to keep them in
+** How to interpret them
+** How to find the source of problems with logs
+* Exago (https://github.com/et4te/Exago) can help
+
+[NOTE.speaker]
+[role="speaker"]
+--
+link to exago: https://github.com/et4te/Exago2
+--
+
+Log Analysis with Exago
+-----------------------
+* Exago defines a standard log format
+** Can still be customised
+* Provides a way to mine logs to find relevant data to deterministic models
+* Can find where logs do or do not subscribe to the model and generate reports
+
+
+Log Analysis with Exago: *log format*
+-------------------------------------
+....
+jim,2010-10-12 16:00:01:0000000,fail
+mark,2010-10-12 16:00:01:0000000,fail
+jim,2010-10-12 16:00:02:0000000,fail
+jim,2010-10-12 16:00:03:0000000,lock
+peter,2010-10-12 16:01:03:0000000,success
+...
+ 
+....
+
+* CSV logs are accepted by default, with 3 mandatory fields
+* **group id**s such as jim, mark and peter. 
+** Logs will be regrouped per group id.
+* A *timestamp* of the format [darkred]+YYYY-MM-DD HH:mm:SS:Microsec+.
+* *transition inputs* such as fail, lock and success
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that Exago is mostly appropriate for applications with behaviours that are usually simple and easy to model -- this has to fit a deterministic finite state automaton after all
+
+Have the students do part A  and B of Maintenance exercise on Exago
+--
+
+
+Log Analysis with Exago: *models*
+---------------------------------
+++++
+<svg id="log_analysis_with_exago_models_1" style="width:1100px; height:500px;" viewBox="0 0 1100 500" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s12 = Snap("#log_analysis_with_exago_models_1");
+
+var arrow = s12.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s12.image("images/exago_models.png",65,50,1741/1.8,693/1.8);
+
+s12_g1 = s12.g(s12.text(935,30,"Successful logins").addClass("darkred middle"),
+              s12.path("M935,40 l-165,40").addClass("line_darkred").attr({"marker-end":marker}),
+              s12.path("M935,40 l-170,64").addClass("line_darkred").attr({"marker-end":marker}),
+              s12.path("M935,40 l-160,87").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s12_g2 = s12.g(s12.text(365,50,"Log off").addClass("darkred middle"),
+              s12.path("M365,60 l172,364").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s12_g3 = s12.g(s12.text(75,420,"login failures").addClass("darkred"),
+              s12.path("M275,415 l-10,-92").addClass("line_darkred").attr({"marker-end":marker}),
+              s12.path("M275,415 l150,-93").addClass("line_darkred").attr({"marker-end":marker}),
+              s12.path("M275,415 l340,-98").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s12_g4 = s12.g(s12.text(835,430,"Denied Attempts").addClass("darkred"),
+              s12.path("M915,400 l-68,-68").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+
+var s12_counter=1
+s12.click( function() {
+  switch(s12_counter) {
+    case 1: {s12_g1.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    case 2: {s12_g1.animate({"opacity":"0"}, 250, mina.linear); s12_g2.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    case 3: {s12_g2.animate({"opacity":"0"}, 250, mina.linear); s12_g3.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    case 4: {s12_g3.animate({"opacity":"0"}, 250, mina.linear); s12_g4.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Exago's models are based on deterministic finite state machines
+** It will report logs that respect their model or those that diverge from it
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Describe the FSM: All users begin logged off. After three failed attempts, the account is locked and the user can't try anymore. A user can only log off if he managed to log in beforehand.
+--
+
+
+Log Analysis with Exago: *models*
+---------------------------------
+++++
+<svg id="log_analysis_with_exago_models_2" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s13 = Snap("#log_analysis_with_exago_models_2");
+
+var arrow = s13.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s13.text(10,40,"-module(sm).").addClass("code");
+s13.text(10,80,"-export([state_machine/0, row_format/0, run/0, run/1]).").addClass("code");
+s13.text(10,120,"-include(\"src/exago_state_machine.hrl\").").addClass("code");
+s13.text(10,160,"").addClass("code");
+s13.text(10,200,"state_machine() ->").addClass("code");
+s13.text(10,240,"    #state_machine{").addClass("code");
+s13.text(10,280,"       states = [#state{number=0, name=\"Logged Off\"},").addClass("code");
+s13.text(10,320,"                 #state{number=1, name=\"Fail 1\"},").addClass("code");
+s13.text(10,360,"                 #state{number=2, name=\"Fail 2\"},").addClass("code");
+s13.text(10,400,"                 #state{number=3, name=\"Locked\"},").addClass("code");
+s13.text(10,440,"                 #state{number=4, name=\"Logged On\"}],").addClass("code");
+s13.text(10,480,"").addClass("code");
+s13.text(10,520,"    ...").addClass("code");
+
+s13_g1 = s13.g(s13.text(760,190,"Contains all state").addClass("darkred middle"),
+               s13.text(760,225,"machine records").addClass("darkred middle"),
+               s13.path("M635,200 l-95,-64").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s13_g2 = s13.g(s13.text(20,410,"Possible states").addClass("darkred"),
+                s13.path("M225,385 l65,-35").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s13_counter=1
+s13.click( function() {
+  switch(s13_counter) {
+    case 1: {s13_g1.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
+    case 2: {s13_g1.animate({"opacity":"0"}, 250, mina.linear); s13_g2.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Log Analysis with Exago: *models*
+---------------------------------
+++++
+<svg id="log_analysis_with_exago_models_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s14 = Snap("#log_analysis_with_exago_models_3");
+
+var arrow = s14.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s14.text(10,60,"...").addClass("code");
+s14.text(10,100,"state_machine() ->").addClass("code");
+s14.text(10,140,"    #state_machine{").addClass("code");
+s14.text(10,180,"...").addClass("code");
+s14.text(10,220,"transitions = [#transition{from=0, to=1, input=\"fail\"},").addClass("code");
+s14.text(10,260,"               #transition{from=1, to=2, input=\"fail\"},").addClass("code");
+s14.text(10,300,"               #transition{from=2, to=3, input=\"fail\"},").addClass("code");
+s14.text(10,340,"               #transition{from=3, to=3, input=\"lock\"},").addClass("code");
+s14.text(10,380,"               #transition{from=0, to=4, input=\"success\"},").addClass("code");
+s14.text(10,420,"               #transition{from=1, to=4, input=\"success\"},").addClass("code");
+s14.text(10,460,"               #transition{from=2, to=4, input=\"success\"},").addClass("code");
+s14.text(10,500,"               #transition{from=4, to=0, ").addClass("code");
+s14.text(10,540,"                           input=\"sign off\"}],").addClass("code");
+s14.text(10,580,"...").addClass("code");
+
+s14_g1 = s14.g(s14.text(500,30,"When in state").addClass("darkred middle"),
+               s14.path("M500,40 l30,145").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s14_g2 = s14.g(s14.text(885,65,"and encounters").addClass("darkred middle"),
+               s14.path("M885,75 l-23,110").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s14_g3 = s14.g(s14.text(665,110,"transitions to").addClass("darkred middle"),
+               s14.path("M665,125 l5,60").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s14_counter=1
+s14.click( function() {
+  switch(s14_counter) {
+    case 1: {s14_g1.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    case 2: {s14_g1.animate({"opacity":"0"}, 250, mina.linear); s14_g2.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    case 3: {s14_g2.animate({"opacity":"0"}, 250, mina.linear); s14_g3.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+All possible state transitions have to be laid out explicitly. If one is forgotten, the report will mention it
+--
+
+
+Log Analysis with Exago: *models*
+---------------------------------
+[role="left"]
+....
+...
+state_machine() ->
+    #state_machine{
+       states = [...],
+       transitions = [...],
+       start  = 0,
+       accept = [0,3,4],
+       error  = [1,2]}.
+ 
+ 
+ 
+....
+
+[role="right"]
+* The finite state machine of each group (jim, mark & peter) starts in state *0*, being logged off
+* States *0* (logged off), *3* (locked) and *4* (logged on) are seen as accepted states
+* States *1* and *2* (after a failed login attempt) are states in which it is erroneous to terminate.
+
+
+Log Analysis with Exago: *log parsing*
+--------------------------------------
+....
+row_format() ->
+    [exago_field:parser(group_id, string),
+     exago_field:parser(timestamp,
+                        "yyyy-MM-dd hh:mm:ss:fffffff"),
+     exago_field:parser(transition_input)].
+ 
+ 
+....
+
+* Parsers are placed in the order of the items they replace in the CSV logs
+* Custom parser can be written
+* Other available parsers for fields include annotations, state objects, ignoring a column, foreign keys, etc.
+
+
+Log Analysis with Exago: *log parsing*
+--------------------------------------
+....
+run(LogFile) ->
+    InputRows    = exago_parser:parse_csv(LogFile),
+    EventSource  = exago_event:new_source("tutorial",                        InputRows, row_format()),
+    exago_state_machine:analyse_event_source(EventSource,                        state_machine()).
+ 
+ 
+....
+
+* Loads and run the code
+* Returns a data structure that contains the overview of what went right or wrong.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Have the students run part C of the Exago exercises
+--
+
+
+
+Log Analysis with Exago: *reports*
+----------------------------------
+[role="plain"]
+....
+{...,{history_analysis,
+      [{"jim",
+        {instance_status,{success,3}},
+        {failing_transitions,
+         [{failing_transition,"sign off",undefined}]},
+        {failing_states,[{failing_state,"sign off",...}]},
+        {failing_constraints,[undefined]}},
+       {"mark",
+         {instance_status,{success,4}},
+         {failing_transitions,[]},
+         {failing_states,[]},
+         {failing_constraints,[]}},
+
+....
+
+
+Log Analysis with Exago
+-----------------------
+* Analysis reports give details about the state the machine was in when terminating
+** The tuple *{success | failure, N}* means the FSM terminated in the accepted or error state number *N*
+* They give details about which state transitions failed with *{failed_transitions, ...}*
+** Exploring the logs to find the exact sequence of events that cause an error becomes much simpler
+
+
+Log Analysis with Exago
+-----------------------
+....
+{"Dwigth",
+ {success,{state,4,"Logged"},
+    [[{input,"logged"},
+      {transition_exists,{transition,2,4,"logged",[]}},
+      {next_state_exists,{state,4,"Logged"}},
+      {delta_time,1.0}, ...
+ 
+....
+////
+            {constraint_results,[]}],
+           [{input,"denied"},
+            {transition_exists,{transition,1,2,"denied",[]}},
+            {next_state_exists,{state,2,"Fail 2"}},
+            {delta_time,1.0},
+////
+
+* Exago generates a file *Name.event_source* that contains detailed state transitions for each group
+** Helps trace changes with more ease
+** Results need to be read from bottom to top (newest events are first)
+
+
+Mocking with Meck
+-----------------
+* Mock modules are fake versions of existing or non-existing modules
+* They replicate the expected interface of a module
+* They replicate the expected behaviour of a module
+* They can track interactions and calls made to them
+* Mock modules can be swapped in and out with the real module.
+
+
+Mocking with Meck: *why mock?*
+------------------------------
+* The module has non-deterministic behaviour
+** Dates, time, randomness, third party's status
+* Some behaviour is hard to trigger
+** Network errors, file permissions, leap years, Nth day of a month, chains of events, etc.
+* The module has hard-to-detect side effects
+** GUI, audio, logs, callbacks to dependencies, complex interactions
+* The module does not exist yet
+
+[NOTE.speaker]
+[role="speaker"]
+--
+non-determinism here is used in the sense of 'a single call can have more than one outcome'.
+--
+
+
+Mocking with Meck
+-----------------
+....
+1> meck:new(fake).  
+ok
+2> meck:new(fake2, [nolink]).
+ok
+3> meck:unload(fak2).
+ok
+ 
+....
+
+* *meck:new(Mod, [Opts])* creates a new module *Mod*. *Opts* can be *nolink* and *passthrough*
+* The new module is dropped if the caller crashes, except when *nolink* is passed
+* Mocks started with *passthrough* let you overload an existing module and keeps the old functions
+* Unload mocks with *meck:unload()* or *meck:unload(Mod)*
+
+
+Mocking with Meck
+-----------------
+....
+4> meck:expect(fake, f, fun() -> hello end). 
+ok
+5> fake:f().
+hello
+6> meck:delete(fake, f, 0).                 
+ok
+....
+
+* *meck:expect(Mod, FunName, Fun)* creates a new function on the mock objects
+* Many functions of any arity can be attached
+* Functions can be removed from the mock by using *meck:delete(Mod, FunName, Arity)*
+
+
+Mocking with Meck
+-----------------
+++++
+<div class="left w_600">
+<div class="pre">7> meck:expect(fake, do, 
+fun('A') -> upper end), 
+fake:do('A').
+upper
+8> meck:expect(fake,y, fun() -> 
+<b>meck:exception(error, badarith)</b> 
+end).
+ok
+9> catch fake:y().
+{'EXIT',{badarith, ...}}
+<b>10> meck:validate(fake).</b>
+true
+11> catch fake:do(b).   
+{'EXIT',{function_clause,[...]}}
+<b>12> meck:validate(fake).</b>
+false
+
+</div></div>
+++++
+
+[role="right"]
+* *meck:validate(Mod)* returns *true* if the mocked object was used according to expectations or *false* if a call failed in some way.
+* Expected exceptions can be raised with *meck:exception(Class, Reason)* without breaking the validation.
+
+
+Mocking with Meck
+-----------------
+++++
+<div class="left">
+<div class="pre"><b>13> meck:history(fake).</b>
+[{{fake,f,[]},hello},
+ {{fake,do,['A']},upper},
+ {{fake,y,[]},
+  error,badarith,
+  [{meck,exception,2},
+   {meck,exec,4},
+   {fake,y,[]},
+   {erl_eval,do_apply,5},
+   {erl_eval,expr,5},
+   {shell,exprs,7},
+   {shell,eval_exprs,7},
+   {shell,eval_loop,3}]}]
+
+
+</div></div>
+++++
+
+[role="right"]
+* The function *meck:history(Mod)* can be used to get a list of all the function calls made to the module.
+* The events are returned in order.
+** Successful events are of the form *{{M,F,A}, Return}*
+** Exceptions are of the form *{{M,F,A}, Class, Reason, Stack}*
+
+
+Mocking with Meck
+-----------------
+* Unloading the module restores the original version
+* A linked mock will detect crashes and reload the original version
+* Not two versions of a module can be loaded at once
+** Tests must be ran sequentially
+* Mocking objects is done by replacing the code in the code server
+** Easier than mocking in most other languages
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Make the mock exercises
+--
+
+
+Type Checking Erlang
+--------------------
+* Can be checked with *dialyzer*
+* Uses *success typing*
+** Will not try to find the exact type of every expression
+** Will guarantee that the inferred types are right
+** Guarantees that the type errors it finds are really errors that will cause run time crashes
+* The more used a function is, the better type inference will be
+* Type annotations can be added
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Dialyzer's type signatures are second-class citizens; if the type signature is not as precise as the inferred code, it will know to ignore it and use what is more precise
+--
+
+
+Type Checking Erlang: *success typing*
+--------------------------------------
+++++
+<svg id="type_checking_erlang_success_typing_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s15 = Snap("#type_checking_erlang_success_typing_1");
+
+var arrow = s15.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s15.text(300,35,"Most type systems").addClass("darkred bold").attr({"text-anchor":"middle"});
+s15_g1 = s15.circle(300,130,10).addClass("shape white")
+s15_g2 = s15.path("M300,130 420,330 Q300,410 180,330 M180,330 300,130").addClass("line").addClass("hide");
+s15_g4 = s15.path("M312,130 l0,220").addClass("line").attr({"marker-end":marker}).transform("t57 -17 r-31").addClass("hide");
+
+s15.text(700,35,"Success Types").addClass("darkred bold").attr({"text-anchor":"middle"});
+s15_g5_1 = s15.path("M580,230 Q700,150 820,230 Q700,310 580,230 M580,230 700,430 820,230").addClass("line");
+s15_g7 = s15.path("M580,230 l0,215").addClass("line").attr({"marker-end":marker}).transform("t47 -7 r-31").addClass("hide");
+
+s15.text(150,150,"Assumes very").addClass("darkred").attr({"text-anchor":"middle"});
+s15.text(150,185,"narrow types").addClass("darkred").attr({"text-anchor":"middle"});
+
+s15_g3 = s15.g(s15.text(300,420,"Expands the types as").addClass("darkred").attr({"text-anchor":"middle"}),
+             s15.text(300,455,"strictly as possible given").addClass("darkred").attr({"text-anchor":"middle"}),
+             s15.text(300,490,"new information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s15_g5_2 = s15.text(850,120,"Assumes the types").addClass("darkred").attr({"text-anchor":"middle"});
+s15_g5_3 = s15.text(850,155,"are very generic").addClass("darkred").attr({"text-anchor":"middle"});
+
+s15_g6 = s15.g(s15.text(890,390,"Narrow down the").addClass("darkred").attr({"text-anchor":"middle"}),
+             s15.text(890,425,"types given new").addClass("darkred").attr({"text-anchor":"middle"}),
+             s15.text(890,460,"information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s15_g5 = s15.g(s15_g5_1, s15_g5_2, s15_g5_3).addClass("hide");
+
+s15_anim1 = function() { s15_g1.animate({"opacity":"0"}, 250, mina.linear);  s15_g2.animate({"opacity":"1"}, 250, mina.linear, s15_anim2) }
+s15_anim2 = function() { s15_g3.animate({"opacity":"1"}, 250, mina.linear, s15_anim3); }
+s15_anim3 = function() { s15_g3.animate({"opacity":"1"}, 250, mina.linear); s15_g4.animate({"opacity":"1"}, 250, mina.linear); }
+
+s15_anim5 = function() { s15_g5.animate({"opacity":"1"}, 250, mina.linear, s15_anim6); }
+s15_anim6 = function() { s15_g6.animate({"opacity":"1"}, 250, mina.linear, s15_anim7); }
+s15_anim7 = function() { s15_g7.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s15_counter=1
+s15.click( function() {
+  switch(s15_counter) {
+    case 1: {s15_anim1(); s15_counter++; break};
+    case 2: {s15_anim5(); s15_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Type Checking Erlang: *type specs*
+----------------------------------
+* There exists a group of pre-defined types.
+* New types can be declared by grouping different pre-defined types together
+** *Type1 | Type2 | Type3* means that the 3 types act as a single one
+* Types can be exported to be used in other modules
+* The complete list of types is available in the Erlang Reference manual
+
+[NOTE.speaker]
+[role="speaker"]
+--
+type specs docs http://www.erlang.org/doc/reference_manual/typespec.html
+--
+
+Type Checking Erlang: *built-in types*
+--------------------------------------
+*any(), term(), _*::
+Any Erlang term
+
+*pid()*::
+An Erlang process identifier
+
+*atom(), \'atom'*::
+The type *atom()* represents any atom, while *\'atom'* is the atom \'atom' itself.
+
+*list(), list(Type), [Type]*::
+A standard Erlang list. If *Type* is specified, it is expected that every element of the list has the type *Type*.
+
+
+Type Checking Erlang: *built-in types*
+--------------------------------------
+*tuple(), {Type1, Type2, ..., TypeN}*::
+Specifies a tuple. Each tuple field can be typed.
+
+*boolean()*::
+false or true
+
+*number(), integer()..integer()*::
+An Erlang *integer()* or *float()*. A standalone number can be used: 42 means the integer 42 is expected. Ranges are also valid: *1..100* includes all integers from 1 to 100.
+
+*string()*::
+A list of characters (*char()*, which represents integers from 0 to 16#10ffff
+
+[NOTE.speaker]
+[role="speaker"]
+--
+More types exist. Please refer to the types documentation
+--
+
+
+Type Checking Erlang: *defining types*
+--------------------------------------
+....
+-type fifo() :: {fifo, list(), list()}.
+-record(user, {name="" :: string(),
+               tasks :: fifo(),
+               age :: number(),
+               friends=[] :: [#user{}],
+               bio :: string() | binary()}).
+ 
+....
+
+* The characters *::* are used to separate a type's name from its definition
+* The new type *fifo()* is added to the module. It comprises a tuple tagged with *\'fifo'* that also contains two lists.
+* Records can be typed and used as a type themselves
+* Multiple types can be grouped with a union (\'*|*')
+
+
+Type Checking Erlang: *defining types*
+--------------------------------------
+....
+-type tasks(A) :: {fifo, list(A), list(A)}.
+
+-opaque fifo() :: {fifo, list(), list()}.
+
+-export_type([fifo/0, tasks/1]).
+ 
+ 
+....
+
+* Types can be polymorphic. The type submitted to _tasks(A)_ has to be respected in both lists. The exact type of _A_ is decided when using the *tasks/1* type in a function.
+* Types can be declared as *opaque*. Their structure is meant to be invisible to modules outside the one where they are defined.
+* Types can be exported with *-export_type([Type])*. Other modules can refer to them in declarations by using *Mod:Type()*.
+
+Type Checking Erlang: *function specs*
+--------------------------------------
+....
+-spec push(tasks(A), A) -> tasks(A).
+push({fifo, In, Out}, X) -> {fifo, [X|In], Out}.
+ -spec id(X) -> X when X :: tuple().
+-spec convert(atom())   -> string() 
+      ;      (string()) -> atom().
+ 
+....
+
+* The function *push/2* takes a queue of tasks of type *A* with a task of type *A* and returns a new queue of tasks.
+* *id/1* only accepts tuples
+* *convert/1* should return different types depending on the input it received in the first place
+
+
+Type Checking Erlang: *example*
+-------------------------------
+[role="plain"]
+....
+-type suit() :: spades | clubs | hearts | diamonds.
+-type value() :: 1..10 | j | q | k.
+-type card() :: {suit(), value()}.
+
+-spec kind(card()) -> face | number.
+kind({_, A}) when A >= 1, A =< 10 -> number;
+kind(_) -> face.
+
+main() ->
+    number = kind({spades, 7}),
+    face   = kind({hearts, k}),
+    number = kind({rubies, 4}),
+    face   = kind({clubs, q}).
+....
+
+
+Type Checking Erlang: *using Dialyzer*
+--------------------------------------
+++++
+<svg id="type_checking_erlang_using_dialyzer_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s16 = Snap("#type_checking_erlang_using_dialyzer_1");
+
+var arrow = s16.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s16.text(10,40,"$ dialyzer --build_plt --apps erts kernel stdlib").addClass("code darkred bold");
+s16.text(10,80,"  Compiling some key modules to native code... done in").addClass("code");
+s16.text(10,120,"0m30.74s").addClass("code");
+s16.text(10,160,"  Creating PLT...").addClass("code");
+s16.text(10,200,"...").addClass("code");
+s16.text(10,240,"").addClass("code");
+s16.text(10,280,"$ dialyzer cards.erl").addClass("code darkred bold");
+s16.text(10,320,"  Checking whether the PLT is up to date...").addClass("code");
+s16.text(10,360,"  Proceeding with analysis...").addClass("code");
+s16.text(10,400,"cards.erl:12: Function main/0 has no local return").addClass("code");
+s16.text(10,440,"cards.erl:15: The call cards:kind({'rubies',4}) breaks the").addClass("code");
+s16.text(10,480,"contract (card()) -> 'face' | 'number'").addClass("code");
+s16.text(10,520," done in 0m0.24s").addClass("code");
+s16.text(10,560,"done (warnings were emitted)").addClass("code");
+
+s16_g1 = s16.g(s16.text(600,140,"Only needs to be done once.").addClass("darkred middle"),
+               s16.text(600,175,"Can take a long time").addClass("darkred middle"),
+               s16.path("M390,120 l-90,-70").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s16_g2 = s16.g(s16.text(805,275,"'rubies' is not a correct suit!").addClass("darkred middle"),
+               s16.path("M805,285 l-112,128").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+/*
+s16.click( function() { s16_g1.animate({"opacity":"0"}, 250, mina.linear);
+                        s16_g2.animate({"opacity":"1"}, 375, mina.linear)
+                      });
+*/
+
+var s16_counter=1
+s16.click( function() {
+  switch(s16_counter) {
+    case 1: {s16_g1.animate({"opacity":"1"}, 375, mina.linear); s16_counter++; break};
+    case 2: {s16_g1.animate({"opacity":"0"}, 250, mina.linear); s16_g2.animate({"opacity":"1"}, 375, mina.linear); s16_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Note that running the code will still succeed. The function uses '_' as a pattern and won't fail.
+--
+
+
+Type Checking Erlang: *TypEr*
+-----------------------------
+++++
+<div class="pre"><b>$ typer cards.erl</b>
+
+%% File: "cards.erl"
+%% -----------------
+-spec kind(card()) -> 'face' | 'number'.
+-spec main() -> none().
+
+</div>
+++++
+
+* TypEr will list out all the specs of a module
+* If the types are not specified, it will infer them the same way Dialyzer would
+* The specifications generated by TypEr can be used to:
+** Annotate modules
+** Verify possible types used and rewrite code accordingly
+** Understand what Dialyzer is inferring
+
+
+Maintenance and Debugging
+-------------------------
+* Code Coverage
+* Refactoring with Wrangler
+* Trace Tool Builder Extended
+* Log Analysis with Exago
+* Type Checking Erlang

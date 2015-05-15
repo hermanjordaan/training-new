@@ -1,0 +1,154 @@
+Other Behaviours
+================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Other Behaviours
+----------------
+* Event Handlers
+* Finite-State Machines
+
+
+Events
+------
+* An event represents a state change in the system
+** A high processor load
+** A board failure
+** A trace printout on the activity of a link
+* For every event that is generated, the system might want to
+** Generate SNMP traps
+** Collect statistics
+** Print a message to I/O
+** Log to file
+
+
+Events
+------
+image::images/events.png[Events, auto, auto]
+
+* Processes can be used to implement event managers
+
+
+Event Handlers
+--------------
+* Each event manager will receive a specific type of event
+** Alarms, equipment state changes, debug traces, etc.
+* Event handlers subscribe to events sent to a manager
+** Several handlers can subscribe to one manager
+* During runtime, event managers provide functionality to:
+** Add, remove and upgrade event handlers
+
+
+Event Handlers
+--------------
+image::images/event_handlers.png["Event Handlers", auto, 300]
+
+{empty}
+
+* The *gen_event* module implements the event manager
+** It is part of the standard library application
+** Each handler solves a specific event-driven task
+* An event manager will take care of several event handlers
+** The event handlers contain the specific code
+
+
+Finite-State Machines
+---------------------
+++++
+<div class="centre">
+<svg id="fsm_2" style="width:870; height:440px;" viewBox="0 0 870 440" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}</style>
+<script>
+
+var s2 = Snap("#fsm_2");
+
+var arrow = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 5,5, 3.75,2.5);
+
+var arrow2 = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#4B5056"}).transform('r0');
+var marker2 = arrow2.marker(0,0, 5,5, 3.75,2.5);
+
+s2.text(120,40,"Day").addClass("darkred bold");
+s2.text(570,40,"Night").addClass("darkred bold");
+s2.circle(200,120,60).addClass("shape darkred");
+s2.circle(600,120,60).addClass("shape grey");
+
+s2_g1 = s2.g(s2.path("M250,70 Q390,-10 540,70").addClass("line2").attr({"marker-end":marker2}),
+			 s2.text(350,65,"Sunset")).addClass("hide");
+s2_g2 = s2.g(s2.path("M540,170 Q400,250 250,170").addClass("line_darkred").attr({"marker-end":marker}),
+			 s2.text(350,195,"Sunrise")).addClass("hide");
+
+s2.text(10,280,"day() ->").addClass("code");
+s2.text(10,320,"  receive").addClass("code");
+s2.text(10,360,"     sunset -> night()").addClass("code");
+s2.text(10,400,"  end.").addClass("code");
+
+s2.text(480,280,"night() ->").addClass("code");
+s2.text(480,320,"  receive").addClass("code");
+s2.text(480,360,"     sunrise -> day()").addClass("code");
+s2.text(480,400,"  end.").addClass("code");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 500, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 500, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+++++
+
+* Each state is represented as a tail recursive function
+* Each event is represented as an incoming message
+
+
+Finite-State Machines
+---------------------
+image::images/fsm_1.png["Finite-State Machines", auto, auto]
+
+* State transitions are triggered by incoming events
+* State transitions are achieved by calling the new state
+** The new state depends on the current state and the incoming events
+* With every state transition actions may be taken
+
+
+Finite-State Machines
+---------------------
+image::images/fsm_2.png["Finite-State Machines", auto, auto]
+
+{empty}  +  
+
+* All Finite-State Machines are given a start state
+* Initialisation of the state can occur when starting the FSM
+
+
+Generic Finite-State Machines
+-----------------------------
+image::images/generic_fsm.png["Generic Finite-State Machines", auto, auto]
+
+{empty}  +  
+
+* The *gen_fsm* module implements the finite-state machine behaviour
+** It is part of the standard library application
+* The library module contains all the generic code
+* Non-generic code is placed in the callback module
+
+
+Other Behaviours
+----------------
+* Event Handlers
+* Finite-State Machines

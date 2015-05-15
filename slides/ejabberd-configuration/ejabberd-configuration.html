@@ -1,0 +1,201 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>ejabberd Configuration</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>ejabberd Configuration</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_overview"><h2>Overview</h2><div class="ulist"><ul><li><p>Configuration files</p></li><li><p>Tuning</p></li></ul></div></section>
+<section id="_configuration_files"><h2>Configuration Files</h2><div class="dlist left comparison darkred"><dl><dt class="hdlist1">ejabberd.cfg</dt><dd><div class="ulist"><ul><li><p>ejabberd-specific configuration</p></li><li><p>listening ports</p></li><li><p>enabled modules</p></li><li><p>authentication models</p></li><li><p>access control lists</p></li></ul></div></dd></dl></div>
+<div class="dlist right comparison darkred"><dl><dt class="hdlist1">ejabberdctl.cfg</dt><dd><div class="ulist"><ul><li><p>VM-related options</p></li><li><p>additional parameters passed to the VM</p></li><li><p>performance tuning</p></li></ul></div></dd></dl></div></section>
+<section id="_ejabberd_cfg_strong_modules_strong"><h2>ejabberd.cfg: <strong>modules</strong></h2><div class="literalblock left"><div class="content"><pre>{modules, [
+  {mod_roster, []},
+  {mod_register,
+    [{access, register}]},
+  {mod_privacy_odbc, []}
+]}.
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>system of plug-ins to ejabberd</p></li><li><p>configurable via ejabberd.cfg file</p><div class="ulist"><ul><li><p>might be enabled/disabled in the run-time</p></li></ul></div></li><li><p>different nature of modules</p></li><li><p>implementation of most XEPs</p></li></ul></div>
+<aside class="notes"><div class="ulist"><ul><li><p>internal system utilities (monitoring, health-checks, logging)</p></li><li><p>hooks subscription (offline messages, rosters, privacy lists)</p></li><li><p>IQ handlers (entire namespace handling)</p></li><li><p>subdomains handlers (gateways, subsystems like MUC)</p></li></ul></div></aside></section>
+<section id="_ejabberd_cfg_strong_modules_strong_2"><h2>ejabberd.cfg: <strong>modules</strong></h2><div class="literalblock left"><div class="content"><pre>{modules, [
+  ...
+  {mod_private, []},
+  {mod_pubsub, []},
+  {mod_time, []},
+  {mod_last, []},
+  ...
+]},
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>remove unused modules</p><div class="ulist"><ul><li><p>faster startup</p></li><li><p>less callback modules for hooks</p></li><li><p>faster execution</p></li><li><p>lower database activity</p></li><li><p>security</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>some modules depend on one another, e.g. web panel and mod_configure
+shapers use bytes, not stanzas sent/received - when the limit is exceeded we are not going to read data from the socket until the average rate is again below the allowed maximum
+be careful with odbc_pool_size - too little will cause bottlenecks in the system, too many may overload the database (if we have a single one)</p></div></aside></section>
+<section id="_ejabberd_cfg_strong_shapers_and_pools_strong"><h2>ejabberd.cfg: <strong>shapers and pools</strong></h2><div class="literalblock left"><div class="content"><pre>{shaper, shaper_name,
+  {maxrate, 10000}}.
+
+{odbc_pool_size, 100}.
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>shapers</p><div class="ulist"><ul><li><p>prevent server from being flooded</p></li></ul></div></li><li><p>pool size for DB workers</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>some modules depend on one another, e.g. web panel and mod_configure
+shapers use bytes, not stanzas sent/received - when the limit is exceeded we are not going to read data from the socket until the average rate is again below the allowed maximum
+be careful with odbc_pool_size - too little will cause bottlenecks in the system, too many may overload the database (if we have a single one)</p></div></aside></section>
+<section id="_ejabberd_cfg_strong_listeners_strong"><h2>ejabberd.cfg: <strong>listeners</strong></h2><div class="literalblock left"><div class="content"><pre>{listen, [
+  {1234, my_listener,
+     [opt1, opt2, opt3]},
+
+  {5222, ejabberd_c2s,
+     [{max_stanza_size, 1024}]}
+]}.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>dedicated XMPP traffic</p><div class="ulist"><ul><li><p>separating e.g. mobile and desktop clients</p></li></ul></div></li><li><p>extensions to XMPP</p><div class="ulist"><ul><li><p>BOSH</p></li><li><p>fast reconnect</p></li></ul></div></li><li><p>non-XMPP traffic</p><div class="ulist"><ul><li><p>JSON</p></li><li><p>HTTP</p></li><li><p>STUN</p></li></ul></div></li><li><p>proxies, gateways</p></li></ul></div></section>
+<section id="_ejabberdctl_cfg_strong_tuning_strong"><h2>ejabberdctl.cfg: <strong>tuning</strong></h2><div class="ulist"><ul><li><p>SMP</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>-smp enable</pre></div></div>
+<div class="ulist"><ul><li><p>async threads</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>+A 100</pre></div></div>
+<div class="ulist"><ul><li><p>kernel poll</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>+K true</pre></div></div>
+<div class="ulist"><ul><li><p>maximum number of ports</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>ERL_MAX_PORTS=200000</pre></div></div>
+<div class="ulist"><ul><li><p>maximum number of processes</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>ERL_PROCESSES=300000</pre></div></div>
+<aside class="notes"><div class="paragraph"><p>SMP: ensure we are going to use more than one core (architecture has been detected properly)
+when the ERTS blocking call is issued, we do not stop scheduling other processes: the call is made in a separate OS thread, to not to interrupt other internal processes from continuing the processing
+kernel poll is more efficient way of checking if there is some data available in a vast number of file descriptors (/dev/poll interface)
+ejabberd creates 2-3 ports per connection, we should have a safe limit on that. Port table is however pre-allocated on the VM startup, so if the number is unreasonably large, the launch is going to take longer time (several seconds) and we will end up in the increased memory usage (several MBs)
+comment similar to the one above - however, there is no memory/latency cost of having a large number of processes running in the system</p></div></aside></section>
+<section id="_ejabberdctl_cfg_strong_tuning_strong_2"><h2>ejabberdctl.cfg: <strong>tuning</strong></h2><div class="ulist"><ul><li><p>garbage collection strategy</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>ERL_FULLSWEEP_AFTER=2</pre></div></div>
+<div class="ulist"><ul><li><p>scheduler policy</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>erlang:system_info(cpu_topology).
++sbt tnnps     // thread_no_node_processor_spread</pre></div></div>
+<div class="ulist"><ul><li><p>heart script</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>-heart
+HEART_COMMAND=/path/to/heart/command</pre></div></div>
+<aside class="notes"><div class="paragraph"><p>garbage collection is per-process and it&#8217;s generational - we operate on a very transient data, there is no need to keep a history. Lower memory usage, increased CPU utilization
+scheduler policy - how the next cores are going to be used (db - default bind - assign next cores when the currently used are utilized already)</p></div></aside></section>
+<section id="_ejabberdctl"><h2>ejabberdctl</h2><div class="literalblock left"><div class="content"><pre>./sbin/ejabberdctl
+
+./sbin/ejabberdctl start/stop
+
+./sbin/ejabberdctl connected_users_number
+
+./sbin/ejabberdctl mnesia info
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>CLI for ejabberd</p></li><li><p>controlling the node</p><div class="ulist"><ul><li><p>get/set operations</p></li><li><p>be careful with some operations</p></li><li><p>e.g. listing all registered users</p></li></ul></div></li><li><p>registering new commands is fairly easy</p></li><li><p>invoking the command results in forking new hidden Erlang node</p></li></ul></div></section>
+<section id="_tuning_strong_os_strong"><h2>Tuning: <strong>OS</strong></h2><div class="ulist"><ul><li><p>maximum number of process' file descriptors</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>ulimit -n
+/etc/security/limits.conf</pre></div></div>
+<div class="ulist"><ul><li><p>socket configuration</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>/etc/sysctl.conf</pre></div></div>
+<div class="ulist level2"><ul><li><p>maximum number of packets polled at once from NIC buffer</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>net.core.netdev_max_backlog</pre></div></div>
+<div class="ulist level2"><ul><li><p>OS send/receive buffer for network connections</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>net.core.[rw]mem_max</pre></div></div>
+<div class="ulist level2"><ul><li><p>TCP autotuning settings</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>net.ipv4.tcp_[rw]mem</pre></div></div>
+<aside class="notes"><div class="paragraph"><p>FD: used for listening sockets, expat/SSL drivers. Not related to the accepted connections
+net.core.rwmem_max - important for inter-node cluster links and when we send large packets of data
+TCP autotuning:                     
+- first number - kernel does not bother about the socket
+         - second number - when we start to pressing on the socket to lower the memory down
+                    - third number - maximum limit, start dropping the incoming packets</p></div></aside></section>
+<section id="_tuning_strong_os_strong_2"><h2>Tuning: <strong>OS</strong></h2><div class="ulist"><ul><li><p>maximum number of packets that can be flushed from NIC buffer at once</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>/sbin/ifconfig $IFACE txqueuelen $N</pre></div></div>
+<div class="ulist"><ul><li><p>enabling jumbo frames</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>/sbin/ifconfig $IFACE mtu $SIZE</pre></div></div>
+<div class="ulist"><ul><li><p>system clocks synchronization</p><div class="ulist"><ul><li><p>NTP</p></li></ul></div></li><li><p>dedicated inter-cluster network interfaces</p></li><li><p>SSD/RAM disks for fast access</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>jumbo - packets bigger than 1.5kB are not going to be divided into smaller ones
+all changes to the interface configuration should be persisted in /etc/networking/interfaces
+NTP: remember about it when we want to kick out our previous sessions</p></div></aside></section>
+<section id="_tuning_strong_ejabberd_strong"><h2>Tuning: <strong>ejabberd</strong></h2><div class="ulist"><ul><li><p>plugging off Mnesia tables</p><div class="ulist"><ul><li><p>large clusters</p></li><li><p>frequent updates</p></li><li><p>integration with other subsystems</p></li><li><p>ODBC/LDAP equivalents</p></li></ul></div></li><li><p>roster tuning</p><div class="ulist"><ul><li><p>do we really need roster?</p></li><li><p>bi-directionality</p></li><li><p>domain storage</p></li><li><p>shared rosters</p></li></ul></div></li><li><p>privacy lists handling</p><div class="ulist"><ul><li><p>over-engineered</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>roster: can we use a simple one-way relationship?
+roster: if we handle only a few domains we can have a tree of sets structure inside of the c2s, do not duplicate the domain name N times</p></div>
+<div class="paragraph"><p>&#8594; what to do when you want to replace mnesia with some other db backend (storing session data in mnesia?)</p></div>
+<div class="paragraph"><p>[steve] most things here in this slide are not self explanatory, please be more verbose, elaborate!</p></div></aside></section>
+<section id="_tuning_strong_ejabberd_strong_2"><h2>Tuning: <strong>ejabberd</strong></h2><div class="ulist"><ul><li><p>using binaries instead of lists</p><div class="ulist"><ul><li><p>"pivot" == [112,105,118,111,116]</p></li><li><p>reference counting</p></li><li><p>faster processing</p></li><li><p>marshalling</p></li><li><p>matching</p></li></ul></div></li><li><p>session counter removal</p><div class="ulist"><ul><li><p>modified every time session table is updated</p></li><li><p>the same as</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>binaries: there is no such data type as <em>string</em> in Erlang: instead we have a linked list of pointers to the consequent characters (list of integers). It&#8217;s much slower and consumes much more memory than binaries handling.
+reference counting for binaries larger than 64 bytes</p></div>
+<div class="paragraph"><p>[steve] what’s implemented in mongoose already?</p></div></aside></section>
+<section id="_tuning_strong_ejabberd_strong_3"><h2>Tuning: <strong>ejabberd</strong></h2><div class="ulist"><ul><li><p>making session processes thiner</p><div class="ulist"><ul><li><p>removing unused fields</p></li><li><p>32 fields</p></li></ul></div></li><li><p>correcting p1_fsm</p><div class="ulist"><ul><li><p>enhanced gen_fsm behaviour</p></li><li><p>max_queue parameter</p></li><li><p>sys:get_status handling</p></li></ul></div></li><li><p>ODBC tuning</p><div class="ulist"><ul><li><p>reformatting SQL tables</p></li><li><p>make use of stored procedures</p></li><li><p>slow auto_increment</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>c2s fields: at other project we went down to 15 fields only</p></div>
+<div class="paragraph"><p>p1_fsm breaks otp compliance - we fixed that at MIM &#8594; remove info on p1_fsm</p></div>
+<div class="paragraph"><p>[steve] what’s implemented in mongoose already?</p></div></aside></section>
+<section id="_tuning_strong_ejabberd_strong_4"><h2>Tuning: <strong>ejabberd</strong></h2><div class="ulist"><ul><li><p>ODBC improvements</p><div class="ulist"><ul><li><p>separate worker pools for read/write operations</p></li><li><p>easier master-slave replication</p></li><li><p>separate worker pools for each functionality</p></li><li><p>dynamically resizing pool size</p></li><li><p>dynamically switching database endpoint</p></li></ul></div></li><li><p>LDAP improvements</p><div class="ulist"><ul><li><p>multiple LDAP connections</p></li><li><p>fetching passwords</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>[steve] what’s implemented in mongoose already?
+[steve] add slides about how mongoose im compares to ejabberd and how it solves some of the issues from above</p></div></aside></section>
+<section id="_tuning_strong_ejabberd_strong_5"><h2>Tuning: <strong>ejabberd</strong></h2><div class="ulist"><ul><li><p>enabling transient supervisors</p></li><li><p>asynchronous listeners</p><div class="ulist"><ul><li><p>accepting clients in the faster way</p></li><li><p>increasing backlog option on the listening sockets</p></li></ul></div></li><li><p>caching</p><div class="ulist"><ul><li><p>memcached</p></li><li><p>membase</p></li><li><p>mnesia</p></li></ul></div></li><li><p>external SSL offloaders</p></li><li><p>tuning the database</p><div class="ulist"><ul><li><p>RAM disks</p></li><li><p>Percona MySQL</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>caching rosters/privacy lists/passwords</p></div>
+<div class="paragraph"><p>[steve] what’s implemented in mongoose already?</p></div></aside></section>
+<section id="_overview_2"><h2>Overview</h2><div class="ulist"><ul><li><p>Configuration files</p></li><li><p>Tuning</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

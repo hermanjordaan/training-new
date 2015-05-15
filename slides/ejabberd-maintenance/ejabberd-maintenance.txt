@@ -1,0 +1,669 @@
+ejabberd Maintenance
+====================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Overview
+--------
+* Scripting
+* Testing
+* Debugging
+* Monitoring
+* Scaling
+
+
+Scripting: *joining new node*
+-----------------------------
+....
+$HOME/erlang/bin/erl -sname ejabberd@`hostname -s` 
+-mnesia dir "'/home/ejabberd/ejabberd/var/lib/ejabberd'" 
+-mnesia extra_db_nodes "['ejabberd@some_host']" 
+-s mnesia -setcookie MY_COOKIE
+
+[mnesia:add_table_copy(T, node(), ram_copies) || T <- ...]
+ 
+....
+
+* automated way of adding new machines into the cluster
+** no need to restart any other machine already running
+* copying the config
+** using local repository might be a good idea
+** git/mercurial
+** centralized way to manage the configuration
+
+
+Scripting: *heart process*
+--------------------------
+....
+export HEART_COMMAND=$COMMAND_NAME 
+export HEART_BEAT_TIMEOUT=$HEART_SECONDS
+erl -heart
+....
+
+* automated way of restarting the service
+* heart command should keep track of number of restarts
+** monitoring the restart frequency
+** copying over the log files
+** preventing infinite restart loops
+** bugs in the code
+** bugs in the configuration
+** environmental limitations
+** e.g. max 3 restarts in the last 30 minutes 
+
+[NOTE.speaker]
+[role="speaker"]
+--
+there is no way of specifying the health-checks for the node, it just checks if the beam process is still alive
+--
+
+
+Scripting: *rc.d scripts*
+-------------------------
+....
+/etc/init.d/ejabberd {start|stop|status|restart}
+update-rc.d defaults ejabberd
+....
+
+* standardised way to manage the services
+* starting up ejabberd after the system reboot
+
+
+Coding: *auto discovery*
+------------------------
+....
+./sbin/ejabberdctl start
+....
+
+* nmap-like behavior
+** scanning the subnet looking for opened 5222 ports
+* reverse DNS lookup on the found hosts
+** in-addr.arpa domain
+* automatic dial into the cluster
+** RPC call to obtain details about Mnesia schema
+* ideal for disk-less workstations or faster set up procedures
+** big clusters
+
+[NOTE.speaker]
+[role="speaker"]
+--
+is not implemented by the standard ejabberd
+be careful when the network configuration is not very well formatted (e.g. several ejabberd servers running within the same subnet)
+good in combination with DHCP and PXE - Pre Execution Environment (pixie)
+--
+
+
+Profiling: *fprof*
+------------------
+....
+fprof:trace([start, {procs, all}]).
+...
+fprof:trace([stop]).
+fprof:profile().
+fprof:analyze([{dest, "/tmp/profile.out"}, {sort, own}, 
+      totals, details]).
+
+grep -n % /tmp/profile.out | head -n 30
+....
+
+* detecting where the system is wasting most of its time
+* run when system is under very low load
+
+[NOTE.speaker]
+[role="speaker"]
+--
+ideal when we have an ability to do some weighted load balancing and let normal users into the node
+we can narrow profiling to some subset of processes, if we want to profile e.g. only LDAP driver
+--
+
+
+Testing: *tsung*
+----------------
+....
+tsung -f path_to_my_scenario_file.xml start
+....
+
+* Tsung - load testing tool
+** http://tsung.erlang-projects.org/
+* various protocols supported
+** XMPP, HTTP, LDAP, MySQL
+* declarative way of defining the scenario
+** XML configuration file
+* support for distributed environments
+** both client and server side
+* report generators
+* easily extensible
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Tsung does not understand the meaning of the packets
+can not really be used for functional tests
+does not support s2s traffic or acks of messages
+--
+
+
+Testing: *escalus (Common Test)*
+--------------------------------
+....
+messages_story(Config) ->
+  escalus:story(Config, [1, 1], fun(Alice, Bob) ->
+    %% Alice sends a message to Bob
+    escalus:send(Alice,
+                 escalus_stanza:chat_to(Bob, "OH, HAI!")),
+    %% Bob gets the message
+    escalus:assert(is_chat_message,
+                   ["OH, HAI!"],
+                   escalus:wait_for_stanza(Bob))
+  end).
+....
+
+* XMPP client/testing library
+* ideal for implementing feature and acceptance tests
+* intended for use in Common Test suites
+
+
+Testing: *escalus (shell)*
+--------------------------
+....
+application:start(escalus).
+application:set_env(escalus, common_test, false).
+{ok, Config} = file:consult("test.config").
+CarolSpec = escalus_users:get_options(Config, carol).
+{ok, Carol, _, _} = escalus_connection:start(CarolSpec).
+escalus_connection:send(Carol,
+    escalus_stanza:chat_to(alice, "hi")).
+escalus_connection:stop(Carol).
+....
+
+* can also be used without Common Test from Erlang shell
+* _alice_ and _carol_ must be defined in _test.config_
+* real life examples
+** https://github.com/esl/escalus
+** https://github.com/esl/ejabberd_tests
+
+
+Testing: *manually registering a user*
+--------------------------------------
+....
+ejabberd_admin:register(“alice”, “localhost”, “secret”).
+ 
+....
+
+* handy when mod_register is off and you still want to connect with Adium, Psi, etc
+* sometimes useful for automatic tests (though Escalus can do this automagically without mod_register)
+
+
+Debugging: *system information*
+-------------------------------
+....
+erlang:memory().
+erlang:system_info(allocated_areas).
+erlang:system_info(cpu_topology).
+erlang:system_info(process_count).
+erlang:system_info(wordsize).
+net_kernel:nodes_info().
+....
+
+* basic information about the system's health
+** memory allocation summary
+** detected CPU topology
+** number of processes running in the system
+** word size in bytes
+** statistics about Erlang distribution channels
+
+[NOTE.speaker]
+[role="speaker"]
+--
+some of them might be worth exposing via SNMP or dumped periodically
+--
+
+
+Debugging: *process information*
+--------------------------------
+....
+Pid = whereis(process_name).
+process_info(Pid).
+....
+
+* obtaining process' details
+** currently evaluated function
+** initial call
+** mailbox content
+** mailbox size
+** garbage collection details
+** reductions count
+** trap exit status
+** links
+** ports
+
+[NOTE.speaker]
+[role="speaker"]
+--
+it's BIF - works only on the local processes
+use RPC module to get more details from remote entities
+be careful when fetching mailbox of overloaded processes
+--
+
+
+Debugging: *session information*
+--------------------------------
+....
+(ejabberd@localhost)2> ets:tab2list(session).
+[{session,{{1390,577075,560662},<0.716.0>},
+          {<<"asd">>,<<"localhost">>,<<"x3">>},
+          {<<"asd">>,<<"localhost">>},
+          5,
+          [{ip,{{127,0,0,1},52628}},
+           {conn,c2s_tls},
+           {auth_module,ejabberd_auth_internal}]}]
+....
+
+* lists sessions from all nodes of the cluster
+* not available when using MongooseIM with Redis session backend (use Redis CLI for similar results)
+* useful for tracing a given c2s process by pid (<0.716.0>)
+* see ejabberd.hrl for the definition of #session{}
+
+
+Debugging: *tracing*
+--------------------
+....
+dbg:tracer().
+dbg:p(all, call).
+dbg:tpl(Module, x).
+dbg:tpl(Module, Function, x).
+dbg:tpl(Module, Function, Arity, x).
+....
+
+* tracing function calls in the system
+* narrowing the range of the calls
+** tp equivalent available
+** ctp/ctpl clearing functions available
+* printed out in the Erlang shell
+
+[NOTE.speaker]
+[role="speaker"]
+--
+other events tracking is also available, e.g. message passing or garbage collection triggers
+it is possible to track events on more than one node
+it is possible to redirect the events into the process
+--
+
+
+Debugging: *tracing a running node*
+-----------------------------------
+....
+dbg:tracer(process, {fun dbg:dhandler/2, standard_io}).
+%% dbg:p/tp/tpl as usual
+
+%% don’t forget to stop the tracer when you’re done:
+dbg:stop_clear().
+ 
+....
+
+* _dbg:tracer/2_ allows for tracing from a shell started as _ejabberdctl debug_
+* otherwise the traces wouldn’t appear on the screen
+* tracing a staging/production system
+* don’t forget the cleanup!
+
+
+Debugging: *misc.*
+------------------
+....
+ets:i().
+ets:tab2list(Table).
+
+sys:get_status(Pid).
+
+garbage_collect(Pid).
+ 
+....
+
+* displaying all public/protected ETS tables
+* listing all contents of the ETS table
+* fetches an OTP process' internal state
+** including #state{} of gen_server/gen_fsm
+** broken in p1_fsm
+* manually triggers garbage collection for a given process
+
+
+Debugging: *TCP connections*
+----------------------------
+....
+(ejabberd@localhost)1> os:getpid().
+"23510"
+
+$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)
+beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)
+beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)
+....
+
+[NOTE.speaker]
+[role="speaker"]
+--
+BEAM is the Erlang virtual machine
+-a ANDs the conditions, the default is to OR them
+--
+
+
+Debugging: *TCP connections*
+----------------------------
+++++
+<div class="pre"><span class="comment">$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME</span>
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+<span class="comment">beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)
+beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)
+beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)</span>
+</div>
+++++
+
+* Distributed Erlang
+* epmd - Erlang Port Mapper Daemon
+
+[NOTE.speaker]
+[role="speaker"]
+--
+more nodes in the cluster - more established connections
+--
+
+
+Debugging: *TCP connections*
+----------------------------
+++++
+<div class="pre"><span class="comment">$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME<
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)</span>
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)
+<span class="comment">beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)</span>
+beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)
+</div>
+++++
+
+* 5222 listening for XMPP connections
+* established client connection
+
+
+Debugging: *TCP connections*
+----------------------------
+++++
+<div class="pre"><span class="comment">$ lsof -a -i tcp -c beam.smp -p 23510
+COMMAND    PID   USER FD  TYPE             DEVICE SIZE/OFF NODE NAME
+beam.smp 23510 erszcz 12u IPv4 0x983c2e40bff35589 0t0  TCP \
+    *:52612 (LISTEN)
+beam.smp 23510 erszcz 13u IPv4 0x983c2e40b2242589 0t0  TCP \
+    localhost:52613->localhost:epmd (ESTABLISHED)
+beam.smp 23510 erszcz 21u IPv4 0x983c2e40bff22e39 0t0  TCP \
+    *:jabber-client (LISTEN)</span>
+beam.smp 23510 erszcz 22u IPv4 0x983c2e40b1a2be39 0t0  TCP \
+    *:jabber-server (LISTEN)
+beam.smp 23510 erszcz 23u IPv4 0x983c2e40bff27e39 0t0  TCP \
+    *:5280 (LISTEN)
+<span class="comment">beam.smp 23510 erszcz 24u IPv4 0x983c2e40b1c8d589 0t0  TCP \
+    localhost:jabber-client->localhost:52628 (ESTABLISHED)</span>
+</div>
+++++
+
+* 5269 listening for XMPP server to server connections (federation)
+* 5280 - BOSH and WebSocket XMPP listener
+
+[NOTE.speaker]
+[role="speaker"]
+--
+5269 s2s - federation
+--
+
+
+Debugging: *cluster status*
+---------------------------
+....
+(ejabberd1@x3)1> mnesia:info(). %% Erlang shell
+...
+running db nodes   = [ejabberd2@x3,ejabberd1@x3]
+stopped db nodes   = []
+
+$ ejabberdctl mnesia %% sh/bash/etc
+...
+{db_nodes,[ejabberd2@x3,ejabberd1@x3]},
+{running_db_nodes,[ejabberd1@x3,ejabberd2@x3]}
+....
+
+* same information accessible by different means
+
+
+Debugging: *cluster status*
+---------------------------
+....
+(ejabberd1@x3)2> erlang:get_cookie().
+'ejabberd'
+
+(ejabberd1@x3)5> net_adm:ping(ejabberd2@x3).
+pong
+....
+
+* Distributed Erlang basics:
+** cookie must be the same on all nodes
+** otherwise we get pang instead of pong - no connectivity
+
+
+Debugging: *module status and hooks*
+------------------------------------
+[role="left"]
+....
+gen_mod:is_loaded("localhost",
+mod_roster).
+
+
+ets:tab2list(hooks).
+ 
+ 
+....
+
+[role="right"]
+* check whether a module is loaded for domain localhost
+* display all registered hook handlers
+
+
+Monitoring: *distributed calls*
+-------------------------------
+....
+apply(M, F, [Arg1, Arg2, Arg3]).
+  =>
+M:F(Arg1, Arg2, Arg3).
+
+rpc:call(Node, M, F, A).
+rpc:multicall(M, F, A).
+....
+
+* collecting data from the remote nodes
+** faster debugging
+** comparing results from all nodes in the cluster
+* be careful with the CPU intensive operations
+* timeouts
+
+
+Monitoring: *mnesia*
+--------------------
+....
+mnesia:info().
+mnesia:table_info(Table, all).
+
+[mnesia:wait_for_tables([T], 100) ||
+    T <- mnesia:system_info(local_tables)].
+....
+
+* information about mnesia state
+** acquired locks
+** tables' statuses
+** statistics about the transactions, etc.
+* information about table state
+** size
+** indexes
+** row fields
+
+
+Monitoring: *ejabberd*
+----------------------
+* integration with centralized logging server
+** splunk
+** rsyslog
+* health-checks
+** end-to-end tests
+** nagios
+* monitoring
+** SNMP
+** zabbix/cacti
+
+
+Monitoring: *logging*
+---------------------
+[role="left"]
+....
+erlang:system_monitor/2
+ 
+ 
+ 
+ 
+ 
+mnesia:subscribe/1
+ 
+ 
+ 
+ 
+ 
+erlang:process_info/1
+ 
+ 
+ 
+ 
+ 
+....
+
+[role="right"]
+* internal system events
+** large heaps
+** long GC
+** busy_port/busy_dist_port
+* mnesia events
+** overloads
+** inconsistency
+** joining/leaving the cluster
+* integrity checks
+** heap sizes
+** message queue lengths
+** reduction counters
+
+[NOTE.speaker]
+[role="speaker"]
+--
+system_monitor: large heaps, long gc, busy_port, busy_dist_port
+mnesia: overloaded, inconsistent_database, mnesia_fatal, mnesia_up/down
+process_info: heap size, message_queue_len, reduction counters
+--
+
+
+ejabberd Logs
+-------------
+....
+ejabberd_loglevel:get().
+ejabberd_loglevel:set(N).
+
+tcpdump -nn -ttt -x -X -s 0 -A  \(tcp and port 5222\) 
+    | tee /tmp/xmpp.pcap
+ 
+....
+
+* changing the log level in the run-time
+* dumping the entire TCP traffic to the file
+** root access
+** dumped in wireshark-compatible format
+
+[NOTE.speaker]
+[role="speaker"]
+--
+-nn do not convert protocol/host numbers to names
+-ttt print timestamps and time deltas between each lines
+-x print each packet in hex
+-X print each packet in ASCII as well
+-s 0 catch all packets (do not truncate them)
+-A print ASCII
+--
+
+
+Scalability
+-----------
+* node specialization
+** dedicated Erlang nodes for some subsets of functionality
+** rosters/offline messages/privacy lists
+** O&M boxes
+** gateways to some other networks
+* removing the global state
+** leaving some very stable tables, such as route, s2s, config
+** everything else stored in cache/RAM based storage
+* auto configuration/discovery
+** network scanning
+** diskless workstations
+
+
+Scalability
+-----------
+image::images/placeholder.png[Placeholder, auto, auto]
+
+* ejabberd_sm disaster recovery
+** p2p architecture
+** ejabberdctl stop
+
+[NOTE.speaker]
+[role="speaker"]
+--
+full scan of Mnesia session table, removal of all the processes that were running on the faulty node
+presence flood
+reconnect wave
+N-2 delete misses, 1 delete hit
+--
+
+
+Overview
+--------
+* Scripting
+* Testing
+* Debugging
+* Monitoring
+* Scaling

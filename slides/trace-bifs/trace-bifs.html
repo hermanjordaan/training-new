@@ -1,0 +1,313 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Trace BIFs</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Trace BIFs</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_trace_bifs"><h2>Trace BIFs</h2><div class="ulist"><ul><li><p>Trace BIF</p></li><li><p>Trace Flags</p></li><li><p>Trace Patterns</p></li></ul></div></section>
+<section id="_trace_bif"><h2>Trace BIF</h2><div class="ulist"><ul><li><p><strong>erlang:trace(PidSpec, Bool, TraceFlags)</strong></p></li><li><p>Enables/disables low-level trace mechanisms</p></li><li><p>Provides data for monitoring execution and memory usage</p></li><li><p>Used by tools such as the Debugger and the process manager (Pman)</p></li><li><p>No need to trace-compile the code</p></li></ul></div>
+<div class="imageblock" style=""><div class="content"><img src="images/loupe.png" alt="Loupe" width="200" height="auto"></div></div></section>
+<section id="_trace_bif_2"><h2>Trace BIF</h2><div class="ulist"><ul><li><p><strong>erlang:trace(PidSpec, Bool, TraceFlags)</strong></p></li><li><p>Events are sent as trace messages of the format</p><div class="ulist"><ul><li><p><code>{trace, Pid, Tag, Data1 [,Data2]}</code></p></li></ul></div></li><li><p>Events include</p><div class="ulist"><ul><li><p>Message passing</p></li><li><p>Gc and memory usage</p></li><li><p>Process activity</p></li></ul></div></li><li><p>At any one given time, only one process may receive trace events from another process</p></li></ul></div></section>
+<section id="_trace_bif_3"><h2>Trace BIF</h2><div class="ulist"><ul><li><p><strong>erlang:trace(PidSpec, Bool, TraceFlags)</strong></p></li><li><p><strong>PidSpec</strong> defines which Pids we want to trace</p><div class="ulist"><ul><li><p>existing</p></li><li><p>new</p></li><li><p>all</p></li><li><p>pid()</p></li></ul></div></li><li><p><strong>Bool</strong> specifies if we want to turn debug on or off</p><div class="ulist"><ul><li><p>true or false</p></li></ul></div></li><li><p>Returns the number of processes being traced</p></li></ul></div></section>
+<section id="_trace_flags"><h2>Trace Flags</h2><svg id="trace_flags_1" style="width:1100px; height:350px;" viewBox="0 0 1100 350" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#trace_flags_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(180,90,"Pid1");
+s1.circle(300,100,40).addClass("shape grey")
+s1.text(760,90,"Pid2");
+s1.circle(700,100,40).addClass("shape darkred")
+
+s1_g2 = s1.g(s1.path("M350,100 l290,0").addClass("line").attr({"marker-end":marker}),
+             s1.text(395,90,"{Pid1, foo}").addClass("code")).addClass("hide");
+
+s1.text(115,200,"Pid2 ! {self(), foo}").addClass("code");
+s1_g1 = s1.text(115,200,"Pid2 ! {self(), foo}").addClass("code darkred bold").addClass("hide");
+
+
+s1.text(550,190,"receive").addClass("code");
+s1.text(550,230,"  {From, Msg} -> ...").addClass("code");
+s1.text(550,270,"end").addClass("code");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 500, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g1.animate({"opacity":"0"}, 375, mina.linear, s1_anim2); }
+
+s1.click( function() {s1_anim1()});
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>send</strong> traces all messages sent by a process.</p><div class="ulist"><ul><li><p><code>{trace, Pid, send, Message, To}</code></p></li><li><p><code>{trace, Pid, send_to_non_existing_process, Message, To}</code></p></li></ul></div></li><li><p><strong>receive</strong> traces all received messages</p><div class="ulist"><ul><li><p><code>{trace, Pid, 'receive', Message}</code></p></li></ul></div></li></ul></div></section>
+<section id="_trace_flags_2"><h2>Trace Flags</h2><div class="literalblock"><div class="content"><pre>-module(ping).
+-export([start/0, send/1, loop/0]).
+
+start() -&gt; spawn_link(ping, loop, []).
+
+send(Pid) -&gt;
+    Pid ! {self(), ping},
+    receive  pong -&gt; pong end.
+
+loop() -&gt;
+    receive
+        {Pid, ping} -&gt;
+            spawn(crash, do_not_exist, []),
+            Pid ! pong,
+            loop()
+    end.</pre></div></div></section>
+<section id="_trace_flags_3"><h2>Trace Flags</h2><svg id="trace_flags_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#trace_flags_2");
+
+s2.rect(10,15,1090,600).addClass("rect_code");
+
+s2.text(20,50,"1> Pid = ping:start().").addClass("code darkred bold");
+s2.text(20,90,"<0.55.0>").addClass("code");
+s2_g1 = s2.g(s2.text(20,130,"2> erlang:trace(Pid, true, [send, 'receive']).").addClass("code darkred bold"),
+             s2.text(20,170,"1").addClass("code")).addClass("hide");
+s2_g2 = s2.g(s2.text(20,210,"3> ping:send(Pid).").addClass("code darkred bold"),
+             s2.text(20,250,"pong").addClass("code")).addClass("hide");
+s2_g3 = s2.g(s2.text(20,290,"4> flush().").addClass("code darkred bold"),
+             s2.text(20,330,"Shell got {trace,<0.55.0>,'receive',{<0.39.0>,ping}}").addClass("code"),
+             s2.text(20,370,"Shell got {trace,<0.55.0>,send,pong,<0.39.0>}").addClass("code"),
+             s2.text(20,410,"ok").addClass("code")).addClass("hide");
+s2_g4 = s2.g(s2.text(20,450,"5> erlang:trace(Pid, false, [send, 'receive']).").addClass("code darkred bold"),
+             s2.text(20,490,"1").addClass("code")).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 3: {s2_g3.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 4: {s2_g4.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_trace_flags_4"><h2>Trace Flags</h2><div class="imageblock" style=""><div class="content"><img src="images/trace_flags_1.png" alt="Trace Flags" width="auto" height="360"></div></div>
+<div class="ulist"><ul><li><p><strong>running</strong> traces the Module:Function/Arity the process was executing when it was scheduled (in) and preempted (out)</p><div class="ulist"><ul><li><p>{trace, Pid, in, {Module, Function, Arity}}</p></li><li><p>{trace, Pid, out, {Module, Function, Arity}}</p></li></ul></div></li></ul></div></section>
+<section id="_trace_flags_5"><h2>Trace Flags</h2><svg id="trace_flags_3" style="width:1100px; height:250px;" viewBox="0 0 1100 250" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#trace_flags_3");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(290,90,"Pid1");
+s3.circle(400,100,40).addClass("shape grey")
+s3.circle(800,100,40).addClass("shape darkred")
+s3.text(850,90,"Pid2");
+
+s3_g1 = s3.g(s3.path("M450,100 l293,0").addClass("line").attr({"marker-end":marker, "strokeDasharray":"3,6"}),
+             s3.text(485,80,"spawn / link").addClass("code")).addClass("hide");
+
+s3.click( function() {s3_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><strong>procs</strong> traces process related events.</p><div class="ulist"><ul><li><p>{trace, Pid, spawnPid2}</p></li><li><p>{trace, Pid, exit, Reason}</p></li><li><p>{trace, Pid, link | unlink, Pid2}</p></li><li><p>{trace, Pid, getting_linked | getting_unlinked, Pid2}</p></li><li><p>{trace, Pid, register | unregister, Pid2}</p></li></ul></div></li></ul></div></section>
+<section id="_trace_flags_6"><h2>Trace Flags</h2><div class="imageblock" style=""><div class="content"><img src="images/trace_flags_2.png" alt="Trace Flags" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p><code><strong>set_on_spawn</strong></code> specifies that any process created will inherit the flags of its parent, including the set_on_spawn flag. </p></li></ul></div></section>
+<section id="_trace_flags_7"><h2>Trace Flags</h2><div class="imageblock" style=""><div class="content"><img src="images/trace_flags_3.png" alt="Trace Flags" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p><code><strong>set_on_first_spawn</strong></code> specifies that any process which is spawned will inherit the flags of its parents except the set_on_first_spawn flag.  </p></li></ul></div></section>
+<section id="_trace_flags_8"><h2>Trace Flags</h2><svg id="trace_flags_5" style="width:1100px; height:400px;" viewBox="0 0 1100 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#trace_flags_5");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(200,140,"traced process").addClass("code middle");
+s5.circle(200,200,40).addClass("shape darkred");
+
+s5_g1 = s5.g(s5.text(320,190,"link(...)").addClass("code"),
+             s5.path("M250,200 l290,0").addClass("line").attr({"marker-end":marker, "strokeDasharray":"3,6"})).addClass("hide");
+
+s5_g2 = s5.g(s5.circle(600,200,40).addClass("shape darkred"),
+             s5.text(655,210,"inherits trace flags").addClass("code")).addClass("hide");
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_g1.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 2: {s5_g2.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p><code><strong>set_on_link</strong></code> and <code><strong>set_on_first_link</strong></code> are similar to the set_on_spawn flags, only that flags are inherited when linking occurs.</p></li></ul></div></section>
+<section id="_trace_flags_9"><h2>Trace Flags</h2><svg id="trace_flags_6" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#trace_flags_6");
+
+s6.rect(10,15,1090,600).addClass("rect_code")
+
+s6.text(20,50,"1> Pid = ping:start().").addClass("code darkred bold");
+s6.text(20,90,"<0.31.0>").addClass("code");
+s6_g1 = s6.g(s6.text(20,130,"2> erlang:trace(Pid, true, [set_on_spawn, procs]).").addClass("code darkred bold"),
+             s6.text(20,170,"1").addClass("code")).addClass("hide");
+s6_g2 = s6.g(s6.text(20,210,"3> ping:send(Pid).").addClass("code darkred bold"),
+             s6.text(20,250,"pong").addClass("code")).addClass("hide");
+s6_g3 = s6.g(s6.text(20,290,"4> flush().").addClass("code darkred bold"),
+             s6.text(20,330,"Shell got {trace,<31>,spawn,<0.34.0>}").addClass("code"),
+             s6.text(20,370,"Shell got {trace,<0.34.0>,exit,{undef,do_not_exist,[]}]}}").addClass("code"),
+             s6.text(20,410,"ok").addClass("code")).addClass("hide");
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_g1.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 2: {s6_g2.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 3: {s6_g3.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 4: {s6_g4.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_trace_flags_10"><h2>Trace Flags</h2><div class="ulist"><ul><li><p><strong>garbage_collection</strong> traces GC initiation and termination</p><div class="ulist"><ul><li><p>{trace, Pid, gc_start | gc_end, Info}</p></li></ul></div></li><li><p><strong>Info</strong> is a list of tagged tuples containing:</p><div class="ulist"><ul><li><p><strong>heap_size</strong>: used part of the heap.</p></li><li><p><strong>old_heap_size</strong>: used part of the old heap.</p></li><li><p><strong>stack_size</strong>: actual stack size</p></li><li><p><strong>recent_size</strong>: data that survived the previous GC</p></li><li><p><strong>mbuf_size</strong>: all message buffer size</p></li></ul></div></li><li><p>All sizes are in words</p></li></ul></div></section>
+<section id="_trace_flags_11"><h2>Trace Flags</h2><div class="ulist"><ul><li><p><strong>timestamp</strong></p><div class="ulist"><ul><li><p>will add a time stamp on all messages</p></li><li><p>The TS format is <code><strong>{MegaSeconds, Seconds, Microseconds}</strong></code> passed since January 1st, 1970</p></li><li><p>TS format is the same as the one returned by <code><strong>erlang:now()</strong></code></p></li><li><p>All trace messages will have an extra field, and be of the format <code><strong>{trace_ts, ...}</strong></code></p></li></ul></div></li><li><p><strong>arity</strong></p><div class="ulist"><ul><li><p>All tags returning <strong>{Module, Function, Arguments}</strong> <br>
+will instead return <strong>{Module, Function, Arity}</strong></p></li></ul></div></li></ul></div></section>
+<section id="_trace_flags_12"><h2>Trace Flags</h2><svg id="trace_flags_7" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#trace_flags_7");
+
+/*
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+*/
+
+s7.text(10,40,"1> Pid = ping:start().").addClass("code darkred bold");
+s7.text(10,80,"<0.31.0>").addClass("code");
+s7_g1 = s7.g(s7.text(10,120,"2> erlang:trace(Pid,true, [garbage_collection,timestamp]).").addClass("code darkred bold"),
+             s7.text(10,160,"1").addClass("code")).addClass("hide");
+s7_g2 = s7.g(s7.text(10,200,"3> ping:send(Pid).").addClass("code darkred bold"),
+             s7.text(10,240,"pong").addClass("code")).addClass("hide");
+s7_g3 = s7.g(s7.text(10,280,"4> flush().").addClass("code darkred bold"),
+             s7.text(10,320,"Shell got {trace_ts,<0.31.0>, gc_start,").addClass("code"),
+             s7.text(10,360,"   [{mbuf_size,0}, {recent_size,0},{stack_size,2}, ").addClass("code"),
+             s7.text(10,400,"{old_heap_size,0},{heap_size,231}],{998,578633,990000}} ").addClass("code"),
+             s7.text(10,440,"Shell got {trace_ts,<0.31.0>, gc_end,").addClass("code"),
+             s7.text(10,480,"      [{mbuf_size,0},{recent_size,228},{stack_size,2},").addClass("code"),
+             s7.text(10,520,"      {old_heap_size,0},{heap_size,228}],").addClass("code"),
+             s7.text(10,560,"       {998,578633,990001}}]}").addClass("code")).addClass("hide");
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_g1.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 2: {s7_g2.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 3: {s7_g3.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_trace_patterns"><h2>Trace Patterns</h2><div class="ulist"><ul><li><p><strong>erlang:trace_pattern(MFA, MatchSpec, FlagList)</strong></p></li><li><p>Used to enable trace of functions through the <strong>call</strong> and <strong>return_to</strong> flags in the trace BIF</p></li><li><p>Functions can be local or exported</p></li><li><p>Trace messages will be of the type</p><div class="ulist"><ul><li><p>{trace, Pid, call, {M, F, A}}</p></li><li><p>{trace, Pid, return_to, {M, F, A}}</p></li></ul></div></li><li><p>Returns the number of traced functions</p></li></ul></div></section>
+<section id="_trace_patterns_2"><h2>Trace Patterns</h2><div class="imageblock" style=""><div class="content"><img src="images/trace_patterns.png" alt="Trace Patterns" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Tracing will be enabled on the intersection of the sets</p><div class="ulist"><ul><li><p>The functions defined in MFA</p></li><li><p>The processes being traced through the pid specification in the trace BIF</p></li></ul></div></li></ul></div></section>
+<section id="_trace_patterns_3"><h2>Trace Patterns</h2><div class="ulist"><ul><li><p><strong>erlang:trace_pattern(MFA, MatchSpec, FlagList)</strong></p></li><li><p><strong>MFA</strong> is one of the following:</p><div class="ulist"><ul><li><p>{Module, Function, Arity}</p></li><li><p>{Module, Function, <em>_</em>}</p></li><li><p>{Module, <em><em></em>, <em></em></em>}</p></li><li><p>{<em><em></em>, <em></em></em>, <em>_</em>}</p></li><li><p>Formats of the type {<em><em></em>, Function, <em></em></em>} are not allowed</p></li></ul></div></li><li><p><strong>FlagList</strong> defines the type of traced function</p><div class="ulist"><ul><li><p><strong>global</strong> traces only exported functions (default)</p></li><li><p><strong>local</strong> traces both local and exported functions</p></li></ul></div></li></ul></div></section>
+<section id="_trace_patterns_4"><h2>Trace Patterns</h2><div class="ulist"><ul><li><p><strong>erlang:trace_pattern(MFA, MatchSpec, FlagList)</strong></p></li><li><p><strong>MatchSpec</strong> can take one of the following values</p><div class="ulist"><ul><li><p><strong>true</strong>, enabling the MFA</p></li><li><p><strong>false</strong>, disabling the MFA</p></li><li><p><strong>Match Specification List</strong>, allowing pattern definitions</p></li></ul></div></li><li><p>Match Specification Lists are terms describing a program which tries to match a set of parameters</p><div class="ulist"><ul><li><p>They are covered later on</p></li></ul></div></li></ul></div></section>
+<section id="_trace_patterns_5"><h2>Trace Patterns</h2><svg id="trace_patterns_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#trace_patterns_1");
+
+s8.rect(10,15,1090,600).addClass("rect_code");
+
+s8.text(20,50,"1> erlang:trace(all, true, [call]).").addClass("code darkred bold");
+s8.text(20,90,"18").addClass("code");
+s8_g1 = s8.g(s8.text(20,130,"2> erlang:trace_pattern({ping, '_', '_'}, true, [local]).").addClass("code darkred bold"),
+             s8.text(20,170,"5").addClass("code")).addClass("hide");
+s8_g2 = s8.g(s8.text(20,210,"3> ping:start(Pid).").addClass("code darkred bold"),
+             s8.text(20,250,"<0.35.0>").addClass("code")).addClass("hide");
+s8_g3 = s8.g(s8.text(20,290,"4> ping:send(Pid).").addClass("code darkred bold"),
+             s8.text(20,330,"pong").addClass("code")).addClass("hide");
+s8_g4 = s8.g(s8.text(20,370,"5> flush().").addClass("code darkred bold"),
+             s8.text(20,410,"Shell got {trace,<0.35.0>,call,{ping,loop,[]}}").addClass("code"),
+             s8.text(20,450,"ok").addClass("code")).addClass("hide");
+
+s8.text(550,550,"The process receiving the trace messages cannot be traced").addClass("darkred bold middle");
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_g1.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 2: {s8_g2.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 3: {s8_g3.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    case 4: {s8_g4.animate({"opacity":"1"}, 375, mina.linear); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_trace_bifs_2"><h2>Trace BIFs</h2><div class="ulist"><ul><li><p>Trace BIF</p></li><li><p>Trace Flags</p></li><li><p>Trace Patterns</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

@@ -1,0 +1,970 @@
+Behaviours and Servers
+======================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Behaviours
+----------
+* Design Patterns
+* Behaviours
+* Examples
+
+
+Design Patterns
+---------------
+* OTP Behaviours are a formalisation of design patterns
+* Processes share similar structures and life cycles
+** They are started
+** They receive messages and send replies
+** They are terminated (or crash)
+* Even if they perform different tasks, they will perform them following a set of patterns
+* Each design pattern solves a specific problem
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Erlang doesn't have strict design patterns, but they're similar and have instead been implemented directly in the language. They are, according to 'design pattern' speech, implementation libraries of design patterns
+
+Stress 'similar structures', because that's what the pattern is.
+--
+
+
+More on Processes: *process skeleton*
+-------------------------------------
+
+++++
+<svg id="process_skeleton_1" style="width:1020px; height:620px;" viewBox="0 0 1020 620" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">
+    #process_skeleton_1 .text {fill:#fff; font-size:20pt;}
+    #process_skeleton_1 .grey {fill:#959595;}
+    #process_skeleton_1 .code {font-size: 20pt;}
+</style>
+<script>
+
+var s1 = Snap("#process_skeleton_1");
+
+var arrow = s1.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s1.rect(10,35,965,580).addClass("rect_code");
+
+s1.ellipse(900,50,80,35).addClass("shape darkred");
+s1.text(870,60,"Start").addClass("text");
+
+s1.rect(820,140,160,80).addClass("shape grey");
+s1.text(845,190,"Initialise").addClass("text");
+
+s1.ellipse(650,280,80,35).addClass("shape darkred");
+s1.text(625,290,"Stop").addClass("text");
+
+s1.rect(850,265,100,100,20,20).addClass("shape").attr({"fill":"#E1E1E1"});
+s1.text(870,325,"loop");
+
+s1.rect(820,410,160,80).addClass("shape grey");
+s1.text(838,460,"terminate").addClass("text");
+
+s1.path("M900,85 l0,57").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M900,220 l0,47").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M950,300 C1020,250 1020,380 953,330").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M730,280 l120,35").attr({"marker-end":marker}).addClass("line_darkred");
+s1.path("M900,365 l0,47").attr({"marker-end":marker}).addClass("line_darkred");
+
+s1.text(20,70,"start(Args) -> spawn(server, init, [Args])").addClass("code");
+s1.text(20,108,"").addClass("code");
+s1.text(20,146,"init(Args) ->").addClass("code");
+s1.text(20,184,"  State = initialize_state(Args),").addClass("code");
+s1.text(20,222,"  loop(State).").addClass("code");
+s1.text(20,260,"").addClass("code");
+s1.text(20,298,"loop(State) ->").addClass("code");
+s1.text(20,336,"   receive").addClass("code");
+s1.text(20,374,"      {handle, Msg} -> ").addClass("code");
+s1.text(20,412,"         NewState = handle(Msg, State),").addClass("code");
+s1.text(20,450,"         loop(NewState);").addClass("code");
+s1.text(20,488,"      stop -> terminate(State)").addClass("code");
+s1.text(20,526,"   end.").addClass("code");
+s1.text(20,564,"").addClass("code");
+s1.text(20,602,"terminate(State) -> clean_up(State).").addClass("code");
+
+</script>
+</svg>
+++++
+
+
+[NOTE.speaker]
+[role="speaker"]
+--
+The pattern behind all the patterns.
+It's so common even the functions get the same name in nearly any module.
+Likely used even in code not written with OTP.
+
+In the terminate, you clean up resources: files, databases, etc. while init is the opposite.
+--
+
+
+Design Patterns
+---------------
+
+++++
+<div class="centre">
+<svg id="design_patterns_1" style="width:600; height:460px;" viewBox="0 0 600 460" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#design_patterns_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(42,30,"Clients").addClass("code darkred bold");
+s2.circle(100,110,40).addClass("shape grey");
+s2.circle(100,250,40).addClass("shape grey");
+s2.circle(100,390,40).addClass("shape grey");
+
+s2.path("M200,25 l0,400").attr({"stroke-dasharray":"4,8"}).addClass("line");
+
+s2.text(450,30,"Server").addClass("code darkred bold");
+s2.circle(500,110,40).addClass("shape darkred");
+
+s2_g1 = s2.g(s2.text(220,80,"request").addClass("code darkred"),
+             s2.path("M155,90 l280,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide")
+s2_g2 = s2.g(s2.text(235,145,"reply").addClass("code darkred"),
+             s2.path("M440,115 l-280,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide")
+
+s2_g3 = s2.g(s2.text(220,240,"request").addClass("code darkred").transform("rotate(-37,275,205)"),
+             s2.path("M150,355 L440,140").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+s2_g4 = s2.g(s2.text(270,305,"reply").addClass("code darkred").transform("rotate(-37,305,270)"),
+             s2.path("M460,160 L160,385").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 500, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 500, mina.linear, s2_anim3); }
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 500, mina.linear, s2_anim4); }
+s2_anim4 = function() { s2_g4.animate({"opacity":"1"}, 500, mina.linear); }
+s2.click(function() { s2_anim1() });
+
+</script>
+</svg>
+</div>
+++++
+
+* Take a Client-Server architecture
+* What behaviours will differ between systems?
+* What similarities will there be between systems?
+
+[NOTE.speaker]
+[role="speaker"]
+--
+mention that this is erlang, the server is a process, the client is a process, communication is message passing
+--
+
+
+Design Patterns
+---------------
+
+[role="left comparison green"]
+Generic::
+* Spawning the server
+* Storing the loop data
+* Sending requests to the server
+* Sending replies to the client
+* Receiving server replies
+* Stopping the server
+
+[role="right comparison darkred"]
+Specific::
+* Initialising the server state
+* The loop data
+* The client requests
+* Handling client requests
+* Contents of server reply
+* Cleaning up
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Go through every single one of these and compare them one to each other.
+--
+
+
+Behaviours
+----------
+image::images/behaviours_1.png[Behaviours, auto, 275]
+{empty}  +  
+
+* The idea is to split the code in two parts
+* The generic part is called the *generic behaviour*
+** They are provided by OTP as library modules
+* The specific part is called the *callback module*
+** They are implemented by the programmer
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Behaviours split generic and specific in two separate modules: one for generics and one for specifics. The generics are in the driving seat. The specifics know nothing of the generics.
+--
+
+
+Behaviours
+----------
+*Generic Servers*::
+Used to model client-server behaviours
+*Generic Finite-State Machines*::
+Used for finite-state machine programming
+*Generic Event Handler/Manager*::
+Used for writing event handlers
+*Supervisors*::
+Used for fault-tolerant supervision trees
+*Application*::
+Used to encapsulate resources and functionality
+
+
+Behaviours
+----------
+[role="left comparison green"]
+Pros::
+* Less code to develop
+* Less bugs
+* Solid well tested base
+* Free built-in functionality
+** Log, Trace, Statistics, Extensible
+* Common Programming Style
+* Component-based terminology
+
+[role="right comparison darkred"]
+Cons::
+* Steep learning curve
+* Affects performance
+
+
+A server Example
+----------------
+++++
+<div class="centre">
+<svg id="server_example_1" style="width:720; height:460px;" viewBox="0 0 720 460" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#server_example_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(42,30,"Clients").addClass("code darkred bold");
+s3.image("images/phone1.png",60,50,210/2,229/2);
+s3.image("images/phone2.png",50,200,201/2,201/2);
+s3.image("images/phone3.png",40,315,240/2,246/2).transform("r-60");
+
+s3.path("M200,45 l0,400").attr({"stroke-dasharray":"4,8"}).addClass("line");
+
+s3.text(500,30,"Server").addClass("code darkred bold");
+s3.circle(550,130,40).addClass("shape darkred");
+s3.image("images/server.png",610,95,175/1.75,133/1.75);
+
+s3_g1 = s3.g(s3.text(250,110,"allocate").addClass("code darkred"),
+             s3.path("M155,120 l330,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+s3_g2 = s3.g(s3.text(205,175,"{ok, Frequency}").addClass("code darkred"),
+             s3.path("M490,145 l-330,0").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+
+s3_g3 = s3.g(s3.text(110,268,"{deallocate, Freq}").addClass("code darkred").transform("rotate(-32,305,235)"),
+             s3.path("M150,385 L490,170").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+s3_g4 = s3.g(s3.text(310,350,"ok").addClass("code darkred").transform("rotate(-37,305,300)"),
+             s3.path("M510,190 L170,405").attr({"marker-end":marker}).addClass("line"))
+            .addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 500, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 500, mina.linear, s3_anim3); }
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 500, mina.linear, s3_anim4); }
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 500, mina.linear); }
+s3.click(function() { s3_anim1() });
+
+</script>
+</svg>
+</div>
+++++
+
+* The following server is responsible for allocating and deallocating frequencies on behalf of mobile phones
+
+[NOTE.speaker]
+[role="speaker"]
+--
+This is a *simplified* example
+--
+
+
+Finite-State Machines
+---------------------
+++++
+<svg id="finite_state_machines_1" style="width:1100px; height:470px;" viewBox="0 0 1100 470" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#finite_state_machines_1");
+
+var arrow_red = s4.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0 s1.25').addClass("darkred");
+var marker_red = arrow_red.marker(0,0, 4,4, 3,2);
+
+var arrow = s4.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0 s1.25');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s4.text(240,80,"Day").addClass("darkred bold");
+s4.circle(300,150,50).addClass("shape darkred")
+s4.text(670,80,"Night").addClass("darkred bold");
+s4.circle(700,150,50).addClass("shape grey")
+
+s4_g1 = s4.g(s4.path("M350,110 Q500,40 650,110").addClass("line").attr({"marker-end":marker}),
+             s4.text(500,110,"Sunset").addClass("middle")).addClass("hide");
+s4_g2 = s4.g(s4.path("M650,190 Q500,260 350,190").addClass("line_darkred").attr({"marker-end":marker_red}),
+             s4.text(500,210,"Sunrise").addClass("middle")).addClass("hide");
+
+s4.text(150,280,"day() ->").addClass("code");
+s4.text(150,320,"  receive").addClass("code");
+s4.text(150,360,"     sunset -> night()").addClass("code");
+s4.text(150,400,"  end.").addClass("code");
+
+s4.text(630,280,"night() ->").addClass("code");
+s4.text(630,320,"  receive").addClass("code");
+s4.text(630,360,"     sunrise -> day()").addClass("code");
+s4.text(630,400,"  end.").addClass("code");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 375, mina.linear); }
+s4_anim2 = function() { s4_g2.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_anim1(); s4_counter++; break};
+    case 2: {s4_anim2(); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* Each state is represented as a tail recursive function
+* Each event is represented as an incoming message
+
+
+FSM Example
+-----------
+image::images/fsm_example.png["FSM Example", auto, auto]
+
+
+Behaviours
+----------
+* Design Patterns
+* Behaviours
+* Examples
+
+
+Generic Servers
+---------------
+* Generic Servers
+* Starting a Server
+* Message Passing
+* Termination
+* Other Messages
+* Timeouts
+* Other Issues
+
+
+Generic Servers
+---------------
+image::images/generic_servers.png["Generic Servers", auto, auto]
+{empty} +  
+
+* The *gen_server* module implements the client-server behaviour
+** It is part of the standard library application
+* The library module contains all the generic code
+* Non-generic code is placed in the callback module
+
+[NOTE.speaker]
+[role="speaker"]
+--
+reiterate the separations between generic and specific.
+--
+
+
+Generic Servers
+---------------
+++++
+<div class="pre">-module(frequency).
+<b>-behaviour(gen_server).</b>
+
+-export([start_link/1, init/1, ...]).
+
+start_link(...) -> ...
+</div>
+++++
+
+* Call back modules must have two extra directives
+* *behaviour* directive, used at compile time
+
+[NOTE.speaker]
+[role="speaker"]
+--
+you might mention that behaviours will warn you at compile-time if you're missing any callback.
+--
+
+
+Starting a Server
+-----------------
+++++
+<svg id="starting_a_server_1" style="width:1100px; height:320px;" viewBox="0 0 1100 320" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#starting_a_server_1");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(130,150,"Supervisor");
+s5.circle(350,150,40).addClass("shape").attr({"fill":"#A6A6A6"});
+s5.circle(350,150,35).addClass("shape").attr({"fill":"#797979"});
+s5_g2 = s5.g(s5.text(740,150,"Name/Pid"),
+             s5.circle(680,150,40).addClass("shape darkred")).addClass("hide");
+s5_g1 = s5.path("M405,150 l215,0").addClass("line").attr({"marker-end":marker, "strokeDasharray":"6,6"}).addClass("hide");
+
+s5.text(100,40,"gen_server:start_link({local, Name}, Mod, Args, [])").addClass("code");
+s5_g6 = s5.path("M785,75 l70,0").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s5_g7 = s5.text(880,85,"{ok, Pid}").addClass("code").addClass("hide");
+
+s5_g3 = s5.text(380,260,"{Mod:init(Args)").addClass("code").addClass("hide");
+s5_g4 = s5.path("M670,250 l60,0").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s5_g5 = s5.text(765,260,"{{ok, LoopData}").addClass("code").addClass("hide");
+
+s5_anim1 = function() { s5_g1.animate({"opacity":"1"}, 375, mina.linear, s5_anim2); }
+s5_anim2 = function() { s5_g2.animate({"opacity":"1"}, 375, mina.linear, s5_anim3); }
+s5_anim3 = function() { s5_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s5_anim4 = function() { s5_g4.animate({"opacity":"1"}, 375, mina.linear, s5_anim5); }
+s5_anim5 = function() { s5_g5.animate({"opacity":"1"}, 375, mina.linear); }
+s5_anim6 = function() { s5_g6.animate({"opacity":"1"}, 375, mina.linear, s5_anim7); }
+s5_anim7 = function() { s5_g7.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_anim1(); s5_counter++; break};
+    case 2: {s5_anim4(); s5_counter++; break};
+    case 3: {s5_anim6(); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* *gen_server:start_link/4* creates a new server
+** Name is the process name
+** Mod is the name of the callback module
+** Args are the arguments passed to the init function
+* *init/1* is called by the server callback module
+** It initialises the process state and returns the loop data
+
+[NOTE.speaker]
+[role="speaker"]
+--
+stress the order things are executed in, describe it.
+- Synchronized startup is important in order to know when things go wrong.
+  (It can be actually be fast compared to asynchronous startups given the need
+   to check if everything went right if there are dependencies)
+--
+
+
+Message Passing: *synchronous*
+------------------------------
+++++
+<div style="text-align:center;">
+<svg id="message_passing_synchronous_1" style="width:1000px; height:400px;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#message_passing_synchronous_1");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.text(40,40,"gen_server:call(Name, Message)").addClass("code");
+s6_g6 = s6.path("M580,30,l100,0").addClass("line hide").attr({"marker-end":marker})
+s6_g7 = s6.text(710,40,"Reply").addClass("code hide");
+
+s6.circle(230,150,40).addClass("shape grey");
+s6_g1 = s6.g(s6.text(370,115,"Message").addClass("code"),
+             s6.path("M290,125,l260,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+s6_g5 = s6.g(s6.text(388,165,"Reply").addClass("code"),
+             s6.path("M555,175,l-260,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+s6.circle(620,150,40).addClass("shape darkred");
+s6.text(680,150,"Name");
+
+s6_g2 = s6.text(300,250,"Mod:handle_call(Message,_From,LoopData)").addClass("code hide");
+s6_g3 = s6.path("M640,270,l0,40").addClass("line hide").attr({"marker-end":marker});
+s6_g4 = s6.text(400,350,"{reply, Reply, NewLoopData}").addClass("code hide");
+
+s6_anim1 = function() { s6_g1.animate({"opacity":"1"}, 500, mina.linear, s6_anim2); }
+s6_anim2 = function() { s6_g2.animate({"opacity":"1"}, 250, mina.linear); }
+s6_anim3 = function() { s6_g3.animate({"opacity":"1"}, 250, mina.linear, s6_anim4); }
+s6_anim4 = function() { s6_g4.animate({"opacity":"1"}, 250, mina.linear); }
+s6_anim5 = function() { s6_g5.animate({"opacity":"1"}, 500, mina.linear, s6_anim6); }
+s6_anim6 = function() { s6_g6.animate({"opacity":"1"}, 250, mina.linear, s6_anim7); }
+s6_anim7 = function() { s6_g7.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: { s6_anim1(); s6_counter++; break};
+    case 2: { s6_anim3(); s6_counter++; break};
+    case 3: { s6_anim5(); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+++++
+
+* *gen_server:call/2* is used by the client to send requests
+** Requests are synchronous
+** Handled in the *handle_call/3* function in the callback module
+* *handle_call/3* returns the tuple *{reply, Reply, NewLoopData}*.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+don't explain _From until the end, if someone asks a question. The students don't need to worry about it for now. 
+Maybe introduce gen_server:reply if they ask the question
+__
+--
+
+
+Message Passing: *asynchronous*
+-------------------------------
+++++
+<div style="text-align:center;">
+<svg id="message_passing_asynchronous_1" style="width:1000px; height:400px;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#message_passing_asynchronous_1");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.text(40,40,"gen_server:cast(Name, Message)").addClass("code");
+s7_g2 = s7.g(s7.path("M580,30,l100,0").addClass("line").attr({"marker-end":marker}),
+             s7.text(710,40,"ok").addClass("code")).addClass("hide");
+
+s7.circle(230,150,40).addClass("shape grey");
+s7_g1 = s7.g(s7.text(370,125,"Message").addClass("code"),
+             s7.path("M290,135,l260,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s7.circle(620,150,40).addClass("shape darkred");
+s7.text(680,160,"Name");
+
+s7_g3 = s7.text(300,250,"Mod:handle_cast(Message, LoopData)").addClass("code hide");
+
+s7_g4 = s7.path("M640,270,l0,40").addClass("line hide").attr({"marker-end":marker});
+s7_g5 = s7.text(400,350,"{noreply, NewLoopData}").addClass("code hide");
+
+s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 500, mina.linear, s7_anim2); }
+s7_anim2 = function() { s7_g2.animate({"opacity":"1"}, 250, mina.linear, s7_anim3); }
+s7_anim3 = function() { s7_g3.animate({"opacity":"1"}, 250, mina.linear); }
+s7_anim4 = function() { s7_g4.animate({"opacity":"1"}, 500, mina.linear, s7_anim5); }
+s7_anim5 = function() { s7_g5.animate({"opacity":"1"}, 500, mina.linear); }
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: { s7_anim1(); s7_counter++; break};
+    case 2: { s7_anim4(); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+++++
+
+* *gen_server:cast/2* is used by the client to send messages
+** Requests are asynchronous
+** Handled in the *handle_cast/2* function in the callback module
+* *handle_cast/2* returns the tuple *{noreply, NewLoopData}*.
+
+
+Termination
+-----------
+....
+Mod:init/1        -> {stop, Reason}
+
+Mod:handle_call/3 -> {stop, Reason, Reply, NewLoopData}
+Mod:handle_cast/2 -> {stop, Reason, NewLoopData}
+
+Mod:terminate(Reason, LoopData) -> Term
+ 
+....
+
+* Returning *stop* instead of *reply* / *noreply* stops the server
+* The call back function *terminate/2* is called
+** It allows the server to clean up before terminating
+** Its return value is ignored
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Call back *terminate/2* NOT called after init!
+--
+
+
+Termination
+-----------
+++++
+<svg id="termination_1" style="width:1000px; height:600px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#termination_1 .line2 {stroke: #4B5056;} .fill2 {fill: #4B5056;}</style>
+<script>
+
+var s8 = Snap("#termination_1");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("fill2");
+var marker2 = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s8.rect(10,50,965,540).addClass("rect_code");
+
+s8.text(15,80,"stop() ->").addClass("code");
+s8.text(15,125,"    gen_server:cast(frequency, stop).").addClass("code");
+s8.text(15,170,"").addClass("code");
+s8.text(15,215,"").addClass("code");
+s8.text(15,260,"handle_cast(stop, Frequencies) ->").addClass("code");
+s8.text(15,305,"    {stop, normal, Frequencies}.").addClass("code");
+s8.text(15,350,"").addClass("code");
+s8.text(15,395,"").addClass("code");
+s8.text(15,440,"terminate(Reason, {Free, Allocated}) ->").addClass("code");
+s8.text(15,485,"    % Clean up on termination").addClass("code");
+s8.text(15,530,"    ok.").addClass("code");
+
+s8_g1 = s8.g(s8.ellipse(590,115,45,30).addClass("line line2").attr({"stroke-dasharray":"8,6"}),
+             s8.path("M550,130 305,230").addClass("line line2").attr({"marker-end":marker2,"stroke-dasharray":"8,6"}).addClass("")).addClass("hide");
+
+s8_g2 = s8.ellipse(260,250,45,30).addClass("line line2").attr({"stroke-dasharray":"8,6"}).addClass("hide");
+
+s8_g3 = s8.g(s8.ellipse(259,297,65,28).addClass("line_darkred").addClass(""),
+             s8.path("M254,326 249,394").addClass("line_darkred").attr({"marker-end":marker}).addClass(""),
+             s8.ellipse(440,297,110,30).addClass("line_darkred").addClass(""),
+             s8.path("M445,327 455,393").addClass("line_darkred").attr({"marker-end":marker}).addClass("")).addClass("hide");
+
+s8_g4 = s8.g(s8.ellipse(244,430,65,28).addClass("line_darkred").addClass(""),
+             s8.ellipse(485,430,160,30).addClass("line_darkred").addClass("")).addClass("hide");
+
+//diagram
+s8.ellipse(920,65,60,30).addClass("shape darkred");
+s8.text(892,74,"Start").addClass("white").attr({"font-size":"17pt"});
+s8.path("M920,95 l0,35").addClass("line_darkred").attr({"marker-end":marker});
+s8.rect(860,138,120,60).addClass("shape grey");
+s8.text(873,177,"Initialise").addClass("white").attr({"font-size":"17pt"});
+s8.path("M920,199 l0,28").addClass("line_darkred").attr({"marker-end":marker});
+s8.rect(882.5,235,75,75,15).addClass("shape lightgrey");
+s8.text(895,281,"loop").attr({"font-size":"17pt"});
+s8.path("M958,260 C1003,225 1003,315 964 284").addClass("line_darkred").attr({"marker-end":marker});
+s8.path("M920,310 l0,28").addClass("line_darkred").attr({"marker-end":marker});
+s8.rect(860,345,120,60).addClass("shape grey");
+s8.text(866.5,383,"terminate").addClass("white").attr({"font-size":"17pt"});
+s8.ellipse(720,245,60,30).addClass("shape darkred");
+s8.text(695,253,"Stop").addClass("white").attr({"font-size":"17pt"});
+s8.path("M781,245 l93,25").addClass("line_darkred").attr({"marker-end":marker});
+
+s8_anim1 = function() { s8_g1.animate({"opacity":"1"}, 500, mina.linear); }
+s8_anim2 = function() { s8_g2.animate({"opacity":"1"}, 500, mina.linear); }
+s8_anim3 = function() { s8_g3.animate({"opacity":"1"}, 500, mina.linear, s8_anim4); }
+s8_anim4 = function() { s8_g4.animate({"opacity":"1"}, 500, mina.linear); }
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_anim1(); s8_counter++; break};
+    case 2: {s8_anim2(); s8_counter++; break};
+    case 3: {s8_anim3(); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Termination
+-----------
+++++
+<svg id="termination_2" style="width:1000px; height:420px;" viewBox="0 0 1000 420" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#termination_2 .line2 {stroke: #4B5056;} .fill2 {fill: #4B5056;}</style>
+<script>
+
+var s9 = Snap("#termination_2");
+
+var arrow = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s9_g1 = s9.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform("t400 -80 r25");
+
+s9.circle(510,120,40).addClass("shape grey");
+s9_g2 = s9.path("M510,220 l0,80").addClass("line hide").attr({"marker-end":marker});
+s9_g3 = s9.g(s9.text(140,350,"Mod:terminate(Reason, LoopData)").addClass("code"),
+		s9.path("M700,340 l70,0").addClass("line").attr({"marker-end":marker}),
+		s9.text(800,350,"Term").addClass("code")).addClass("hide");
+
+s9_anim1 = function() { s9_g1.animate({"opacity":"1"}, 750, mina.linear, s9_anim2); }
+s9_anim2 = function() { s9_g2.animate({"opacity":"1"}, 500, mina.linear, s9_anim3); }
+s9_anim3 = function() { s9_g3.animate({"opacity":"1"}, 500, mina.linear); }
+s9.click(function() { s9_anim1() });
+
+</script>
+</svg>
+++++
+
+* If the parent process crashes, *terminate/2* is called
+** The server must be trapping exits: *process_flag(trap_exit, true)*.
+** *Reason* will be the reason of termination
+
+[NOTE.speaker]
+[role="speaker"]
+--
+The returned term is discarded.
+
+if you want to be sure terminate is called, the process should be trapping exits, otherwise a parent or linked process could bring it down and not allow for a proper termination.
+
+look at the context for the cleanup ('Reason'). If the reason is that the resource you had to clean up died, don't try to clean it up!
+--
+
+
+Other Messages
+--------------
+[role="centered"]
+++++
+<div class="pre" style="text-align:center;">monitor_node(Node, True)
+Pid ! Message
+process_flag(trap_exit, true), link(Pid)
+<span style="font-size:2em;">&darr;</span>
+Mod:handle_info(Message, LoopData)
+<span style="font-size:2em;">&darr;</span>
+{noreply, NewLoopData}
+{stop, Reason, NewLoopData}
+</div>
+++++
+
+//NOTE: fix arrows?
+
+* Generic servers follow a protocol hidden in the *gen_server:cast/2* and *gen_server:call/2* function calls
+* Messages not following this protocol must be handled
+* They are handled in the *handle_info/2* callback function
+
+
+Timeouts
+--------
+++++
+<svg id="timeouts_1" style="width:1000px; height:350px;" viewBox="0 0 1000 350" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#timeouts_1");
+
+var arrow = s10.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var clock = s10.polygon([0,0, 3,1.5, 0,3]).attr({"fill":"#000"}).transform('r0');
+var hand = clock.marker(0,0, 3,3, 2,1.5);
+
+s10.text(200,50,"gen_server:call(Name, Message, Timeout)").addClass("code");
+
+s10_g2 = s10.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform("t120 0");
+
+s10.circle(230,200,40).addClass("shape grey");
+
+s10_clock = s10.g(s10.circle(100,100,48).attr({"fill":"none", "stroke":"#888", "stroke-width":"2"}),
+			    s10.path("M100,100 l0,-40").attr({"stroke":"#000", "stroke-width":"2", "marker-end":hand}),
+			    s10.path("M100,100 l24,-18").attr({"stroke":"#000", "stroke-width":"2", "marker-end":hand}))
+			   .transform("t750,100");
+
+s10.path("M770,200 l-420,0").addClass("line").attr({"marker-end":marker});
+
+s10_g1 = s10.path("M340,200 l430,0").attr({"stroke-width":"14pt","stroke":"#fff","strokeDasharray":430});
+
+s10.click(function() { s10_g1.animate({"strokeDashoffset":"430"}, 750, mina.linear); });
+
+s10_anim1 = function() { s10_g1.animate({"strokeDashoffset":"430"}, 750, mina.linear, s10_anim2); }
+s10_anim2 = function() { s10_g2.animate({"opacity":"1"}, 500, mina.linear); }
+
+s10.click(function() { s10_anim1() });
+
+</script>
+</svg>
+++++
+
+* Timeouts can be set on client calls
+* Timeout is an integer in milliseconds or the atom *infinity*
+* Default timeout is 5000ms
+* If the client does not receive a response, it terminates
+
+
+Timeouts
+--------
+++++
+<svg id="timeouts_2" style="width:1200px; height:300px;" viewBox="0 0 1100 300" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s11 = Snap("#timeouts_2");
+
+var arrow = s11.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s11.rect(10,10,1090,280).addClass("rect_code");
+
+s11.text(18,40, "Mod:init/1             {ok, LoopData, Timeout}").addClass("code");
+s11.text(18,40, "                                      Timeout").addClass("code bold darkred");
+s11.text(18,80, "Mod:handle_call/3      {reply, Reply, NewLoopData, Timeout}").addClass("code");
+s11.text(18,80, "                                                   Timeout").addClass("code bold darkred");
+s11.text(18,120,"Mod:handle_cast/2      {noreply, NewLoopData, Timeout}").addClass("code");
+s11.text(18,120,"                                              Timeout").addClass("code bold darkred");
+s11.text(18,160,"Mod:handle_info/2      {noreply, NewLoopData, Timeout}").addClass("code");
+s11.text(18,160,"                                              Timeout").addClass("code bold darkred");
+s11.text(18,260,"                       Mod:handle_info(timeout, LoopData)").addClass("code");
+s11.text(18,260,"                                       timeout").addClass("code bold darkred");
+
+s11.path("M327,90 l77,0").addClass("line").attr({"marker-end":marker,"stroke-width":"4px"});
+s11.path("M697,178 l0,40").addClass("line").attr({"marker-end":marker,"stroke-width":"4px"});
+
+</script>
+</svg>
+++++
+
+* *Timeouts* can be generated within the server
+* *Timeout* is an integer in milliseconds or the atom *infinity*
+* Default value is *infinity*
+* Timeouts are triggered if no message is received within *Timeout* ms
+* Timeouts are reset after a *timeout* event or an incoming message
+
+
+Other Issues: *sys module*
+--------------------------
+++++
+<div class="pre"><br />
+<b>   sys:log(Server, Flag)      sys:log_to_file(Server,Flag)</b>
+
+ Flag = true | {true,int()}     Flag = FileName | false
+      | get | false | print
+
+</div>
+++++
+
+* *sys:log/2* turns on the logging of systems events
+** A maximum of *int()* events are logged
+** Default value is 10
+* *sys:log_to_file/2* turns on the logging of system events to file
+
+[NOTE.speaker]
+[role="speaker"]
+--
+in start_link, the last argument is optional stuff. The sys module is what uses these and allows to turn it on and off.
+
+Allows debugging.
+--
+
+
+Other Issues: *sys module*
+--------------------------
+++++
+<div class="pre"><br />
+<b> sys:statistics(Server, Flag)      sys:trace(Server,Flag)</b>
+
+  Flag = true | false | get         Flag = true | false
+
+
+</div>
+++++
+
+* *sys:statistics/2* enables the logging of statistics
+** Includes start/current times
+** Messages sent/received
+** The number of reductions
+* *sys:trace/2* prints all system events to standard IO
+** You can implement your own debug/trigger function
+
+
+Other Issues: *sys module*
+--------------------------
+++++
+<div class="left">
+<div class="pre">gen_server:start_link(
+   {global, Name},
+   Module,
+   Args,
+   <b>Options</b>
+).
+
+
+<b>Options:</b>
+{debug, [trace|statistics|log
+      | {log_to_file, FileName}
+      | {install, {F, State}]}
+| {timeout, Time}
+| {spawn_opts, Opts}
+
+
+</div></div>
+++++
+
+[role="right"]
+* Options is a list of debug functions from the sys module
+* Can be set when starting the generic servers
+
+
+Other Issues
+------------
+++++
+<div class="pre" style="text-align:center; padding:14pt 0 16pt !important;">gen_server:start_link({global, Name}, Module, Args, Opts)
+
+gen_server:start({local, Name}, Module, Args, Options)
+
+gen_server:start(Modules, Args, Options) or
+gen_server:start_link(Module, Args, Options)
+</div>
+++++
+
+[role="closer"]
+* *global* registers the name globally in a network of nodes
+** +*gen_server:call({global, Name}, Msg)*+ is used to make calls
+** The name must be unique among connected nodes
+** Location transparency is preserved
+* Processes do not have to be linked to their supervisors
+* Processes do not have to be named 
+** referred to through their Pid
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Global names: Note that this now requires a different call with the {global, _} tuple
+
+Note that gen_server:start is only for debugging (in the shell, to avoid kills)
+__
+--
+
+
+Generic Servers
+---------------
+* Generic Servers
+* Starting a Server
+* Message Passing
+* Termination
+* Other Messages
+* Timeouts
+* Other Issues

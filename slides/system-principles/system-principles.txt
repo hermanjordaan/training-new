@@ -1,0 +1,389 @@
+System Principles
+=================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+System Principles
+-----------------
+* Starting Erlang
+* Making a Release
+* Erlang Directives
+* Release Handling
+
+
+Starting Erlang
+---------------
+....
+erl -boot BootFile -mode ModeType -pa Dir -pz Dir
+    -config ConfigFile -heart 
+    -ApplicationName Key Value
+ 
+ 
+ 
+....
+
+* Arguments can be passed when starting Erlang
+** Documented in the *erl* manual page
+* The *erl* command is usually placed in a script
+
+
+Starting Erlang: *release files*
+--------------------------------
+....
+{release,
+ {"OTP  APN 181 01","R14B02"},
+ {erts, "5.8.3"},
+ [{kernel, "2.14.3"},
+  {stdlib, "1.17.3"},
+  {sasl, "2.1.9.3"}]}.
+ 
+....
+
+* Every Erlang System has a release specification
+** It contains the system revision information
+** It contains all applications used to build the system and start it
+* The above is the standard OTP R14B02 release specification
+
+
+Making a Release: *release files*
+---------------------------------
+++++
+<div class="w_700">
+<svg id="making_a_release_release_files_1" style="width:650; height:650px;" class="left" viewBox="0 0 650 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#making_a_release_release_files_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s1.rect(10,10,600,600).addClass("rect_code")
+
+s1.text(20,45,"{release,").addClass("code");
+s1.text(20,85," {ReleaseName, Version},").addClass("code");
+s1.text(20,125," {erts, ErtsVersion},").addClass("code");
+s1.text(20,165," [{Application, Version},").addClass("code");
+s1.text(20,205,"  {Application, Version, Type},").addClass("code");
+s1.text(20,245,"  {Application, Version,").addClass("code");
+s1.text(20,285,"   [IncludedApps]},").addClass("code");
+s1.text(20,325,"  {Application, Version, Type,").addClass("code");
+s1.text(20,365,"   [IncludedApps]}]").addClass("code");
+s1.text(20,405,"}.").addClass("code");
+
+s1_g1 = s1.g(s1.path("M470,400 Q480,380 530,375 C600,370 600,280 540,260 Q510,250 505,230").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.text(450,435,"permanent,").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(450,470,"transient,").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(450,505,"temporary or load").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s1_g2 = s1.g(s1.path("M190,545 l0,-150").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.text(55,580,"{Name, Version} | Name").addClass("darkred")).addClass("hide");
+
+setTimeout( function() {s1_g1.animate({"opacity":"1"}, 375, mina.linear)}, 1500);
+setTimeout( function() {s1_g2.animate({"opacity":"1"}, 375, mina.linear)}, 2000);
+
+</script>
+</svg>
+</div>
+++++
+
+[role="right w_400"]
+* Consists of a single Erlang term
+** Included applications override the app file specification
+** All version numbers are strings
+* Stored in a file with the *.rel* suffix
+
+
+Making a Release: *boot files*
+------------------------------
+image::images/boot_files.png["Making a Release: boot files", auto, 400]
+
+* Create the boot file using the *make_script* tool
+** All revision controls are done based on the app and rel files
+* A binary (boot) and a text (script) file are generated
+** Use the text version for debugging only
+
+
+Making a Release: *config files*
+--------------------------------
+++++
+<div class="left">
+<div class="pre"><span class="comment">%% SASL.app</span>
+{application, <b>sasl</b>,                                        
+ [{description, "SASL ..."},
+  ...
+  {env,[{sasl_error_logger,tty},
+        {<b>errlog_type</b>, <b>all</b>}]}]}.
+
+<span class="comment">%% Name.config</span>
+[{<b>sasl</b>, [{<b>errlog_type</b>, <b>info</b>}]},
+ {Application1,
+[{Key,Val}, ...]},
+ {Application2, [...]}]. 
+
+<span class="comment">%% Running</span>
+$ erl -config Name
+$ erl <b>-sasl errlog_type all</b>
+</div></div>
+++++
+
+[role="right"]
+* Environment variables can be overridden in config files
+** They are usually target or customer specific
+* Config files can be overridden by *-App Key Val* directives
+** These values are commonly used for test purposes
+
+
+Erlang Directives
+-----------------
+++++
+<div class="pre">
+<img src="images/directives.png" style="float:right; width:200px; height:auto; position:relative; margin-top:-40px; margin-right:-40px;" />
+<span></span>erl -heart -env HEARTBEAT_TIMEOUT Seconds
+           -env HEART_COMMAND Script 
+
+
+
+
+
+</div>
+
+++++
+
+* Heart will monitor the Erlang node and call a command
+** Upon failure and if the Erlang node hangs
+* Environment variables can be set and updated
+** Hardware watchdogs, restart commands, timeout intervals
+
+
+Erlang Directives
+-----------------
+*init:restart/0*::
+The system is restarted in the Erlang node. Applications are taken down smoothly, modules are unloaded and the ports are closed.
+
+*init:reboot/0*::
+Like restart, only that the Erlang node is also restarted
+* *Heart* will attempt to restart the system
+
+*init:stop/0*::
+The system is taken down smoothly, and Heart is stopped.
+
+
+Erlang Directives
+-----------------
+* *erl -mode* embedded / interactive 
+* Interactive mode loads modules automatically at runtime
+** It will use the code path when the global calls are made
+** The mode is used when developing
+* Embedded will load code at start-up through the boot file
+** Code can only be loaded using *code:load_file/1*
+** Provides strict revision control
+
+
+Erlang Directives
+-----------------
+
+++++
+<ul style="margin-bottom:15pt;"><li><strong>erl -pa | -pz</strong> Directory <img src="images/directory.png" style="height:40px; width:auto; margin-left:20px; margin-bottom:-5px;" /></li></ul>
+++++
+
+* *pa* adds a directory to the beginning of the code search path
+** Commonly used in start scripts for patch directories
+** Same effects as calling *code:add_patha/1*
+* *pz* adds the directory to the end of the code search path
+** Same effect as calling *code:add_pathz/1*
+** Can be used in all execution modes
+
+
+Release Handling: *creating*
+----------------------------
+++++
+<svg id="release_handling_creating_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#release_handling_creating_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.rect(10,10,400,100,15).addClass("shape darkred")
+s2.text(210,70,"Create a boot file").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+
+s2.path("M210,116 l0,42").addClass("line").attr({"marker-end":marker});
+s2.rect(10,170,400,100,15).addClass("shape darkred");
+s2.text(210,230,"Create a start script").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s2.text(510,195,"Create a shell script that boots the").addClass("darkred");
+s2.text(510,230,"node and initialises the shell").addClass("darkred");
+s2.text(510,265,"environment").addClass("darkred");
+s2.path("M495,220 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red});
+
+s2_g1 = s2.g(s2.path("M210,276 l0,42").addClass("line").attr({"marker-end":marker}),
+             s2.rect(10,330,400,100,15).addClass("shape darkred"),
+             s2.text(210,390,"systools:make_tar/1").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(510,355,"Creates the target structure,").addClass("darkred"),
+             s2.text(510,390,"including ERTS and applications,").addClass("darkred"),
+             s2.text(510,425,"and tars it all up").addClass("darkred"),
+             s2.path("M495,380 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+s2_g2 = s2.g(s2.path("M210,436 l0,42").addClass("line").attr({"marker-end":marker}),
+             s2.rect(10,490,400,100,15).addClass("shape darkred"),
+             s2.text(210,532,"Un-tar and install on").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(210,568,"target").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(510,515,"Installation of the files might").addClass("darkred"),
+             s2.text(510,550,"require fine tuning based on the").addClass("darkred"),
+             s2.text(510,585,"tar file created.").addClass("darkred"),
+             s2.path("M495,540 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Release Handling: *target*
+--------------------------
+++++
+<div class="left w_600">
+<div class="pre"><b>$TARGETROOT</b>/bin/
+                erl
+                start
+           /erts-&lt;VSN&gt;/
+           /releases/
+                &lt;RelName&gt;/
+                &lt;RelName&gt;.rel
+           /lib/
+                /&lt;App1-Vsn&gt;/
+                          priv/
+                          ebin/
+                /&lt;App2-Vsn&gt;/
+                          priv/
+                          ebin/
+
+
+</div></div>
+++++
+
+[role="right w_500"]
+* Un-tar and install on target using the release handler
+* The target structure is similar to the Erlang installation
+** Only contains applications specified in the rel file
+* Application and ERTS versions are part of the directory names
+
+
+Release Handling: *upgrade*
+---------------------------
+* Tools for upgrades are included in the SASL app
+** See the *systools* and *release_handler* modules
+* Application upgrades can be done during runtime
+** Including application data and module upgrades
+* The ERTS can be upgraded
+** The node must be taken down
+** Often updated through fail and take-over mechanism
+* Problems to keep in mind during the upgrade
+** Process failures/dependencies, distributed nodes
+
+
+Release Handling: *upgrade*
+---------------------------
+++++
+<svg id="release_handling_upgrade_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#release_handling_upgrade_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.rect(10,10,400,100,15).addClass("shape darkred")
+s3.text(210,70,"Create an appup file").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s3.text(510,35,"Defines how the application is").addClass("darkred");
+s3.text(510,70,"upgraded and downgraded with").addClass("darkred");
+s3.text(510,105,"high-level instructions.").addClass("darkred");
+s3.path("M495,60 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red});
+
+s3_g1 = s3.g(s3.path("M210,116 l0,42").addClass("line").attr({"marker-end":marker}),
+             s3.rect(10,170,400,100,15).addClass("shape darkred"),
+             s3.text(210,230,"systools:make_relup").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(510,195,"Makes a relup file used by the").addClass("darkred"),
+             s3.text(510,230,"release handler, describing how ").addClass("darkred"),
+             s3.text(510,265,"the upgrade works").addClass("darkred"),
+             s3.path("M495,220 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+s3_g2 = s3.g(s3.path("M210,276 l0,42").addClass("line").attr({"marker-end":marker}),
+             s3.rect(10,330,400,100,15).addClass("shape darkred"),
+             s3.text(210,390,"systools:make_tar/1").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"})).addClass("hide");
+
+s3_g3 = s3.g(s3.path("M210,436 l0,42").addClass("line").attr({"marker-end":marker}),
+             s3.rect(10,490,400,100,15).addClass("shape darkred"),
+             s3.text(210,532,"Un-tar and install on").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(210,568,"target").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(510,495,"Functionality is in place to unpack, ").addClass("darkred"),
+             s3.text(510,530,"install and make the new release ").addClass("darkred"),
+             s3.text(510,565,"permanent, or roll back to the ").addClass("darkred"),
+             s3.text(510,600,"previous version").addClass("darkred"),
+             s3.path("M495,540 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+s3_anim1 = function() {s3_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s3_anim2 = function() {s3_g2.animate({"opacity":"1"}, 375, mina.linear, s3_anim3)};
+s3_anim3 = function() {s3_g3.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim2(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Release Handling
+----------------
+[role="table2"]
+[options="header"]
+|===========================================
+|Extension |Type                |Description
+|.erl      |Module              |Erlang Code
+|.beam     |Binary Module       |Byte Code
+|.app      |Application         |Resource File
+|.rel      |Release             |Release script
+|.script   |Script              |Start script
+|.boot     |Boot                |Binary boot file
+|.config   |Configuration       |Override app env variables
+|.appup    |Application upgrade |Application upgrade file
+|.relup    |Release upgrade     |Release upgrade script
+|===========================================
+
+
+System Principles
+-----------------
+* Starting Erlang
+* Making a Release
+* Erlang Directives
+* Release Handling

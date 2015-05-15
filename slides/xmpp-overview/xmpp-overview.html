@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>XMPP Overview</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>XMPP Overview</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_overview"><h2>Overview</h2><div class="ulist"><ul><li><p>XMPP/Jabber</p></li><li><p>History</p></li><li><p>Properties</p></li><li><p>Example Products</p></li><li><p>XMPP architecture</p></li><li><p>Protocol</p></li><li><p>Roster and Presence</p></li><li><p>Extensions</p></li></ul></div></section>
+<section id="_xmpp_jabber"><h2>XMPP/Jabber</h2><div class="ulist"><ul><li><p>formerly known as Jabber (Trademarks apply)</p></li><li><p>XMPP stands for <br>
+e<strong>X</strong>tensible <strong>M</strong>essaging &amp; <strong>P</strong>resence <strong>P</strong>rotocol</p></li><li><p>XMPP is based on XML</p></li><li><p>Defined at RFC-6120 (Core) and RFC-6121 (IM)</p></li><li><p>Supplemented by XEPs (XMPP Enhancement Protocols)</p></li></ul></div></section>
+<section id="_xmpp_history"><h2>XMPP History</h2><svg id="xmpp_history_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+s1 = Snap("#xmpp_history_1");
+
+s1_g1 = s1.image("images/history_1.png",20,100,2037/1.9,527/1.9);
+s1_g2 = s1.image("images/history_2.png",20,100,2037/1.9,758/1.9).addClass("hide");
+s1_g3 = s1.image("images/history_3.png",20,100,2037/1.9,762/1.9).addClass("hide");
+s1_g4 = s1.image("images/history_4.png",20,100,2037/1.9,875/1.9).addClass("hide");
+s1_g5 = s1.image("images/history_5.png",20,100,2037/1.9,875/1.9).addClass("hide");
+
+s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g2.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    case 2: {s1_g3.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    case 3: {s1_g4.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    case 4: {s1_g5.animate({"opacity":"1"}, 500, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="__strong_xmpp_properties_strong"><h2><strong>XMPP: properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Open standard</strong></dt><dd><p>Standard formalized by the IETF through RFCs
+and extensions are published by the XFS</p></dd><dt class="hdlist1"><strong>Secure</strong></dt><dd><p>Channel encryption, strong authentication, may be isolated from the public network</p></dd><dt class="hdlist1"><strong>Flexible</strong></dt><dd><p>Custom functionality can be built on top of XMPP</p></dd></dl></div></section>
+<section id="_xmpp_strong_properties_strong"><h2>XMPP: <strong>properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Decentralized</strong></dt><dd><p>Anyone can run XMPP server and there is no central master server</p></dd><dt class="hdlist1"><strong>Scalable</strong></dt><dd><p>Solves scalability issues of polling approaches</p></dd><dt class="hdlist1"><strong>Proven</strong></dt><dd><p>In use since 1998, many implementations and deployments, millions of end users</p></dd></dl></div></section>
+<section id="_example_products"><h2>Example Products</h2><table class="logos">
+	<tr>
+		<td class="logo"><img src="images/logo_isode.png" style="height:60px;" /></td>
+		<td><ul><li>isode M-Link Server</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_oracle.png" style="height:30px;" /></td>
+		<td><br /><ul><li>Oracle Communications<br />Instant Messaging Server</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_cisco.png" style="height:54px;" /></td>
+		<td><ul><li>CISCO Jabber XCP</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_IBM.png" style="height:75px;" /></td>
+		<td><br /><ul><li>IBM Lotus Sametime<br />Gateway</li></ul></td>
+	</tr>
+</table></section>
+<section id="_example_products_strong_open_source_strong"><h2>Example Products: <strong>open source</strong></h2><table class="logos">
+	<tr>
+		<td class="logo"><img src="images/logo_ejabberd.png" style="height:60px;" /></td>
+		<td><ul><li>Ejabberd (Erlang)</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_openfire.png" style="height:60px;" /></td>
+		<td><ul><li>Openfire (Java)</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_spreadfirefox.png" style="height:60px;" /></td>
+		<td><ul><li>Tigase (Java)</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_prosody.png" style="height:60px;" /></td>
+		<td><ul><li>Prosody (Lua)</li></ul></td>
+	</tr>
+	<tr>
+		<td class="logo"><img src="images/logo_jabberd.png" style="height:60px;" /></td>
+		<td><ul><li>jabberd 2.x (C)</li></ul></td>
+	</tr>
+</table></section>
+<section id="_architecture_strong_client_strong"><h2>Architecture: <strong>Client</strong></h2><svg id="architecture_client_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+s2 = Snap("#architecture_client_1");
+
+arrow = s2.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+marker = arrow.marker(0,0, 4,4, 3,2);
+
+s2.text(10,40, "• Decentralized client-server architecture");
+s2.text(10,100,"• Client (user) identified by JID similar to email");
+s2.text(10,140,"   address");
+s2.text(50,190,"- user@jabber.org").attr({"fill":"4B5056", "font-size":"20pt"});
+s2.text(10,250,"• Client relies on DNS to resolve");
+s2.text(471,250,"domain").attr({"text-decoration":"underline"});
+s2.text(10,310,"• Client connects to server using TCP/IP");
+s2.text(10,370,"• Each connection represented by");
+s2.text(493,370,"resource").attr({"text-decoration":"underline"});
+s2.text(10,410,"   identifier");
+s2.text(50,460,"- user@jabber.org/home").attr({"fill":"4B5056", "font-size":"20pt"});
+
+s2_g1 = s2.g(s2.ellipse(220,184,80,30).addClass("line_darkred").attr({"stroke-width":"2px"}),
+             s2.path("M525,225 Q460,160 300,175").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_g2 = s2.g(s2.ellipse(340,452,50,24).addClass("line_darkred").attr({"stroke-width":"2px"}),
+             s2.path("M563,380 Q540,425 392,446").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g1.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    case 3: {s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 4: {s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_architecture_strong_server_strong"><h2>Architecture: <strong>Server</strong></h2><div class="ulist"><ul><li><p>Server identified by domain name</p></li><li><p>Opens TCP socket on ports</p><div class="ulist"><ul><li><p>5222 (STARTTLS)and 5223 (SSL, deprecated)</p></li><li><p>Optional HTTP port 80 (and 443) for BOSH</p></li></ul></div></li><li><p>Direct federation between servers</p><div class="ulist"><ul><li><p>no intermediate servers</p></li><li><p>many inter-domain connections</p></li><li><p>port 5269 for s2s (server to server) connections</p></li></ul></div></li></ul></div></section>
+<section id="_architecture_strong_server_federation_strong"><h2>Architecture: <strong>Server federation</strong></h2><div class="ulist"><ul><li><p>allows two different XMPP servers to talk to each another</p></li><li><p>servers initiate a connection using server dialback (XEP-0220)</p><div class="ulist"><ul><li><p>entity verification based on the Domain Name System</p></li><li><p>DNS SRV record (_xmpp-server._tcp.domain.com)</p></li><li><p>may use DNSSEC for security reason in the future</p></li></ul></div></li><li><p>multiple connections to the remote servers allowed</p></li><li><p>TLS/SSL is recommended</p></li></ul></div>
+<div class="paragraph"><p><code class="hidden">__</code></p></div></section>
+<section id="_protocol_strong_overview_strong"><h2>Protocol: <strong>Overview</strong></h2><div class="ulist"><ul><li><p>XML stream</p><div class="ulist"><ul><li><p>one stream for both directions (client – server)</p></li><li><p>&lt;stream:stream&gt; element as wrapper</p></li></ul></div></li><li><p>Three basic types of stanzas (packets)</p><div class="ulist"><ul><li><p>message</p></li><li><p>presence</p></li><li><p>iq</p></li></ul></div></li><li><p>long-lived TCP connection</p></li><li><p>asynchronous exchange of stanzas</p></li></ul></div></section>
+<section id="_protocol_strong_example_stanza_strong"><h2>Protocol: <strong>Example stanza</strong></h2><svg id="protocol_example_stanza_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+s3 = Snap("#protocol_example_stanza_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+
+s3.text(250,160,"&lt;iq type=\"get\"&gt;").addClass("code");
+s3.text(250,200,"  &lt;query xmlns=\"jabber:iq:roster\"/&gt;").addClass("code");
+s3.text(250,240,"&lt;/iq&gt;").addClass("code");
+
+s3_g1 = s3.g(s3.text(100,90,"stanza name").addClass("darkred"),
+             s3.ellipse(278,152,32,28).addClass("line_darkred").attr({"stroke-width":"2px"}),
+             s3.path("M170,97 243,135").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g2 = s3.g(s3.text(465,80,"stanza type").addClass("darkred"),
+             s3.path("M530,90 l-60,30").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g3 = s3.g(s3.text(480,340,"stanza body").addClass("darkred"),
+             s3.path("M295,205 C345,235 525,195 575,225").addClass("line_darkred"),
+             s3.path("M855,205 C815,235 615,195 575,225").addClass("line_darkred"),
+             s3.path("M575,225 l0,75").addClass("line_darkred")).addClass("hide")
+
+s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_g1.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 2: {s3_g1.animate({"opacity":"0"}, 250, mina.linear); s3_g2.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 3: {s3_g2.animate({"opacity":"0"}, 250, mina.linear); s3_g3.animate({"opacity":"1"}, 500, mina.linear); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_protocol_strong_message_strong"><h2>Protocol: <strong>Message</strong></h2><div class="ulist"><ul><li><p>Basic method of sending information</p></li><li><p>Typically not acknowledged</p></li><li><p>Used for</p><div class="ulist"><ul><li><p>instant messaging</p></li><li><p>group chats</p></li><li><p>notifications</p></li></ul></div></li></ul></div>
+<div style="position:relative; top:-120px;">
+<svg id="protocol_message_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+s4 = Snap("#protocol_message_1");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s4.rect(250,170,760,210).addClass("rect_code")
+s4.text(260,205,"&lt;message from=\"user@jabber.org/home\" ").addClass("code");
+s4.text(260,245,"         to=\"friend@gmail.com\" ").addClass("code");
+s4.text(260,285,"         type=\"chat\"&gt; ").addClass("code");
+s4.text(260,325,"  &lt;body&gt;Let me know what you think!&lt;/body&gt; ").addClass("code");
+s4.text(260,365,"&lt;/message&gt;").addClass("code");
+
+s4_g1 = s4.g(s4.path("M600,175 l80,-80 -50,0 0,-80, 280,0 0,80 -190,0 -120,80").addClass("line_darkred").attr({"stroke-width":"2px"}),
+             s4.text(735,48,"from").addClass("darkred bold").attr({"font-style":"italic", "font-size":"20pt"}),
+             s4.text(650,82,"stamped by server").attr({"font-size":"20pt"})).addClass("hide");
+
+s4.click( function() {s4_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+</div></section>
+<section id="_protocol_strong_message_strong_2"><h2>Protocol: <strong>Message</strong></h2><div class="ulist"><ul><li><p>Message types</p><div class="ulist"><ul><li><p><em>normal</em> (one-off messages)</p></li><li><p><em>chat</em> (sent in a "session" between two users)</p></li><li><p><em>groupchat</em> (sent in a multi-user chat room)</p></li><li><p><em>headline</em> (alerts or notifications)</p></li><li><p><em>error</em> (describe an error occurred, mostly in a response to own message sent)</p></li></ul></div></li></ul></div></section>
+<section id="_protocol_strong_presence_strong"><h2>Protocol: <strong>Presence</strong></h2><div class="ulist"><ul><li><p>Advertises the availability</p></li><li><p>Requires presence subscription</p><div class="ulist"><ul><li><p>send subscription request and approve it</p></li></ul></div></li><li><p>online</p><div class="ulist"><ul><li><p>away</p></li><li><p>dnd</p></li><li><p>xa</p></li><li><p>chat</p></li></ul></div></li><li><p>unavailable (offline)</p></li></ul></div>
+<div style="position:relative; top:-310px;">
+<svg id="protocol_presence_1" style="width:1000px; height:400px;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<script>
+
+s5 = Snap("#protocol_presence_1");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"4"});
+
+s5.path("M140,32 C450,52 160,70 470,90").addClass("line_darkred").attr({"marker-end":marker, "stroke-width":"2pt"});
+
+s5.rect(490,65,500,280).addClass("rect_code")
+s5.text(500,100,"&lt;presence/&gt;").addClass("code");
+s5.text(500,140,"").addClass("code");
+s5.text(500,180,"&lt;presence&gt;").addClass("code");
+s5.text(500,220,"  &lt;show&gt;away&lt;/show&gt;").addClass("code");
+s5.text(500,260,"  &lt;status&gt;eating&lt;/status&gt;").addClass("code");
+s5.text(500,300,"&lt;/presence&gt;").addClass("code");
+
+</script>
+</svg>
+</div></section>
+<section id="_protocol_strong_info_query_strong"><h2>Protocol: <strong>Info/Query</strong></h2><div class="ulist"><ul><li><p>Structure for request-response exchange</p></li><li><p>Result tracked using the id attribute</p></li><li><p>Payload qualified by the namespace</p></li><li><p>Client:</p></li></ul></div>
+<div class="pre" style="width:600px !important; position:relative; margin-top:-36pt; left:120pt;">&lt;iq type=&quot;get&quot; <b>id=&quot;aad6a&quot;</b>&gt;
+  &lt;query xmlns=&quot;jabber:iq:roster&quot;/&gt;
+&lt;/iq&gt;
+
+</div>
+<div class="ulist"><ul><li><p>Server:</p></li></ul></div>
+<div class="pre" style="width:930px !important; position:relative; margin-top:-36pt; left:120pt;">&lt;iq type=&quot;result&quot; <b>id=&quot;aad6a&quot;</b>
+    from=&quot;user@jabber.org/Psi&quot; to=&quot;user@jabber.org/Psi&quot;&gt;
+  &lt;query xmlns=&quot;jabber:iq:roster&quot;&gt;
+    &lt;item subscription=&quot;both&quot; jid=&quot;friend@gmail.com&quot;/&gt;
+  &lt;/query&gt;
+&lt;/iq&gt;
+
+</div></section>
+<section id="_protocol_strong_info_query_types_strong"><h2>Protocol: <strong>Info/Query Types</strong></h2><div class="ulist"><ul><li><p>get</p><div class="ulist"><ul><li><p>ask for information</p></li></ul></div></li><li><p>set</p><div class="ulist"><ul><li><p>provide some information</p></li></ul></div></li><li><p>result</p><div class="ulist"><ul><li><p>return the result of a get request</p></li><li><p>acknowledge set request</p></li></ul></div></li><li><p>error</p><div class="ulist"><ul><li><p>unable to process the request</p></li></ul></div></li></ul></div></section>
+<section id="_protocol_strong_info_query_strong_2"><h2>Protocol: <strong>Info/Query</strong></h2><div class="ulist"><ul><li><p>Body of stanzas can contain any number of XML child elements that extend the stanza</p></li><li><p>There are some conventions in naming extensions and namespaces</p><div class="ulist"><ul><li><p>x element used in message or presence</p></li><li><p>query element used in IQ</p></li><li><p>jabber:iq:roster (before 2001)</p></li><li><p><a href="http://jabber.org/protocol/muc" class="bare">http://jabber.org/protocol/muc</a> (2001-2005)</p></li></ul></div></li><li><p>The above are just conventions!</p></li></ul></div></section>
+<section id="_roster_and_presence"><h2>Roster and Presence</h2><div class="ulist"><ul><li><p>Roster is a list of JIDs to which presence updates the client subscribed</p></li><li><p>Upon roster modification server pushes roster update to all user resources</p></li></ul></div>
+<div class="literalblock"><div class="content"><pre>&lt;iq type="set" id="aad6a"
+    from="user@jabber.org" to="user@jabber.org/Psi"&gt;
+  &lt;query xmlns="jabber:iq:roster"&gt;
+    &lt;item subscription="both" jid="friend@gmail.com"/&gt;
+  &lt;/query&gt;
+&lt;/iq&gt;
+ </pre></div></div></section>
+<section id="_roster_and_presence_2"><h2>Roster and Presence</h2><div class="ulist"><ul><li><p>After successful login server usually:</p><div class="ulist"><ul><li><p>sends user&#8217;s roster to new resource</p></li><li><p>dispatches presence notifications to subscribed users</p></li><li><p>dispatches presence probes</p></li></ul></div></li></ul></div>
+<div style="position:relative; top:-115px; left:-35px;">
+<svg id="roster_and_presence_1" style="width:1000px; height:400px;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#roster_and_presence_1 .code {font-size:19pt;}</style>
+<script>
+
+s6 = Snap("#roster_and_presence_1");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"4.5"});
+
+s6.rect(50,170,450,160).addClass("rect_code");
+s6.text(60,200,"&lt;presence").addClass("code");
+s6.text(60,235,"  from=\"user@jabber.org/Psi\"").addClass("code");
+s6.text(60,270,"  to=\"friend@gmail.com\"").addClass("code");
+s6.text(60,305,"  type=\"probe\"/&gt;").addClass("code");
+s6.path("M370,100 C350,110 260,110 240,170").addClass("line_darkred").attr({"marker-end":marker, "stroke-width":"2pt"});
+
+s6.rect(540,170,450,125).addClass("rect_code");
+s6.text(550,200,"&lt;presence").addClass("code");
+s6.text(550,235,"  from=\"user@jabber.org/Psi\"").addClass("code");
+s6.text(550,270,"  to=\"friend@gmail.com\"/&gt; ").addClass("code");
+s6.path("M400,50 C450,70 780,70 790,160").addClass("line_darkred").attr({"marker-end":marker, "stroke-width":"2pt"});
+
+/*
+s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_g1.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 2: {s6_g1.animate({"opacity":"0"}, 250, mina.linear); s6_g2.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 3: {s6_g2.animate({"opacity":"0"}, 250, mina.linear); s6_g3.animate({"opacity":"1"}, 500, mina.linear); s6_counter++; break};
+    }
+} );
+*/
+
+</script>
+</svg>
+</div></section>
+<section id="_roster_and_presence_3"><h2>Roster and Presence</h2><div class="ulist"><ul><li><p>Sending presence updates is a big scalability challenge</p></li><li><p>Every presence update results in many stanzas sent from the server to subscribed clients</p></li><li><p>Traffic related to presence updates is the most bandwidth-intensive part of XMPP</p></li></ul></div></section>
+<section id="_extensions"><h2>Extensions</h2><div class="ulist"><ul><li><p>Popular extensions:</p><div class="ulist"><ul><li><p>Service Discovery (XEP-0030)</p></li><li><p>Remote Commands (XEP-0050)</p></li><li><p>vCards (XEP-0054)</p></li><li><p>Formatted Messages (XEP-0071)</p></li><li><p>Data Forms (XEP-0004)</p></li></ul></div></li><li><p>More at <a href="http://xmpp.org/extensions/" class="bare">http://xmpp.org/extensions/</a></p></li></ul></div></section>
+<section id="_overview_2"><h2>Overview</h2><div class="ulist"><ul><li><p>XMPP and Jabber</p></li><li><p>History</p></li><li><p>Properties</p></li><li><p>Example Products</p></li><li><p>XMPP architecture</p></li><li><p>Protocol</p></li><li><p>Roster and Presence</p></li><li><p>Extensions</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

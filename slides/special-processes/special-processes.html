@@ -1,0 +1,435 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Special Processes</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Special Processes</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_special_processes"><h2>Special Processes</h2><div class="ulist"><ul><li><p>Non-OTP Behaviours</p></li><li><p>Starting Non-OTP Behaviours</p></li><li><p>System Messages</p></li><li><p>Special Process Example</p></li><li><p>Creating a Behaviour</p></li></ul></div></section>
+<section id="_non_otp_behaviours"><h2>Non-OTP Behaviours</h2><div class="ulist"><ul><li><p>There might be times we want to add Erlang processes not using generic behaviours to the supervision tree</p></li><li><p>Efficiency reasons</p><div class="ulist"><ul><li><p>Behaviours can have performance impacts due to the overhead</p></li></ul></div></li><li><p>Using old code</p><div class="ulist"><ul><li><p>Reuse existing Erlang code without migrating it to OTP</p></li></ul></div></li><li><p>Implementing your own behaviours</p></li></ul></div></section>
+<section id="_non_otp_behaviours_2"><h2>Non-OTP Behaviours</h2><div class="ulist"><ul><li><p>Processes in a supervision tree must handle:</p><div class="ulist"><ul><li><p>System messages &amp; events, shut down messages</p></li><li><p>If running dynamic modules, get modules messages</p></li></ul></div></li><li><p>Use the sys module to handle system events</p><div class="ulist"><ul><li><p>Allows the process to be controlled like behaviours</p></li></ul></div></li><li><p>Processes must be spawned using the <strong>proc_lib</strong> library</p><div class="ulist"><ul><li><p>Saves startup information for crash and error reports</p></li></ul></div></li><li><p>Standard OTP debugging functionality can optionally be added</p></li></ul></div></section>
+<section id="_starting_non_otp_behaviours"><h2>Starting Non-OTP Behaviours</h2><svg id="starting_non_otp_behaviours_1" style="width:1100px; height:380px;" viewBox="0 0 1100 380" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#starting_non_otp_behaviours_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(60,30,"proc_lib:start_link(Mod, Fun, Args)").addClass("code");
+
+s1_g6 = s1.g(s1.path("M682,20 l96,0").addClass("line").attr({"marker-end":marker}),
+             s1.text(800,30,"Value").addClass("code")).addClass("hide");
+
+s1.text(50,140,"Supervisor");
+s1.circle(260,140,40).addClass("shape grey")
+
+s1_g1 = s1.path("M318,140 l302,0").addClass("line").attr({"marker-end":marker,"strokeDasharray":"8,6"}).addClass("hide");
+s1_g2 = s1.g(s1.circle(680,140,40).addClass("shape darkred"),
+             s1.text(740,140,"Pid")).addClass("hide");
+s1_g3 = s1.text(515,230,"Mod:Fun(Arg1, ...)").addClass("code").addClass("hide");
+
+s1_g4 = s1.path("M680,245 l0,32").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s1_g5 = s1.text(405,320,"..., proc_lib:init_ack(Value), ...").addClass("code").addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 375, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_g2.animate({"opacity":"1"}, 375, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s1_anim4 = function() { s1_g4.animate({"opacity":"1"}, 375, mina.linear, s1_anim5); }
+s1_anim5 = function() { s1_g5.animate({"opacity":"1"}, 375, mina.linear, s1_anim6); }
+s1_anim6 = function() { s1_g6.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim4(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Start your processes using <strong>proc_lib:start_link/3</strong></p><div class="ulist"><ul><li><p>Calling <strong>proc_lib:init_ack/1</strong> will make the start function return</p></li></ul></div></li><li><p><strong>proc_lib:spawn_link</strong> may also be used</p><div class="ulist"><ul><li><p>Asynchronous, immediately returns Pid</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Emphasize that spawned function NEVER returns!
+It is NOT a callback!</p></div></aside></section>
+<section id="_starting_non_otp_behaviours_2"><h2>Starting Non-OTP Behaviours</h2><div class="ulist"><ul><li><p>Use the <strong>proc_lib</strong> module to initialise the process</p><div class="ulist"><ul><li><p>Stores the process name, identity, parent, ancestors and the initial function call when spawning</p></li></ul></div></li><li><p>Processes started with <strong>proc_lib</strong> will generate crash reports</p><div class="ulist"><ul><li><p>All crashes are forwarded to the error logger and contain process info and termination reason</p></li></ul></div></li><li><p>Start functions called by supervisors must return <strong>{ok, Pid}</strong>.</p><div class="ulist"><ul><li><p>Common practice: <strong>proc_lib:init_ack({ok,self()})</strong></p></li></ul></div></li></ul></div></section>
+<section id="_starting_non_otp_behaviours_3"><h2>Starting Non-OTP Behaviours</h2><svg id="starting_non_otp_behaviours_2" style="width:1100px; height:380px;" viewBox="0 0 1100 380" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#starting_non_otp_behaviours_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape").transform("t0 -80 s1 r-16");
+
+s2.circle(110,120,46).addClass("shape").attr({"fill":"#A6A6A6"})
+s2.circle(110,120,40).addClass("shape grey");
+s2_g1 = s2.g(s2.path("M205,120 l465,0").addClass("line").attr({"marker-end":marker,"strokeDasharray":"8,6"}),
+             s2.text(225,110,"{'EXIT', Parent, Reason}").addClass("code")).addClass("hide");
+s2.circle(730,120,40).addClass("shape darkred");
+s2.text(785,110,"Pid");
+s2_g2 = s2.text(365,210,"receive {'EXIT', Parent, Reason} ->").addClass("code").addClass("hide");
+s2_g3 = s2.path("M720,225 l0,30").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s2_g4 = s2.text(470,290,"clean_up(...), exit(Reason)").addClass("code").addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 375, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s2_anim3 = function() { s2_g3.animate({"opacity":"1"}, 375, mina.linear, s2_anim4); }
+s2_anim4 = function() { s2_g4.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim3(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>Non-OTP processes must monitor their parents</p></li><li><p>If the parent terminates, the process has to terminate</p><div class="ulist"><ul><li><p>Link to the parent and don&#8217;t trap exits</p></li><li><p>Trap exits and terminate upon receiving {<em>EXIT</em>, Parent, Reason}</p></li></ul></div></li></ul></div></section>
+<section id="_system_messages"><h2>System Messages</h2><div class="ulist"><ul><li><p>Can pass debug options to non-OTP behaviours</p><div class="ulist"><ul><li><p>Options are <strong>trace</strong>, <strong>log</strong>, <strong>statistics</strong>, <strong>{log_to_file, FileName}</strong></p></li></ul></div></li><li><p><strong>sys:debug_options([Option])</strong> initiates the debug routines</p><div class="ulist"><ul><li><p>The return value must be passed to all system calls</p></li></ul></div></li><li><p>Processes must generate trace events if trace option is on</p><div class="ulist"><ul><li><p>Use <strong>sys:handle_debug/4</strong></p></li></ul></div></li><li><p>Users can define their own debug functions</p></li></ul></div></section>
+<section id="_system_messages_2"><h2>System Messages</h2><svg id="system_messages_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#system_messages_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.circle(110,120,46).addClass("shape").attr({"fill":"#A6A6A6"})
+s3.circle(110,120,40).addClass("shape grey");
+s3_g1 = s3.g(s3.path("M180,120 l485,0").addClass("line").attr({"marker-end":marker}),
+             s3.text(255,105,"{system, From, Msg}").addClass("code")).addClass("hide");
+s3.circle(730,120,40).addClass("shape darkred");
+s3.text(785,110,"Pid");
+s3_g2 = s3.text(420,210,"receive {system, From, Msg} ->").addClass("code").addClass("hide");
+s3_g3 = s3.path("M740,225 l-60,65").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s3_g4 = s3.text(50,330,"sys:handle_system_message(Msg,From,Parent,Mod,Dbg,Data)").addClass("code").addClass("hide");
+s3_g5 = s3.path("M515,355 l0,70").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s3_g6 = s3.g(s3.text(200,470,"Mod:system_continue(Parent, Dbg, Data)").addClass("code"),
+            s3.text(123,510,"Mod:system_terminate(Reason, Parent, Dbg, Data)").addClass("code")).addClass("hide");
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 375, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 375, mina.linear, s3_anim4); }
+s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 375, mina.linear, s3_anim5); }
+s3_anim5 = function() { s3_g5.animate({"opacity":"1"}, 375, mina.linear, s3_anim6); }
+s3_anim6 = function() { s3_g6.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim3(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_system_messages_3"><h2>System Messages</h2><div class="pre"><span class="comment">
+ %% Called after receiving {system, From Msg}</span>
+
+ sys:handle_system_message(Msg, From, Parent, Mod,
+                          Dbg, Data)
+
+</div>
+<div class="ulist"><ul><li><p><strong>Msg</strong> and <strong>From</strong> come from the system message.</p></li><li><p><strong>Parent</strong> is the parent Pid. <strong>Mod</strong> is the process module</p></li><li><p><strong>Dbg</strong> is the debug data, returned by <strong>sys:debug_options/1</strong></p></li><li><p><strong>Data</strong> is used to store the loop data of the process</p></li><li><p>The function should be tail recursive as it never returns</p></li><li><p>Control is returned to the process by calling <strong>system_continue/3</strong> or <strong>system_terminate/4</strong></p></li></ul></div></section>
+<section id="_system_messages_4"><h2>System Messages</h2><svg id="system_messages_3" style="width:1100px; height:380px;" viewBox="0 0 1100 380" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#system_messages_3");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.circle(110,120,46).addClass("shape").attr({"fill":"#A6A6A6"})
+s4.circle(110,120,40).addClass("shape grey");
+s4_g1 = s4.g(s4.path("M180,120 l485,0").addClass("line").attr({"marker-end":marker}),
+             s4.text(250,105,"{get_modules, From}").addClass("code")).addClass("hide");
+s4.circle(730,120,40).addClass("shape darkred");
+
+s4_g2 = s4.text(380,210,"receive {get_modules, From} ->").addClass("code").addClass("hide");
+s4_g3 = s4.path("M690,225 l0,30").addClass("line").attr({"marker-end":marker}).addClass("hide");
+s4_g4 = s4.text(435,295,"From ! {modules, ModuleList}").addClass("code").addClass("hide");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 375, mina.linear, s4_anim2); }
+s4_anim2 = function() { s4_g2.animate({"opacity":"1"}, 375, mina.linear); }
+s4_anim3 = function() { s4_g3.animate({"opacity":"1"}, 375, mina.linear, s4_anim4); }
+s4_anim4 = function() { s4_g4.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_anim1(); s4_counter++; break};
+    case 2: {s4_anim3(); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>The event is generated for processes with dynamic modules</p><div class="ulist"><ul><li><p>When modules are not known at compile time (ex.: event handlers)</p></li><li><p>Used for software upgrade</p></li></ul></div></li></ul></div></section>
+<section id="_special_process_example"><h2>Special Process Example</h2><svg id="special_process_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#special_process_example_1");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s5.text(10,40,"-module(my_supervisor).").addClass("code");
+s5.text(10,80,"").addClass("code");
+s5.text(10,120,"-export([start_link/2, init/3, stop/1]).").addClass("code");
+s5.text(10,160,"-export([system_continue/3, system_terminate/4, debug/3]).").addClass("code");
+s5.text(10,200,"").addClass("code");
+s5.text(10,240,"start_link(Name, ChildSpecList) ->").addClass("code");
+s5.text(10,280,"    proc_lib:start_link(?MODULE, init,").addClass("code darkred bold");
+s5.text(10,320,"                        [Name, ChildSpecList, self()]).").addClass("code darkred bold");
+s5.text(10,360,"").addClass("code");
+s5.text(10,400,"stop(Name) -> Name ! stop.").addClass("code");
+
+s5.text(700,450,"Spawns the").addClass("darkred");
+s5.text(683,485,"process using").addClass("darkred");
+s5.text(725,520,"proc_lib").addClass("darkred");
+
+s5.path("M650,475 600,418 C450,240 230,460 290,300").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg></section>
+<section id="_special_process_example_2"><h2>Special Process Example</h2><svg id="special_process_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#special_process_example_2");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s6.text(10,60,"init(Name, ChildSpecList, Parent) ->").addClass("code");
+s6.text(10,100,"    register(Name, self()),").addClass("code");
+s6.text(10,140,"    process_flag(trap_exit, true),").addClass("code");
+s6.text(10,180,"    ChildList = start_children(ChildSpecList, []),").addClass("code");
+s6.text(10,220,"    proc_lib:init_ack({ok, self()}),").addClass("code darkred bold");
+s6.text(10,260,"    Debug = sys:debug_options([]),").addClass("code darkred bold");
+s6.text(10,300,"    loop(ChildList, Parent, Debug).").addClass("code");
+s6.text(10,340,"").addClass("code");
+s6.text(10,380,"start_children([], Acc) -> Acc;").addClass("code");
+s6.text(10,420,"start_children([{M, F, A} | ChildSpecList], Acc) ->").addClass("code");
+s6.text(10,460,"    {ok, Pid} = apply(M,F,A),").addClass("code");
+s6.text(10,500,"    start_children(ChildSpecList, [{Pid, {M,F,A}} | Acc]).").addClass("code");
+
+s6.path("M925,80 C1025,310 865,210 660,215").addClass("line_darkred").attr({"marker-end":marker});
+s6.text(900,30,"reply to the").addClass("darkred").attr({"text-anchor":"middle"});
+s6.text(900,65,"spawner").addClass("darkred").attr({"text-anchor":"middle"});;
+
+s6.path("M730,315 l-110,-50").addClass("line_darkred").attr({"marker-end":marker});
+s6.text(820,345,"initialise debug").addClass("darkred").attr({"text-anchor":"middle"});
+s6.text(820,380,"parameters").addClass("darkred").attr({"text-anchor":"middle"});
+
+</script>
+</svg></section>
+<section id="_special_process_example_3"><h2>Special Process Example</h2><svg id="special_process_example_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#special_process_example_3");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s7.text(10,40,"loop(ChildList, Parent, Debug) ->").addClass("code");
+s7.text(10,80,"  receive").addClass("code");
+s7.text(10,120,"    {'EXIT', Parent, Reason} ->").addClass("code");
+s7.text(10,160,"      terminate(ChildList, Reason);").addClass("code");
+s7_g1 = s7.g(s7.text(10,120,"    {'EXIT', Parent, Reason} ->").addClass("code darkred bold"),
+             s7.text(10,160,"      terminate(ChildList, Reason);").addClass("code darkred bold"),
+             s7.text(890,80,"Handle parent").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.text(890,115,"termination").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.path("M780,90 l-200,25").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s7.text(10,200,"    {system, From, Message} ->").addClass("code");
+s7.text(10,240,"      sys:handle_system_msg(Message, From, Parent, ").addClass("code");
+s7.text(10,280,"                            ?MODULE, Debug, ChildList);").addClass("code");
+s7_g2 = s7.g(s7.text(10,200,"    {system, From, Message} ->").addClass("code darkred bold"),
+             s7.text(10,240,"      sys:handle_system_msg(Message, From, Parent, ").addClass("code darkred bold"),
+             s7.text(10,280,"                            ?MODULE, Debug, ChildList);").addClass("code darkred bold"),
+             s7.text(950,170,"Handle system").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.text(950,205,"messages").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.path("M840,180 l-60,20").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s7.text(10,320,"    {'EXIT', Pid, Reason} ->").addClass("code");
+s7.text(10,360,"      NewDebug=sys:handle_debug(Debug,fun ?MODULE:debug/3,").addClass("code");
+s7.text(10,400,"                          ?MODULE, {'EXIT', Pid, Reason}),").addClass("code");
+s7.text(10,360,"      NewDebug=sys:handle_debug(Debug,fun ?MODULE:debug/3,").addClass("code");
+
+s7_g3 = s7.g(s7.text(10,360,"      NewDebug=sys:handle_debug(Debug,fun ?MODULE:debug/3,").addClass("code darkred bold"),
+             s7.text(10,400,"                          ?MODULE, {'EXIT', Pid, Reason}),").addClass("code darkred bold"),
+             s7.text(970,510,"Create debug").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.text(970,545,"events").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.path("M960,475 l-30,-55").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s7.text(10,480,"      loop(NewChildList, Parent, NewDebug);").addClass("code");
+s7.text(10,520,"     stop -> terminate(ChildList, normal)").addClass("code");
+s7.text(10,560,"    end.").addClass("code");
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_g1.animate({"opacity":"1"}, 250, mina.linear); s7_counter++; break};
+    case 2: {s7_g1.animate({"opacity":"0"}, 250, mina.linear); s7_g2.animate({"opacity":"1"}, 250, mina.linear); s7_counter++; break};
+    case 3: {s7_g2.animate({"opacity":"0"}, 250, mina.linear); s7_g3.animate({"opacity":"1"}, 250, mina.linear); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_special_process_example_4"><h2>Special Process Example</h2><svg id="special_process_example_4" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#special_process_example_4");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s8.text(10,80,"system_continue(Parent, Debug, ChildList) ->").addClass("code");
+s8.text(10,120,"   loop(ChildList, Parent, Debug).").addClass("code");
+s8.text(10,160,"system_terminate(Reason, Parent, Debug, ChildList) ->").addClass("code");
+s8.text(10,200,"   terminate(ChildList, Reason).").addClass("code");
+
+s8_g1 = s8.g(s8.text(10,80,"system_continue(Parent, Debug, ChildList) ->").addClass("code darkred bold"),
+             s8.text(10,120,"   loop(ChildList, Parent, Debug).").addClass("code darkred bold"),
+             s8.text(10,160,"system_terminate(Reason, Parent, Debug, ChildList) ->").addClass("code darkred bold"),
+             s8.text(10,200,"   terminate(ChildList, Reason).").addClass("code darkred bold"),
+             s8.text(800,30,"System Callbacks").addClass("darkred"),
+             s8.path("M895,40 Q840,100 730,105").addClass("line_darkred").attr({"marker-end":marker}),
+             s8.path("M895,40 Q895,80 950,100 C1050,140 1000,250 810,190").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s8.text(10,270,"debug(Dev, Event, Name) ->").addClass("code");
+s8.text(10,310,"   io:format(Dev, \"~p event = ~p~n\", [Name, Event]).").addClass("code");
+
+s8_g2 = s8.g(s8.text(10,270,"debug(Dev, Event, Name) ->").addClass("code darkred bold"),
+             s8.text(10,310,"   io:format(Dev, \"~p event = ~p~n\", [Name, Event]).").addClass("code darkred bold"),
+             s8.text(920,410,"Print debug").addClass("darkred").attr({"text-anchor":"middle"}),
+             s8.text(920,445,"events").addClass("darkred").attr({"text-anchor":"middle"}),
+             s8.path("M860,380 795,330").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s8.text(10,380,"terminate([], Reason) -> exit(Reason);").addClass("code");
+s8.text(10,420,"terminate([{Pid, _} | ChildList], Reason) ->").addClass("code");
+s8.text(10,460,"   exit(Pid, kill), terminate(ChildList, Reason).").addClass("code");
+s8.text(10,500,"restart_child(Pid, ChildList) ->").addClass("code");
+s8.text(10,540,"   {value,{Pid,{M,F,A}}}=lists:keysearch(Pid,1,ChildList),").addClass("code");
+s8.text(10,580,"    {ok, NewPid} = apply(M,F,A),").addClass("code");
+s8.text(10,620,"    [{NewPid, {M,F,A}}|lists:keydelete(Pid,1,ChildList)].").addClass("code");
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_g1.animate({"opacity":"1"}, 250, mina.linear); s8_counter++; break};
+    case 2: {s8_g1.animate({"opacity":"0"}, 250, mina.linear); s8_g2.animate({"opacity":"1"}, 250, mina.linear); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_creating_a_behaviour"><h2>Creating a Behaviour</h2><div class="ulist"><ul><li><p>You might define your own behaviour when:</p><div class="ulist"><ul><li><p>You have several modules that follow the same pattern</p></li><li><p>The patterns can be abstracted in generic and specific modules</p></li></ul></div></li><li><p>Write a generic behaviour using <strong>sys</strong> and <strong>proc_lib</strong></p><div class="ulist"><ul><li><p>The module name has to be the same as the behaviour name</p></li></ul></div></li></ul></div></section>
+<section id="_creating_a_behaviour_2"><h2>Creating a Behaviour</h2><div class="ulist"><ul><li><p>Export a <strong>behaviour_info(callbacks)</strong> function</p><div class="ulist"><ul><li><p>Return a list of callback functions of the form <strong>{Function, Arity}</strong></p></li></ul></div></li><li><p>Implement your callback modules</p><div class="ulist"><ul><li><p>Add the <strong>-behaviour(BehaviourName)</strong>. directive in your callback modules</p></li><li><p>The compiler will issue warnings when omitting callback functions</p></li><li><p>Make sure to compile the behaviour before the callback modules</p></li></ul></div></li></ul></div></section>
+<section id="_creating_a_behaviour_3"><h2>Creating a behaviour</h2><svg id="creating_a_behaviour_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#creating_a_behaviour_1");
+
+var arrow = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s9.rect(10,65,535,540).addClass("rect_code")
+s9.rect(560,65,535,540).addClass("rect_code")
+
+s9.text(175,50,"Behaviour").addClass("darkred bold").attr({"font-size":"30pt"});
+s9.text(20,100,"-module(my).").addClass("code");
+s9.text(20,140,"-export([...]).").addClass("code");
+s9.text(20,180,"-export([behaviour_info/1").addClass("code");
+s9.text(20,220,"]).").addClass("code");
+s9.text(20,340,"behaviour_info(callbacks)->").addClass("code");
+s9.text(20,380,"  [{start,1},{stop,1},").addClass("code");
+s9.text(20,420,"   {clear,0}];").addClass("code");
+s9.text(20,460,"behaviour_info(Other) ->").addClass("code");
+s9.text(20,500,"    undefined.").addClass("code");
+s9.text(20,540,".....").addClass("code");
+
+s9.text(645,50,"Callback Module").addClass("darkred bold").attr({"font-size":"30pt"});
+s9.text(580,100,"-module(behaviour_test).").addClass("code");
+s9.text(580,140,"-behaviour(my).").addClass("code");
+s9.text(580,180,"-export([...]).").addClass("code");
+s9.text(580,220,"-export([start/1, stop/1,").addClass("code");
+s9.text(580,260,"         clear/0]).").addClass("code");
+s9.text(580,340,"start(_) ->   .....").addClass("code");
+s9.text(580,380,"stop(_) ->   .....").addClass("code");
+s9.text(580,420,"clear() ->    .....").addClass("code");
+s9.text(580,500,".....").addClass("code");
+
+s9.circle(177,90,23).addClass("line_darkred")
+s9.circle(789,130,23).addClass("line_darkred")
+s9.path("M200,90 Q600,175 764,148").addClass("line_darkred").attr({"marker-end":marker});
+s9.path("M200,370 C300,330 445,370 545,340").addClass("line_darkred").attr({"marker-end":marker});
+s9.path("M370,370 545,370").addClass("line_darkred").attr({"marker-end":marker});
+s9.path("M230,410 555,410").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg></section>
+<section id="_special_processes_2"><h2>Special Processes</h2><div class="ulist"><ul><li><p>Non-OTP Behaviours</p></li><li><p>Starting Non-OTP Behaviours</p></li><li><p>System Messages</p></li><li><p>Special Process Example</p></li><li><p>Creating a Behaviour</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

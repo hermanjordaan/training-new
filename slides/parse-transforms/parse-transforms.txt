@@ -1,0 +1,179 @@
+Parse Transforms
+================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+The Problem
+-----------
+* Sometimes you need to work with code during compilation
+* Macros provide a very restricted way of doing this
+** Using -ifdef and defining macros when running the compiler gives a limited control of compilation
+* To get full control you need Parse Transforms
+
+
+Macros
+------
+....
+-ifdef(debug).
+-define(SYS_DEBUG(Format, Args), io:format(Format, Args).
+-endif.
+-define(SYS_DEBUG(Format, Args), ok).
+-endif.
+ 
+ 
+....
+
+* Can control _which_ macro definition is used
+** But only by checking which macros have been defined
+* Cannot generate code, only use static code alternatives
+
+
+Parse Transforms
+----------------
+* Work on the full Abstract Syntax Tree of the module to generate a new AST
+* Allow you to make any changes to the code
+** As long as the resultant AST is valid
+* Allow running multiple parse transforms
+** So each transform need only do one thing
+
+* Can be complex to code
+
+
+Parse Transforms: *compiler sequence*
+-------------------------------------
+image::images/compiler_sequence.png["Compiler Sequence", auto, auto]
+
+* Parse transforms are run _after_ the code has been parsed but _before_ the code is checked
+* Parse transforms can only transform already syntactically correct Erlang code
+
+
+Parse Transforms: *invoking*
+----------------------------
+....
+-module(foo).
+
+%% Declare parse transforms.
+
+-compile([{parse_transform,bar_transform}]).
+ 
+ 
+....
+
+{empty} +
+{empty}
+
+....
+-module(bar_transform).
+
+-export([parse_transform/2]).
+
+parse_transform(Forms, Options) ->
+    forms(Forms, Options).
+ 
+ 
+....
+
+
+Abstract Syntax
+---------------
+* Top level forms
+** +{attribute,LINE,module,Module}.+
+** +{attribute,LINE,export,[{Fun,Arity},...]}.+
+** +{attribute,LINE,import,{Module,[{Fun,Arity},...]}.+
+** +{attribute,LINE,record,{Name,[Field,...]}.+
+** +{attribute,LINE,Attribute,Value}.+
+** +{function,LINE,Name,Arity,[Clause,...]}.+
+* Expressions
+** +{op,LINE,Operator,Arg}+
+** +{op,LINE,Operator,Lhs,Rhs}+
+** +{case,LINE,Expression,[Clause,...]}+
+** +{clause,LINE,[Pattern],Guard,[Expression,...]}+
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Everything at the top level is a *form*
+--
+
+
+Abstract Syntax
+---------------
+* Data constructors
+** +{cons,LINE,Head,Tail}+
+** +{nil,LINE}+
+** +{tuple,LINE,[Element,...]}+
+* Atomic literals
+** +{integer,LINE,Int}+
+** +{float,LINE,Float}+
+** +{string,LINE,Chars}+
+** +{atom,LINE,Atom}+
+** +{var,LINE,Name}+
+
+
+Abstract Syntax
+---------------
+* For a complete description of the Erlang Abstract Syntax
+** http://erlang.org/doc/apps/erts/absform.html
+* The erl_id_trans.erl module is an identity transformation
+** http://erlang.org/doc/man/erl_id_trans.html
+
+
+Parse Transform Tools
+---------------------
+* erl_syntax
+** libraries for building abstract syntax
+* parse_trans
+** tools for writing parse_transforms
+* exprecs
+** tool for building module interface to records
+
+** https://github.com/uwiger/parse_trans
+
+[NOTE.speaker]
+[role="speaker"]
+--
+erl_syntax is part of the standard release
+--
+
+
+Parse_trans
+-----------
+* Abstracts away traversing the AST, done by parse_trans
+** Only need to specify which syntax elements to work with and what they should be transformed to
+* +parse_trans:plain_transform(TransFun, Forms)+
+** +_TransFun_+ is applied to every syntax element, returns
+** +_NewForm_+ - transform element to a new element
+** +_continue_+ - treat this element in the general way
+** +_{done,NewForm}_+ - abort all future transformation
+** +_{error,Reason}_+ - generate an error
+
+
+Parse_trans
+-----------
+....
+parse_transform(Forms, _Options) ->
+    parse_trans:plain_transform(fun do_transform/1, Forms).
+
+%% gproc(Name) ! Msg becomes gproc:send(Name, Msg).
+
+do_transform({op,LINE,’!’,{call,_,{atom,_,gproc},[Name]},Msg)->
+    [NewName] = parse_trans:plain_trans(fun do_transform/1, 
+                                        [Name]),
+    [NewMsg] = parse_trans:plain_trans(fun do_transform/1, 
+                                       [Msg]),
+    Func = {remote,LINE,{atom,LINE,gproc},{atom,LINE,send}},
+    {call,LINE,Func,[NewName,NewMsg]};
+do_transform(_Form) ->
+    continue.
+....

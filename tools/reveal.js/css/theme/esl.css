@@ -155,14 +155,20 @@ pre {
   margin-right: 15px;
 }
 
-.reveal .w_200 {width: 200px !important}
-.reveal .w_300 {width: 300px !important}
-.reveal .w_400 {width: 400px !important}
-.reveal .w_500 {width: 500px !important}
-.reveal .w_600 {width: 600px !important}
-.reveal .w_700 {width: 700px !important}
-.reveal .w_800 {width: 800px !important}
-.reveal .w_900 {width: 900px !important}
+.reveal .w_200 {width: 200px !important;}
+.reveal .w_300 {width: 300px !important;}
+.reveal .w_400 {width: 400px !important;}
+.reveal .w_500 {width: 500px !important;}
+.reveal .w_600 {width: 600px !important;}
+.reveal .w_700 {width: 700px !important;}
+.reveal .w_800 {width: 800px !important;}
+.reveal .w_900 {width: 900px !important;}
+
+.reveal .f_24pt div {font-size: 24pt !important;}
+.reveal .f_26pt div {font-size: 26pt !important;}
+.reveal .f_28pt div {font-size: 28pt !important;}
+.reveal .f_30pt div {font-size: 30pt !important;}
+.reveal .f_36pt div {font-size: 36pt !important;}
 
 .reveal .right {
   display: block;
@@ -335,7 +341,8 @@ div.slides:after {
   margin-bottom: 1em !important;
 }
 
-svg.placeholder {
+svg.placeholder
+div.placeholder {
 	border: 1px dashed #aaa;
 	background-color: #fafafa;
 	height: 100px;
@@ -458,3 +465,23 @@ div.attribution {
 .green {
 	color: #007F00;
 }
+
+table.logos {
+   margin: auto;
+}
+
+table.logos td {
+   vertical-align: middle;
+   padding: 15px;
+}
+
+table.logos td.logo {
+   text-align: center;
+   padding-right: 45px;
+}
+
+table.logos td img {
+   width: auto
+}
+
+

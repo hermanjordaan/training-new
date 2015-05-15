@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Other Behaviours</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Other Behaviours</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_other_behaviours"><h2>Other Behaviours</h2><div class="ulist"><ul><li><p>Event Handlers</p></li><li><p>Finite-State Machines</p></li></ul></div></section>
+<section id="_events"><h2>Events</h2><div class="ulist"><ul><li><p>An event represents a state change in the system</p><div class="ulist"><ul><li><p>A high processor load</p></li><li><p>A board failure</p></li><li><p>A trace printout on the activity of a link</p></li></ul></div></li><li><p>For every event that is generated, the system might want to</p><div class="ulist"><ul><li><p>Generate SNMP traps</p></li><li><p>Collect statistics</p></li><li><p>Print a message to I/O</p></li><li><p>Log to file</p></li></ul></div></li></ul></div></section>
+<section id="_events_2"><h2>Events</h2><div class="imageblock" style=""><div class="content"><img src="images/events.png" alt="Events" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Processes can be used to implement event managers</p></li></ul></div></section>
+<section id="_event_handlers"><h2>Event Handlers</h2><div class="ulist"><ul><li><p>Each event manager will receive a specific type of event</p><div class="ulist"><ul><li><p>Alarms, equipment state changes, debug traces, etc.</p></li></ul></div></li><li><p>Event handlers subscribe to events sent to a manager</p><div class="ulist"><ul><li><p>Several handlers can subscribe to one manager</p></li></ul></div></li><li><p>During runtime, event managers provide functionality to:</p><div class="ulist"><ul><li><p>Add, remove and upgrade event handlers</p></li></ul></div></li></ul></div></section>
+<section id="_event_handlers_2"><h2>Event Handlers</h2><div class="imageblock" style=""><div class="content"><img src="images/event_handlers.png" alt="Event Handlers" width="auto" height="300"></div></div>
+<div class="paragraph"><p></p></div>
+<div class="ulist"><ul><li><p>The <strong>gen_event</strong> module implements the event manager</p><div class="ulist"><ul><li><p>It is part of the standard library application</p></li><li><p>Each handler solves a specific event-driven task</p></li></ul></div></li><li><p>An event manager will take care of several event handlers</p><div class="ulist"><ul><li><p>The event handlers contain the specific code</p></li></ul></div></li></ul></div></section>
+<section id="_finite_state_machines"><h2>Finite-State Machines</h2><div class="centre">
+<svg id="fsm_2" style="width:870; height:440px;" viewBox="0 0 870 440" preserveAspectRatio="xMinYMin meet">
+<style type="text/css">#fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}</style>
+<script>
+
+var s2 = Snap("#fsm_2");
+
+var arrow = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 5,5, 3.75,2.5);
+
+var arrow2 = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#4B5056"}).transform('r0');
+var marker2 = arrow2.marker(0,0, 5,5, 3.75,2.5);
+
+s2.text(120,40,"Day").addClass("darkred bold");
+s2.text(570,40,"Night").addClass("darkred bold");
+s2.circle(200,120,60).addClass("shape darkred");
+s2.circle(600,120,60).addClass("shape grey");
+
+s2_g1 = s2.g(s2.path("M250,70 Q390,-10 540,70").addClass("line2").attr({"marker-end":marker2}),
+			 s2.text(350,65,"Sunset")).addClass("hide");
+s2_g2 = s2.g(s2.path("M540,170 Q400,250 250,170").addClass("line_darkred").attr({"marker-end":marker}),
+			 s2.text(350,195,"Sunrise")).addClass("hide");
+
+s2.text(10,280,"day() ->").addClass("code");
+s2.text(10,320,"  receive").addClass("code");
+s2.text(10,360,"     sunset -> night()").addClass("code");
+s2.text(10,400,"  end.").addClass("code");
+
+s2.text(480,280,"night() ->").addClass("code");
+s2.text(480,320,"  receive").addClass("code");
+s2.text(480,360,"     sunrise -> day()").addClass("code");
+s2.text(480,400,"  end.").addClass("code");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 500, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 500, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+<div class="ulist"><ul><li><p>Each state is represented as a tail recursive function</p></li><li><p>Each event is represented as an incoming message</p></li></ul></div></section>
+<section id="_finite_state_machines_2"><h2>Finite-State Machines</h2><div class="imageblock" style=""><div class="content"><img src="images/fsm_1.png" alt="Finite-State Machines" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>State transitions are triggered by incoming events</p></li><li><p>State transitions are achieved by calling the new state</p><div class="ulist"><ul><li><p>The new state depends on the current state and the incoming events</p></li></ul></div></li><li><p>With every state transition actions may be taken</p></li></ul></div></section>
+<section id="_finite_state_machines_3"><h2>Finite-State Machines</h2><div class="imageblock" style=""><div class="content"><img src="images/fsm_2.png" alt="Finite-State Machines" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>All Finite-State Machines are given a start state</p></li><li><p>Initialisation of the state can occur when starting the FSM</p></li></ul></div></section>
+<section id="_generic_finite_state_machines"><h2>Generic Finite-State Machines</h2><div class="imageblock" style=""><div class="content"><img src="images/generic_fsm.png" alt="Generic Finite-State Machines" width="auto" height="auto"></div></div>
+<div class="paragraph"><p> <br></p></div>
+<div class="ulist"><ul><li><p>The <strong>gen_fsm</strong> module implements the finite-state machine behaviour</p><div class="ulist"><ul><li><p>It is part of the standard library application</p></li></ul></div></li><li><p>The library module contains all the generic code</p></li><li><p>Non-generic code is placed in the callback module</p></li></ul></div></section>
+<section id="_other_behaviours_2"><h2>Other Behaviours</h2><div class="ulist"><ul><li><p>Event Handlers</p></li><li><p>Finite-State Machines</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

@@ -1,0 +1,1067 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Concurrent Erlang</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Concurrent Erlang</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_creating_processes"><h2>Creating Processes</h2><svg id="creating_processes_1" style="height:600px; width:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s1 = Snap("#creating_processes_1");
+
+var arrow = s1.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+s1.text(40,40,"Pid2 = spawn(Mod, Func, Args)").addClass("code");
+s1.text(220,180,"Pid1").addClass("code");
+
+s1.circle(250,100,40).addClass("shape grey");
+
+var s1_line1 = s1.path("M210,100 A90,90 0 1,0 205,450").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+var s1_shape1_1 = s1.text(120,390,"Mod:Func(Arg1, ...)").addClass("code");
+var s1_shape1_2 = s1.text(220,530,"Pid2").addClass("code");
+var s1_shape1_3 = s1.circle(250,450,40).addClass("shape darkred");
+
+var s1_shape1 = s1.g(s1_shape1_1, s1_shape1_2, s1_shape1_3);
+
+s1_line1.addClass("hide");
+s1_shape1.addClass("hide");
+
+s1_anim1 = function() { s1_shape1.animate({"opacity":"1"}, 250, mina.linear, s1_anim2); }
+s1_anim2 = function() { s1_line1.animate({"opacity":"1"}, 500, mina.linear); }
+s1.click(function() { s1_anim1() });
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Before</p><div class="ulist"><ul><li><p>Code executed by Process 1</p></li><li><p><strong>process identifier</strong> is Pid1</p></li><li><p>Pid2 = spawn(M, F, A)</p></li></ul></div></li><li><p>After</p><div class="ulist"><ul><li><p>A new process with Pid2 is created</p></li><li><p>Pid2 is only known to Pid1</p></li><li><p>Pid2 runs M:F(A)</p></li><li><p>M:F/Arity must be exported</p></li></ul></div></li><li><p>Convention: we identify processes by their process ids (pids)</p></li></ul></div></section>
+<section id="_creating_processes_2"><h2>Creating Processes</h2><svg id="creating_processes_2" style="height:600px; width:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s2 = Snap("#creating_processes_2");
+
+var arrow = s2.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+s2.text(40,40,"Pid2 = spawn(Mod, Func, Args)").addClass("code");
+s2.text(220,180,"Pid1").addClass("code");
+
+s2.circle(250,100,40).addClass("shape grey");
+
+var s2_line1_1 = s2.path("M210,100 A90,90 0 1,0 205,450").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+var s2_line1_2 = s2.text(50,295,"spawns").addClass("code");
+
+var s2_shape1_1 = s2.text(220,530,"Pid2").addClass("code");
+var s2_shape1_2 = s2.circle(250,450,40).addClass("shape darkred");
+
+//Groups
+var s2_line1 = s2.g(s2_line1_1, s2_line1_2);
+var s2_shape1 = s2.g(s2_shape1_1, s2_shape1_2);
+
+s2_line1.addClass("hide");
+s2_shape1.addClass("hide");
+
+s2_anim1 = function() { s2_line1.animate({"opacity":"1"}, 250, mina.linear, s2_anim2); }
+s2_anim2 = function() { s2_shape1.animate({"opacity":"1"}, 175, mina.linear); }
+s2.click(function() { s2_anim1() });
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>The BIF <strong>spawn</strong> never fails</p></li><li><p>A process terminates</p><div class="ulist"><ul><li><p><strong>abnormally</strong> when run-time errors occur</p></li><li><p><strong>normally</strong> when there is no more code to execute</p></li></ul></div></li></ul></div></section>
+<section id="_message_passing"><h2>Message Passing</h2><svg id="message_passing_1" style="height:600px; width:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s3 = Snap("#message_passing_1");
+
+var arrow = s3.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+
+s3.text(67,150,"Pid1").addClass("code");
+s3.circle(100,200,40).addClass("shape grey");
+
+s3.text(367,150,"Pid2").addClass("code");
+s3.circle(400,200,40).addClass("shape darkred");
+
+s3.text(5,290,"Pid1").addClass("code darkred bold");
+s3.text(90,290,"! {self(),foo}").addClass("code");
+
+var s3_line1_1 = s3.path("M140,200 l215,0").attr({"marker-end":marker}).addClass("line");
+var s3_line1_2 = s3.text(153,188,"{Pid1,foo}").addClass("code");
+
+//Groups
+var s3_line1 = s3.g(s3_line1_1, s3_line1_2);
+
+s3_line1.addClass("hide");
+
+s3.click( function() { s3_line1.animate({"opacity":"1"}, 300, mina.linear); } );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Messages are sent using the <strong>Pid ! Msg</strong> expression</p><div class="ulist"><ul><li><p><strong>Msg</strong> is any valid Erlang data type</p></li></ul></div></li><li><p>Sending a message will never fail</p></li><li><p>Messages sent to non-existing processes are thrown away</p></li><li><p>Received messages are stored in the process' mailbox</p></li></ul></div></section>
+<section id="_message_passing_2"><h2>Message Passing</h2><svg id="message_passing_2" style="width:800px; height:600px;" viewBox="0 0 800 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#message_passing_2");
+
+var arrow = s4.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s4.text(200,160,"receive").addClass("code bold font18pt");
+s4.text(200,200,"    {reset, Board} -> reset(Board);").addClass("code font18pt");
+s4.text(200,240,"    {do, Signal} -> process(Signal)").addClass("code font18pt");
+s4.text(200,280,"end").addClass("code bold font18pt");
+
+var s4_clauses_1 = s4.text(10,220,"clauses").addClass("darkred font19pt");
+var s4_clauses_2 = s4.path("M110,214 l135,-22").attr({"marker-end":marker}).addClass("line_darkred");
+var s4_clauses_3 = s4.path("M110,214 l135,18").attr({"marker-end":marker}).addClass("line_darkred");
+var s4_clauses_4 = s4.polyline("255,170 465,170 465,210 435,210 435,250 255,250 255,170").attr({"stroke-dasharray":"5,5"}).addClass("line_darkred");
+var s4_clauses = s4.g(s4_clauses_1, s4_clauses_2, s4_clauses_3, s4_clauses_4)
+
+var s4_clause_separator_1 = s4.text(550,70,"clause separator").addClass("darkred font19pt")
+var s4_clause_separator_2 = s4.path("M655,82 l40,93").attr({"marker-end":marker}).addClass("line_darkred");
+var s4_clause_separator_3 = s4.circle(698,194,13).addClass("circle_darkred");
+var s4_clause_separator = s4.g(s4_clause_separator_1, s4_clause_separator_2, s4_clause_separator_3);
+
+var s4_last_clause_1 = s4.text(635,340,"no separator").addClass("darkred font19pt");
+var s4_last_clause_2 = s4.text(635,372,"in last clause").addClass("darkred font19pt");
+var s4_last_clause_3 = s4.path("M712,318 l0,-68").attr({"marker-end":marker}).addClass("line_darkred");
+var s4_last_clause_4 = s4.circle(712,231,13).addClass("circle_darkred");
+var s4_last_clause = s4.g(s4_last_clause_1, s4_last_clause_2, s4_last_clause_3, s4_last_clause_4);
+
+var s4_patterns_1 = s4.text(250,370,"patterns").addClass("darkred font19pt");
+var s4_patterns_2 = s4.path("M300,345 l35,-85").attr({"marker-end":marker}).addClass("line_darkred");
+var s4_patterns = s4.g(s4_patterns_1, s4_patterns_2);
+
+var s4_clause_body_1 = s4.text(460,330,"clause body").addClass("darkred font19pt");
+var s4_clause_body_2 = s4.path("M535,305 l45,-50").attr({"marker-end":marker}).addClass("line_darkred");
+var s4_clause_body_3 = s4.polyline("483,213 705,213 705,250 483,250 483,213").attr({"stroke-dasharray":"5,5"}).addClass("line_darkred");
+var s4_clause_body = s4.g(s4_clause_body_1, s4_clause_body_2, s4_clause_body_3);
+
+s4_clauses.addClass("hide");
+s4_clause_separator.addClass("hide");
+s4_last_clause.addClass("hide");
+s4_patterns.addClass("hide");
+s4_clause_body.addClass("hide");
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_clauses.animate({"opacity":"1"}, 250, mina.linear); s4_counter++; break};
+    case 2: {s4_clause_separator.animate({"opacity":"1"}, 250, mina.linear); s4_counter++; break};
+    case 3: {s4_last_clause.animate({"opacity":"1"}, 250, mina.linear); s4_counter++; break};
+    case 4: {s4_patterns.animate({"opacity":"1"}, 250, mina.linear); s4_counter++; break};
+    case 5: {s4_clause_body.animate({"opacity":"1"}, 250, mina.linear); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_receiving_messages"><h2>Receiving Messages</h2><div class="left">
+<div class="pre">
+<b>receive</b>
+    Pattern1 -&gt;
+         &lt;expression 1&gt;,
+         &lt;expression 2&gt;,
+         ...,
+         &lt;expression N&gt;;
+    Pattern2 -&gt;
+         &lt;expression 1&gt;,
+         ...,
+         &lt;expression N&gt;;
+    ...;
+    PatternN -&gt;
+         &lt;expression 1&gt;,
+         ...
+         &lt;expression N&gt;
+<b>end</b>
+</div></div>
+<div class="ulist right"><ul><li><p>Messages are retrieved using a <strong>receive</strong> clause</p></li><li><p><strong>receive</strong> suspends the process until a message is received</p></li><li><p>Message passing is asynchronous</p></li></ul></div></section>
+<section id="_receiving_messages_2"><h2>Receiving Messages</h2><svg id="receiving_messages_2" style="width:650px; height:650px;" viewBox="0 0 650 650" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s5 = Snap("#receiving_messages_2");
+
+var arrow = s5.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s5.text(100,180,"Pid1").addClass("code");
+s5.circle(135,240,40).addClass("shape grey");
+
+s5.text(500,220,"Pid2").addClass("code");
+s5.circle(535,280,40).addClass("shape darkred");
+
+var s5_g1_1 = s5.text(15,340,"Pid2").addClass("code bold darkred");
+var s5_g1_2 = s5.text(15,340,"     ! {self(),foo}").addClass("code");
+
+var s5_g2_1 = s5.text(250,230,"{Pid1,foo}").addClass("code");
+var s5_g2_2 = s5.path("M184,240 l300,35").attr({"marker-end":marker}).addClass("line");
+
+s5.text(365,390,"receive").addClass("code");
+s5.text(365,428,"  start -> ...").addClass("code");
+s5.text(365,466,"  stop -> ...").addClass("code");
+s5.text(365,504,"  {Pid, foo} ->").addClass("code");
+s5.text(365,542,"    ...").addClass("code");
+s5.text(365,580,"end").addClass("code");
+
+// part of code in bold
+var s5_g3_1 = s5.text(365,504,"  {Pid, foo} ->").addClass("code bold darkred");
+var s5_g3_2 = s5.text(365,542,"    ...").addClass("code bold darkred");
+
+var s5_g1 = s5.g(s5_g1_1, s5_g1_2);
+var s5_g2 = s5.g(s5_g2_1, s5_g2_2);
+var s5_g3 = s5.g(s5_g3_1, s5_g3_2);
+
+s5_g1.addClass("hide");
+s5_g2.addClass("hide");
+s5_g3.addClass("hide");
+
+s5_anim1 = function() { s5_g1.animate({"opacity":"1"}, 250, mina.linear, s5_anim2); }
+s5_anim2 = function() { s5_g2.animate({"opacity":"1"}, 500, mina.linear); }
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_anim1(); s5_counter++; break};
+    case 2: {s5_g3.animate({"opacity":"1"}, 250, mina.linear); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right w_500"><ul><li><p>Messages can be matched and selectively retrieved</p></li><li><p>Messages are received when a message matches a clause</p></li><li><p>Mailboxes are scanned sequentially.</p></li></ul></div></section>
+<section id="_receiving_messages_3"><h2>Receiving Messages</h2><svg id="receiving_messages_3" style="width:1000px; height:480px;" viewBox="0 0 1000 480" preserveAspectRatio="xMinYMin meet"">
+<script>
+
+var s6 = Snap("#receiving_messages_3");
+
+var arrow = s6.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+var s6_g1_1 = s6.text(115,40,"Pid2").addClass("code");
+var s6_g1_2 = s6.text(115,40,"     !").addClass("code bold darkred");
+var s6_g1_3 = s6.text(115,40,"       {self(), {digit, [1,2,3,4]}}").addClass("code");
+
+s6.text(25,100,"Pid1").addClass("code");
+s6.circle(60,160,40).addClass("shape grey");
+
+s6.text(915,100,"Pid2").addClass("code");
+s6.circle(950,160,40).addClass("shape darkred");
+
+var s6_g2_1 = s6.text(270,145,"{Pid1, {digit, [1,2,3,4]}}").addClass("code");
+var s6_g2_2 = s6.path("M110,160 l790,0").attr({"marker-end":marker}).addClass("line");
+
+s6.text(580,250,"receive").addClass("code");
+s6.text(580,288,"  {").addClass("code");
+s6.text(580,288,"   Pid").addClass("code bold darkred");
+s6.text(580,288,"      ,{digit,Digit}} ->").addClass("code");
+s6.text(580,326,"    stop -> ...").addClass("code");
+s6.text(580,364,"end").addClass("code");
+
+
+var s6_g1 = s6.g(s6_g1_1, s6_g1_2, s6_g1_3);
+var s6_g2 = s6.g(s6_g2_1, s6_g2_2);
+
+s6_g1.addClass("hide");
+s6_g2.addClass("hide");
+
+s6_anim1 = function() { s6_g1.animate({"opacity":"1"}, 750, mina.linear, s6_anim2); }
+s6_anim2 = function() { s6_g2.animate({"opacity":"1"}, 250, mina.linear); }
+s6.click(function() { s6_anim1() });
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>If <strong>Pid</strong> is bound before receiving the message, then only data tagged with that pid can be pattern matched</p></li><li><p>The variable <strong>Digit</strong> is bound when receiving the message</p></li></ul></div></section>
+<section id="_receiving_messages_strong_selective_strong"><h2>Receiving Messages: <strong>selective</strong></h2><svg id="receiving_messages_selective" style="width:600px; height:700px;" viewBox="0 0 600 700" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s7 = Snap("#receiving_messages_selective");
+
+var arrow = s7.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s7.text(60,50,"Pid1").addClass("code");
+s7.circle(95,110,40).addClass("shape grey");
+var s7_g3 = s7.text(20,200,"Pid3 ! foo").addClass("code");
+
+s7.text(60,350,"Pid2").addClass("code");
+s7.circle(95,410,40).addClass("shape grey");
+var s7_g1 = s7.text(20,500,"Pid3 ! bar").addClass("code");
+
+s7.text(430,200,"Pid3").addClass("code");
+s7.circle(465,260,40).addClass("shape darkred");
+
+var s7_g4_1 = s7.text(250,150,"foo").addClass("code");
+var s7_g4_2 = s7.path("M145,120 l270,120").attr({"marker-end":marker}).addClass("line");
+
+var s7_g2_1 = s7.text(240,315,"bar").addClass("code");
+var s7_g2_2 = s7.path("M145,400 l270,-120").attr({"marker-end":marker}).addClass("line");
+
+s7.text(310,410,"receive").addClass("code");
+s7.text(310,448,"  foo").addClass("code bold darkred");
+s7.text(310,448,"      -> true").addClass("code");
+s7.text(310,486,"end,").addClass("code");
+s7.text(310,524,"receive").addClass("code");
+s7.text(310,562,"  bar").addClass("code bold darkred");
+s7.text(310,562,"      -> true").addClass("code");
+s7.text(310,600,"end,").addClass("code");
+s7.text(310,638,"...").addClass("code");
+
+var s7_g2 = s7.g(s7_g2_1, s7_g2_2);
+var s7_g4 = s7.g(s7_g4_1, s7_g4_2);
+
+s7_g1.addClass("hide");
+s7_g2.addClass("hide");
+s7_g3.addClass("hide");
+s7_g4.addClass("hide");
+
+s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 250, mina.linear, s7_anim2); }
+s7_anim2 = function() { s7_g2.animate({"opacity":"1"}, 250, mina.linear); }
+
+s7_anim3 = function() { s7_g3.animate({"opacity":"1"}, 250, mina.linear, s7_anim4); }
+s7_anim4 = function() { s7_g4.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_anim1(); s7_counter++; break};
+    case 2: {s7_anim3(); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>The message <strong>foo</strong> is received, followed by the message <strong>bar</strong></p></li><li><p>This is irrespective of the order in which they were sent or stored in the mailbox</p></li></ul></div></section>
+<section id="_receiving_messages_strong_non_selective_strong"><h2>Receiving Messages: <strong>non-selective</strong></h2><svg id="receiving_messages_non_selective" style="width:600px; height:700px;" viewBox="0 0 600 700" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s8 = Snap("#receiving_messages_non_selective");
+
+var arrow = s8.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s8.text(60,50,"Pid1").addClass("code");
+s8.circle(95,110,40).addClass("shape grey");
+var s8_g3 = s8.text(20,200,"Pid3 ! foo").addClass("code");
+
+s8.text(60,350,"Pid2").addClass("code");
+s8.circle(95,410,40).addClass("shape grey");
+var s8_g1 = s8.text(20,500,"Pid3 ! bar").addClass("code");
+
+s8.text(430,200,"Pid3").addClass("code");
+s8.circle(465,260,40).addClass("shape darkred");
+
+var s8_g4_1 = s8.text(250,150,"foo").addClass("code");
+var s8_g4_2 = s8.path("M145,120 l270,120").attr({"marker-end":marker}).addClass("line");
+
+var s8_g2_1 = s8.text(240,315,"bar").addClass("code");
+var s8_g2_2 = s8.path("M145,400 l270,-120").attr({"marker-end":marker}).addClass("line");
+
+s8.text(310,410,"receive").addClass("code");
+s8.text(310,448,"  Msg").addClass("code bold darkred");
+s8.text(310,448,"      -> true").addClass("code");
+s8.text(310,486,"end,").addClass("code");
+s8.text(310,524,"...").addClass("code");
+
+var s8_g2 = s8.g(s8_g2_1, s8_g2_2);
+var s8_g4 = s8.g(s8_g4_1, s8_g4_2);
+
+s8_g1.addClass("hide");
+s8_g2.addClass("hide");
+s8_g3.addClass("hide");
+s8_g4.addClass("hide");
+
+s8_anim1 = function() { s8_g1.animate({"opacity":"1"}, 250, mina.linear, s8_anim2); }
+s8_anim2 = function() { s8_g2.animate({"opacity":"1"}, 250, mina.linear); }
+
+s8_anim3 = function() { s8_g3.animate({"opacity":"1"}, 250, mina.linear, s8_anim4); }
+s8_anim4 = function() { s8_g4.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s8_counter=1
+s8.click( function() {
+  switch(s8_counter) {
+    case 1: {s8_anim1(); s8_counter++; break};
+    case 2: {s8_anim3(); s8_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>The first message to arrive at the process <strong>Pid3</strong> will be processed</p></li><li><p>The variable <strong>Msg</strong> in the process <strong>Pid3</strong> will be bound to one of the atoms <strong>foo</strong> or <strong>bar</strong> depending on which arrives first.</p></li></ul></div></section>
+<section id="_receiving_messages_4"><h2>Receiving Messages</h2><svg id="receiving_messages_6" style="width:1100px; height:480px;" viewBox="0 0 1100 480" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#receiving_messages_6");
+
+var arrow = s9.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s9.circle(120,130,40).addClass("shape darkred");
+s9.text(85,70,"PidA").addClass("code");
+
+var s9_g1 = s9.text(20,250,"PidB ! {transfer,self()}").addClass("code");
+var s9_g2 = s9.path("M170,150 l320,70").attr({"marker-end":marker}).addClass("line");
+
+s9.circle(540,230,40).addClass("shape darkred");
+s9.text(505,170,"PidB").addClass("code");
+
+var s9_g3 = s9.path("M590,220 l320,-70").attr({"marker-end":marker}).addClass("line");
+
+s9.circle(960,130,40).addClass("shape darkred");
+s9.text(925,70,"PidC").addClass("code");
+
+var s9_g4_1 = s9.path("M 909,110 C 663,30 417,30 171,110").attr({"marker-end":marker}).addClass("line");
+var s9_g4_2 = s9.text(515,30,"foo").addClass("code");
+
+s9.text(750,230,"receive").addClass("code");
+s9.text(750,268,"  {transfer, Pid} ->").addClass("code");
+s9.text(750,306,"    Pid ! foo").addClass("code");
+s9.text(750,344,"end").addClass("code");
+
+s9.text(240,320,"receive").addClass("code");
+s9.text(240,358,"  {transfer, Pid} ->").addClass("code");
+s9.text(240,396,"    PidC ! {transfer, Pid}").addClass("code");
+s9.text(240,434,"end").addClass("code");
+
+var s9_g4 = s9.g(s9_g4_1, s9_g4_2);
+
+s9_g1.addClass("hide");
+s9_g2.addClass("hide");
+s9_g3.addClass("hide");
+s9_g4.addClass("hide");
+
+s9_anim1 = function() { s9_g1.animate({"opacity":"1"}, 250, mina.linear, s9_anim2); }
+s9_anim2 = function() { s9_g2.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s9_counter=1
+s9.click( function() {
+  switch(s9_counter) {
+    case 1: {s9_anim1(); s9_counter++; break};
+    case 2: {s9_g3.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break};
+    case 3: {s9_g4.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist"><ul><li><p>PidA sends a message to PidB containing its own Pid</p></li><li><p>PidB binds it to variable A and sends a message to PidC</p></li><li><p>PidC receives the message and replies directly to PidA</p></li></ul></div></section>
+<section id="_data_in_messages_strong_example_strong"><h2>Data in Messages: <strong>example</strong></h2><div class="literalblock left"><div class="content"><pre>-module(echo).
+-export([go/0, loop/0]).
+
+go() -&gt;
+  Pid= spawn(echo,loop,[]),
+  Pid ! {self(), hello},
+  receive
+    {Pid, Msg} -&gt;
+      io:format("~w~n",[Msg])
+  end,
+  Pid ! stop.
+ </pre></div></div>
+<div class="literalblock right"><div class="content"><pre> 
+ 
+loop() -&gt;
+  receive
+    {From, Msg} -&gt;
+      From ! {self(), Msg},
+      loop();
+    stop -&gt;
+      true
+  end.
+ 
+ </pre></div></div></section>
+<section id="_registered_processes"><h2>Registered Processes</h2><div class="literalblock centered darkred bold"><div class="content"><pre> 
+register(Alias, Pid)
+Alias ! Message
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Registers the process <strong>Pid</strong> with the name <strong>Alias</strong></p></li><li><p>Any process can send a message to a registered process</p></li><li><p>The BIF <strong>registered/0</strong> returns all registered process names</p></li><li><p>The BIF <strong>whereis(Alias)</strong> returns the Pid of the process with the name <strong>Alias</strong>.</p></li></ul></div></section>
+<section id="_registered_processes_2"><h2>Registered Processes</h2><svg id="registered_processes_2" style="width:1100px; height:270px;" viewBox="0 0 1100 270" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#registered_processes_2");
+
+var arrow = s10.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s10.circle(300,130,40).addClass("shape grey");
+s10.text(265,70,"Pid1").addClass("code");
+
+var s10_g1_1 = s10.text(425,115,"{Pid1,hello}").addClass("code");
+var s10_g1_2 = s10.path("M350,130 l395,0").attr({"marker-end":marker}).addClass("line");
+
+s10.circle(800,130,40).addClass("shape darkred");
+s10.text(765,70,"echo").addClass("code");
+
+s10.text(70,220,"echo ! {self(), hello}").addClass("code");
+
+s10.text(550,220,"receive {From, Msg} -> ... end").addClass("code");
+
+var s10_g1 = s10.g(s10_g1_1, s10_g1_2).addClass("hide");
+
+s10.click(function() { s10_g1.animate({"opacity":"1"}, 250, mina.linear) });
+
+</script>
+</svg>
+<div class="literalblock plain"><div class="content"><pre>go() -&gt; register(echo, spawn(echo, loop, [])).
+
+loop() -&gt;
+  receive
+    {From, Msg} -&gt;
+      From ! {self(), Msg},
+      loop();
+    stop -&gt;
+      true
+  end.
+ </pre></div></div></section>
+<section id="_message_passing_3"><h2>Message Passing</h2><svg id="message_passing_3" style="width:600px; height:400px;" viewBox="0 0 600 400" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s11 = Snap("#message_passing_3");
+
+var arrow = s11.polygon([0,0, 5,2.5, 0,5]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 5,5, 4,2.75);
+
+s11_g2 = s11.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide");
+
+s11_g3 = s11.g(s11.text(75,90,"Pid1").addClass("code"),
+               s11.circle(110,200,40).addClass("shape grey"));
+
+s11_g1 = s11.g(s11.text(20,335,"does_not_exist").addClass("code darkred bold"),
+               s11.text(20,335,"               ! hello").addClass("code"),
+               s11.path("M200,200 l250,0").attr({"marker-end":marker}).addClass("line")).addClass("hide");
+
+s11.text(480,250,"?").addClass("darkred").attr({"font-size":"150"});
+
+s11_anim1 = function() { s11_g1.animate({"opacity":"1"}, 375, mina.linear); }
+s11_anim2 = function() { s11_g2.animate({"opacity":"1"}, 250, mina.linear, s11_anim3); s11_g1.animate({"opacity":"0"}, 375, mina.linear) }
+s11_anim3 = function() { s11_g2.animate({"opacity":"0"}, 250, mina.linear); s11_g3.animate({"opacity":"0"}, 375, mina.linear); }
+
+var s11_counter=1
+s11.click( function() {
+  switch(s11_counter) {
+    case 1: {s11_anim1(); s11_counter++; break};
+    case 2: {s11_anim2(); s11_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Sending messages to non-existing registered processes causes the calling process to terminate with a <strong>badarg</strong> error</p></li></ul></div></section>
+<section id="_timeouts"><h2>Timeouts</h2><svg id="timeouts_1" style="width:600px; height:600px;" viewBox="0 0 600 600" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s12 = Snap("#timeouts_1");
+
+var arrow = s12.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+var clock = s12.polygon([0,0, 3,1.5, 0,3]).attr({"fill":"#000"}).transform('r0');
+var hand = clock.marker(0,0, 3,3, 2,1.5);
+
+// clock face
+s12.circle(100,100,48).attr({"fill":"none", "stroke":"#888", "stroke-width":"2"});
+
+// clock hands
+s12.path("M100,100 l0,-40").attr({"stroke":"#000", "stroke-width":"2", "marker-end":hand});
+s12.path("M100,100 l24,-18").attr({"stroke":"#000", "stroke-width":"2", "marker-end":hand});
+
+s12.text(65,275,"PidA").addClass("code");
+s12.circle(100,330,40).addClass("shape grey");
+
+s12.text(435,95,"PidB").addClass("code");
+s12.circle(470,150,40).addClass("shape darkred");
+
+var s12_g1_2 = s12.path("M158,100 l260,40").attr({"marker-end":marker}).addClass("line");
+var s12_g1_2 = s12.path("M150,315 l270,-150").attr({"marker-end":marker}).addClass("line");
+
+s12.text(220,95,"timeout").addClass("code");
+s12.text(235,220,"Msg").addClass("code");
+
+s12.text(250,350,"receive").addClass("code bold");
+s12.text(250,388,"  Msg ->").addClass("code");
+s12.text(250,426,"    &lt;expressions1&gt;").addClass("code");
+s12.text(250,464,"  after").addClass("code bold");
+s12.text(250,464,"  after TimeOut ->").addClass("code");
+s12.text(250,502,"    &lt;expressions2&gt;").addClass("code");
+s12.text(250,540,"end").addClass("code bold");
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>If the message <strong>Msg</strong> is received within the time <strong>TimeOut</strong>, &lt;expressions1&gt; will be executed</p></li><li><p>If not, &lt;expressions2&gt; will be executed</p></li><li><p>TimeOut is an integer denoting the time in milliseconds or the atom <strong>infinity</strong></p></li></ul></div></section>
+<section id="_timeouts_2"><h2>Timeouts</h2><div class="left" style="width: 600px;">
+<div class="pre">read(Key) ->
+    db ! {self(), {read, Key}},
+    <b>receive</b>
+      {read, R} ->
+         {ok, R};
+      {error, Reason} ->
+         {error, Reason}
+    <b>after</b> 1000 ->
+      {error, timeout}
+    <b>end</b>.
+ 
+ 
+ 
+</div></div>
+<div class="ulist right"><ul><li><p>If the server takes more than a second to handle the request, a timeout is generated</p></li><li><p>Do not forget to handle messages received after a timeout</p></li></ul></div></section>
+<section id="_timeouts_3"><h2>Timeouts</h2><div class="left" style="width: 600px;">
+<div class="pre">send_after(Time, Msg) ->
+    spawn(timer,
+          send,
+          [self(),Time,Msg]).
+
+send(Pid, Time, Msg) ->
+    <b>receive </b>
+    <b>after</b> Time ->
+        Pid ! Msg 
+    <b>end</b>.
+
+sleep(T) ->
+    <b>receive</b>
+    <b>after</b> T ->
+        true
+    <b>end</b>.
+</div></div>
+<div class="ulist right"><ul><li><p><strong>send_after(T, What)</strong> sends the message <strong>What</strong> to the current process after <strong>T</strong> milliseconds</p></li><li><p>The <strong>sleep(T)</strong> function will suspend the calling process for <strong>T</strong> milliseconds</p></li></ul></div></section>
+<section id="_timeouts_4"><h2>Timeouts</h2><svg id="timeouts_2" style="width:640px; height:640px;" viewBox="0 0 640 640" preserveAspectRatio="xMinYMin meet" class="left">
+<style type="text/css">
+    .msgtext {fill:#fff; font-size:16pt;}
+    .msgrect {fill:#888;}
+</style>
+<script>
+
+var s13 = Snap("#timeouts_2");
+
+s13.rect(10,10,600,560).attr({"stroke":"#E1E1E1", "stroke-width":"2", "fill":"#F2F2F2"});
+
+s13.text(20,50,"flush() ->").addClass("code");
+s13.text(20,88,"  receive do").addClass("code darkred bold");
+s13.text(20,126,"    _ -> flush()").addClass("code");
+s13.text(20,164,"  after").addClass("code darkred bold");
+s13.text(20,164,"        0 ->").addClass("code");
+s13.text(20,202,"    ok").addClass("code");
+s13.text(20,240,"  end").addClass("code darkred bold");
+s13.text(20,240,"     .").addClass("code");
+
+s13.circle(490,300,40).addClass("shape darkred");
+
+var msg1_rect = s13.rect(400,350,180,40,15,15).addClass("shape msgrect");
+var msg1_text = s13.text(435,378,"Message 1").addClass("msgtext");
+
+var msg2_rect = msg1_rect.clone().transform( "t0,50" );
+var msg2_text = s13.text(435,428,"Message 2").addClass("msgtext");
+
+var msg3_rect = msg1_rect.clone().transform( "t0,100" );
+var msg3_text = s13.text(435,478,"Message 3").addClass("msgtext");
+
+var msg4_rect = msg1_rect.clone().transform( "t0,150" );
+var msg4_text = s13.text(435,528,"Message 4").addClass("msgtext");
+
+var msg1 = s13.g(msg1_rect, msg1_text);
+var msg2 = s13.g(msg2_rect, msg2_text);
+var msg3 = s13.g(msg3_rect, msg3_text);
+var msg4 = s13.g(msg4_rect, msg4_text);
+
+var msgs = s13.g(msg1, msg2, msg3, msg4)
+
+s13_anim1 = function() { msg1.animate({"opacity":"0"}, 400, mina.linear, s13_anim2); };
+s13_anim2 = function() { msgs.animate({"transform":"t0,-50"}, 250, mina.linear, s13_anim3); };
+s13_anim3 = function() { msg2.animate({"opacity":"0"}, 400, mina.linear, s13_anim4); };
+s13_anim4 = function() { msgs.animate({"transform":"t0,-100"}, 250, mina.linear, s13_anim5); };
+s13_anim5 = function() { msg3.animate({"opacity":"0"}, 400, mina.linear, s13_anim6); };
+s13_anim6 = function() { msgs.animate({"transform":"t0,-150"}, 250, mina.linear, s13_anim7); };
+s13_anim7 = function() { msg4.animate({"opacity":"0"}, 400, mina.linear); };
+
+s13.click(function() { s13_anim1() });
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p><strong>flush()</strong> will clear the mailbox from all messages, stopping when it is empty.</p></li></ul></div></section>
+<section id="_more_on_processes_strong_definitions_strong"><h2>More on Processes: <strong>definitions</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Process</strong></dt><dd><p>A concurrent activity. The system may have many concurrent processes executing at the same time</p></dd><dt class="hdlist1"><strong>Message</strong></dt><dd><p>A method of communication and sharing data between processes</p></dd><dt class="hdlist1"><strong>Timeout</strong></dt><dd><p>A mechanism for waiting for a given period of time for an incoming message</p></dd></dl></div></section>
+<section id="_more_on_processes_strong_definitions_strong_2"><h2>More on Processes: <strong>definitions</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Registered Processes</strong></dt><dd><p>Processes which have been given a name with BIFs such as <strong>register/2</strong>.</p></dd><dt class="hdlist1"><strong>Termination</strong></dt><dd><p>A process is said to terminate normally when it has no more code to execute. <br>
+It terminates abnormally if a run time error occurs or if someone makes it exit with a non-normal reason.</p></dd></dl></div></section>
+<section id="_more_on_processes_strong_process_skeleton_strong"><h2>More on Processes: <strong>process skeleton</strong></h2><svg id="process_skeleton" style="height:600px; width:1020px;" class="left">
+<style type="text/css">
+    .text {fill:#fff; font-size:20pt;}
+    .grey {fill:#959595;}
+    .code {font-size: 20pt;}
+</style>
+<script>
+
+var s14 = Snap("#process_skeleton");
+
+var arrow = s14.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0').addClass("darkred");
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s14.ellipse(900,50,80,35).addClass("shape darkred");
+s14.text(870,60,"Start").addClass("text");
+
+s14.rect(820,140,160,80).addClass("shape grey");
+s14.text(845,190,"Initialise").addClass("text");
+
+s14.ellipse(650,280,80,35).addClass("shape darkred");
+s14.text(625,290,"Stop").addClass("text");
+
+s14.rect(850,265,100,100,20,20).addClass("shape").attr({"fill":"#E1E1E1"});
+s14.text(870,325,"loop");
+
+s14.rect(820,410,160,80).addClass("shape grey");
+s14.text(838,460,"terminate").addClass("text");
+
+s14.path("M900,85 l0,57").attr({"marker-end":marker}).addClass("line_darkred");
+s14.path("M900,220 l0,47").attr({"marker-end":marker}).addClass("line_darkred");
+s14.path("M950,300 C1020,250 1020,380 953,330").attr({"marker-end":marker}).addClass("line_darkred");
+s14.path("M730,280 l120,35").attr({"marker-end":marker}).addClass("line_darkred");
+s14.path("M900,365 l0,47").attr({"marker-end":marker}).addClass("line_darkred");
+
+s14.text(10,40,"start(Args) -> spawn(server, init, [Args])").addClass("code");
+s14.text(10,78,"").addClass("code");
+s14.text(10,116,"init(Args) ->").addClass("code");
+s14.text(10,154,"  State = initialize_state(Args),").addClass("code");
+s14.text(10,192,"  loop(State).").addClass("code");
+s14.text(10,230,"").addClass("code");
+s14.text(10,268,"loop(State) ->").addClass("code");
+s14.text(10,306,"   receive").addClass("code");
+s14.text(10,344,"      {handle, Msg} -> ").addClass("code");
+s14.text(10,382,"         NewState = handle(Msg, State),").addClass("code");
+s14.text(10,420,"         loop(NewState);").addClass("code");
+s14.text(10,458,"      stop -> terminate(State)").addClass("code");
+s14.text(10,496,"   end.").addClass("code");
+s14.text(10,534,"").addClass("code");
+s14.text(10,572,"terminate(State) -> clean_up(State).").addClass("code");
+
+</script>
+</svg></section>
+<section id="_concurrent_programming_exercise"><h2>Concurrent Programming Exercise</h2><div class="imageblock left w_600" style=""><div class="content"><img src="images/exercise.png" alt="Concurrent Programming Exercise" width="auto" height="auto"></div></div>
+<div class="ulist right w_500"><ul><li><p>This highly useful program spawns two processes which send a message back and forth between themselves <em>N</em> times. Try the program by calling <em>pingpong:start()</em>, followed by <em>pingpong:send(N)</em>, where <em>N</em> is the number of times the message should be passed on.</p></li></ul></div></section>
+<section id="_process_error_handling"><h2>Process Error Handling</h2></section>
+<section id="_links"><h2>Links</h2><svg id="links_1" style="width:500px; height:300px;" viewBox="0 0 500 300" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s15 = Snap("#links_1");
+
+var arrow = s15.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s15.text(65,90,"PidA").addClass("code");
+s15.circle(100,150,40).addClass("shape grey");
+s15.text(18,235,"link(PidB)").addClass("code");
+s15.circle(400,150,40).addClass("shape darkred");
+s15.text(365,90,"PidB").addClass("code");
+
+s15_g1_1 = s15.path("M150,150 l195,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s15_g1_2 = s15.path("M155,150 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s15_g1 = s15.g(s15_g1_1, s15_g1_2).addClass("hide");
+
+s15.click(function() { s15_g1.animate({"opacity":"1"}, 500, mina.linear); });
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p><strong>link/1</strong> will create a bi-directional link between the process calling the BIF and the process <strong>PidB</strong></p></li><li><p><strong>spawn_link/3</strong> will yield the same result as calling <strong>spawn/3</strong> followed by <strong>link/1</strong>, only that it will do it <strong>atomically</strong></p></li></ul></div></section>
+<section id="_links_2"><h2>Links</h2><svg id="links_2" style="width:500px; height:400px;" viewBox="0 0 500 400" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s2 = Snap("#links_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2_g1 = s2.text(50,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s2_g2 = s2.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t-10,0" );
+
+s2_g3_1 = s2.text(65,100,"PidA").addClass("code");
+s2_g3_2 = s2.circle(100,200,40).addClass("shape grey");
+
+s2_g4_1 = s2.path("M150,200 l195,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s2_g4_2 = s2.path("M155,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s2_g5 = s2.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t290,0" );
+
+s2_g6_1 = s2.circle(400,200,40).addClass("shape grey");
+s2_g6_2 = s2.text(365,100,"PidB").addClass("code");
+
+s2_g3 = s2.g(s2_g3_1, s2_g3_2).addClass("");
+s2_g4 = s2.g(s2_g4_1, s2_g4_2).addClass("");
+s2_g6 = s2.g(s2_g6_1, s2_g6_2).addClass("");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 250, mina.linear, s2_anim2); };
+s2_anim2 = function() { s2_g2.animate({"opacity":"1"}, 250, mina.linear, s2_anim3); };
+s2_anim3 = function() { s2_g2.animate({"opacity":"0"}, 250, mina.linear); s2_g3.animate({"opacity":"0"}, 250, mina.linear); };
+
+s2_anim4 = function() { s2_g4.animate({"opacity":"0"}, 250, mina.linear, s2_anim5); };
+s2_anim5 = function() { s2_g5.animate({"opacity":"1"}, 250, mina.linear, s2_anim6); };
+s2_anim6 = function() { s2_g5.animate({"opacity":"0"}, 250, mina.linear); s2_g6.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim4(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p><strong>Exit Signals</strong> are sent when processes terminate abnormally</p></li><li><p>They are sent to all processes to which the failing process is currently linked to</p></li><li><p>The process receiving the signal will exit, then propagate a new signal to the processes it is linked to</p></li></ul></div></section>
+<section id="_links_3"><h2>Links</h2><svg id="links_3" style="width:620px; height:620px;" viewBox="0 0 620 620" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s17 = Snap("#links_3");
+
+var arrow = s17.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s17_g1 = s17.text(10,40,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s17_g2 = s17.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s17_g3_1 = s17.text(115,100,"PidA").addClass("code");
+s17_g3_2 = s17.circle(150,200,40).addClass("shape grey");
+
+s17_g4 = s17.text(200,350,"{'EXIT', PidB, Reason})").addClass("code hide");
+
+s17_g5_1 = s17.path("M200,200 l195,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s17_g5_2 = s17.path("M205,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s17_g6 = s17_g2.clone().transform( "t340,0" );
+
+s17_g7_1 = s17.circle(450,200,40).addClass("shape grey");
+s17_g7_2 = s17.text(415,100,"PidB").addClass("code");
+
+s17_g8_1 = s17.path("M450,250 l0,175").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s17_g8_2 = s17.path("M450,255 l0,-1").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s17_g9 = s17_g2.clone().transform( "t340,280" );
+
+s17_g10_1 = s17.circle(450,480,40).addClass("shape grey");
+s17_g10_2 = s17.text(415,600,"PidC").addClass("code");
+
+s17_g3 = s17.g(s17_g3_1, s17_g3_2).addClass("");
+s17_g5 = s17.g(s17_g5_1, s17_g5_2).addClass("");
+s17_g7 = s17.g(s17_g7_1, s17_g7_2).addClass("");
+s17_g8 = s17.g(s17_g8_1, s17_g8_2).addClass("");
+s17_g10 = s17.g(s17_g10_1, s17_g10_2).addClass("");
+
+s17_anim1 = function() { s17_g1.animate({"opacity":"1"}, 250, mina.linear, s17_anim2); };
+s17_anim2 = function() { s17_g2.animate({"opacity":"1"}, 250, mina.linear, s17_anim3); };
+s17_anim3 = function() { s17_g2.animate({"opacity":"0"}, 250, mina.linear); s17_g3.animate({"opacity":"0"}, 250, mina.linear); };
+s17_anim4 = function() { s17_g4.animate({"opacity":"1"}, 250, mina.linear); s17_g5.animate({"opacity":"0"}, 250, mina.linear, s17_anim5); };
+s17_anim5 = function() { s17_g6.animate({"opacity":"1"}, 250, mina.linear, s17_anim6); };
+s17_anim6 = function() { s17_g6.animate({"opacity":"0"}, 250, mina.linear); s17_g7.animate({"opacity":"0"}, 250, mina.linear, s17_anim7); };
+s17_anim7 = function() { s17_g8.animate({"opacity":"0"}, 250, mina.linear, s17_anim8); };
+s17_anim8 = function() { s17_g9.animate({"opacity":"1"}, 250, mina.linear, s17_anim9); };
+s17_anim9 = function() { s17_g9.animate({"opacity":"0"}, 250, mina.linear); s17_g10.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s17_counter=1
+s17.click( function() {
+  switch(s17_counter) {
+    case 1: {s17_anim1(); s17_counter++; break};
+    case 2: {s17_anim4(); s17_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>When process <strong>PidA</strong> fails, the exit signals propagate to PidB</p></li><li><p>From <strong>PidB</strong>, it propagates to <strong>PidC</strong>.</p></li></ul></div></section>
+<section id="_exit_signals"><h2>Exit Signals</h2><svg id="exit_signals_1" style="width:620px; height:420px;" viewBox="0 0 620 420" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s18 = Snap("#exit_signals_1");
+
+var arrow = s18.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s18_g1 = s18.text(90,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s18_g2 = s18.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s18_g3_1 = s18.text(115,120,"PidA").addClass("code");
+s18_g3_2 = s18.circle(150,200,40).addClass("shape grey");
+
+s18_g4_1 = s18.path("M200,200 l190,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s18_g4_2 = s18.path("M205,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s18.circle(450,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s18.circle(450,200,40).addClass("shape grey");
+s18.text(415,140,"PidB").addClass("code");
+
+s18_g3 = s18.g(s18_g3_1, s18_g3_2);
+s18_g4 = s18.g(s18_g4_1, s18_g4_2);
+
+s18_anim1 = function() { s18_g1.animate({"opacity":"1"}, 250, mina.linear, s18_anim2); };
+s18_anim2 = function() { s18_g2.animate({"opacity":"1"}, 250, mina.linear, s18_anim3); };
+s18_anim3 = function() { s18_g2.animate({"opacity":"0"}, 250, mina.linear); s18_g3.animate({"opacity":"0"}, 250, mina.linear); };
+s18_anim4 = function() { s18_g4.animate({"opacity":"0"}, 250, mina.linear); };
+
+var s18_counter=1
+s18.click( function() {
+  switch(s18_counter) {
+    case 1: {s18_anim1(); s18_counter++; break};
+    case 2: {s18_anim4(); s18_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Processes can trap exit signals by calling the BIF <strong>process_flag(trap_exit, true)</strong></p></li><li><p>Exit signals will be converted to messages of the format  <strong>{<em>EXIT</em>, Pid, Reason}</strong></p></li><li><p>They are saved in the process mailbox</p></li><li><p>If an exit signal is trapped, it does not propagate further</p></li></ul></div></section>
+<section id="_exit_signals_2"><h2>Exit Signals</h2><svg id="exit_signals_2" style="width:620px; height:620px;" viewBox="0 0 620 60" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s19 = Snap("#exit_signals_2");
+
+var arrow = s19.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s19_g1 = s19.text(20,350,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s19_g2 = s19.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t90,0" );
+
+s19_g3_1 = s19.text(165,120,"PidA").addClass("code");
+s19_g3_2 = s19.circle(200,200,40).addClass("shape grey");
+
+s19_g4_1 = s19.path("M250,200 l190,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s19_g4_2 = s19.path("M255,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s19.circle(500,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s19.circle(500,200,40).addClass("shape grey");
+s19.text(465,140,"PidB").addClass("code");
+
+s19.path("M500,255 l0,170").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s19.path("M500,260 l0,-1").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s19.circle(500,480,40).addClass("shape grey");
+s19.text(465,560,"PidC").addClass("code");
+
+s19_g3 = s19.g(s19_g3_1, s19_g3_2);
+s19_g4 = s19.g(s19_g4_1, s19_g4_2);
+
+s19_anim1 = function() { s19_g1.animate({"opacity":"1"}, 250, mina.linear, s19_anim2); };
+s19_anim2 = function() { s19_g2.animate({"opacity":"1"}, 250, mina.linear, s19_anim3); };
+s19_anim3 = function() { s19_g2.animate({"opacity":"0"}, 250, mina.linear); s19_g3.animate({"opacity":"0"}, 250, mina.linear, s19_anim4); };
+s19_anim4 = function() { s19_g4.animate({"opacity":"0"}, 250, mina.linear); };
+
+s19.click( function() {s19_anim1() } );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>Process B marked with a double ring is trapping EXITs</p></li><li><p>If an error occurs in A or C, then they will terminate.</p></li><li><p>Process B will receive the <strong>{<em>EXIT</em>, Pid, Reason}</strong> message</p></li><li><p>The process that did not terminate will not be affected.</p></li></ul></div></section>
+<section id="_definitions_strong_built_in_functions_strong"><h2>Definitions: <strong>built-in functions</strong></h2><svg id="definitions_built_in_functions_1" style="width:620px; height:420px;"" viewBox="0 0 620 420" preserveAspectRatio="xMinYMin meet" class="left">
+<script>
+
+var s20 = Snap("#definitions_built_in_functions_1");
+
+var arrow = s20.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s20_g1 = s20.text(90,340,"{'EXIT', PidA, Reason})").addClass("code hide");
+
+s20_g2 = s20.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape hide").transform( "t40,0" );
+
+s20_g3_1 = s20.text(115,115,"PidA").addClass("code");
+s20_g3_2 = s20.circle(150,200,40).addClass("shape grey");
+
+s20_g4_1 = s20.path("M200,200 l190,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+s20_g4_2 = s20.path("M205,200 l-1,0").attr({"stroke-dasharray":"5,5", "marker-end":marker}).addClass("line dashed");
+
+s20.circle(450,200,45).addClass("shape").attr({"fill":"#A6A6A6"});
+s20.circle(450,200,40).addClass("shape grey");
+s20.text(415,140,"PidB").addClass("code");
+
+s20_g3 = s20.g(s20_g3_1, s20_g3_2);
+s20_g4 = s20.g(s20_g4_1, s20_g4_2);
+
+s20_anim1 = function() { s20_g1.animate({"opacity":"1"}, 250, mina.linear, s20_anim2); };
+s20_anim2 = function() { s20_g2.animate({"opacity":"1"}, 250, mina.linear, s20_anim3); };
+s20_anim3 = function() { s20_g2.animate({"opacity":"0"}, 250, mina.linear); s20_g3.animate({"opacity":"0"}, 250, mina.linear); s20_g4.animate({"opacity":"0"}, 250, mina.linear); };
+
+s20.click( function() {s20_anim1() } );
+
+</script>
+</svg>
+<div class="ulist right"><ul><li><p>the BIF <strong>exit(Reason)</strong> terminates the process which calls it</p></li><li><p><strong>exit(Pid, Reason)</strong> sends an exit signal containing <strong>Reason</strong> to the process <strong>Pid</strong></p></li><li><p>If trapping exits, the signal is converted to an exit message</p></li></ul></div></section>
+<section id="_propagation_semantics_strong_no_trapping_strong"><h2>Propagation Semantics: <strong>no trapping</strong></h2><div class="imageblock left" style=""><div class="content"><img src="images/no_trapping.png" alt="No trapping" width="500" height="auto"></div></div>
+<div class="paragraph right"><p><br>
+<br>
+<br></p></div>
+<div class="ulist"><ul><li><p>Nothing happens to PidB<br>
+<br>
+<br>
+<br></p></li><li><p>PidB terminates with reason <strong>'killed'</strong><br>
+<br>
+<br>
+<br></p></li><li><p>PidB terminates with reason <strong>Other</strong></p></li></ul></div></section>
+<section id="_propagation_semantics_strong_trapping_exits_strong"><h2>Propagation Semantics: <strong>trapping exits</strong></h2><div class="imageblock left" style=""><div class="content"><img src="images/trapping_exits.png" alt="Trapping exits" width="500" height="auto"></div></div>
+<div class="paragraph right"><p><br>
+<br>
+<br></p></div>
+<div class="ulist"><ul><li><p>PidB receives<br>
+<strong>{<em>EXIT</em>, PidA, <em>normal</em>}</strong><br>
+<br>
+<br></p></li><li><p>PidB terminates with reason <strong>'killed'</strong><br>
+<br>
+<br>
+<br></p></li><li><p>PidB receives<br>
+<strong>{<em>EXIT</em>, PidA, Other}</strong></p></li></ul></div></section>
+<section id="_propagation_semantics"><h2>Propagation Semantics</h2><div class="ulist"><ul><li><p>When a process terminates, it sends an exit signal to the processes in its link set</p></li><li><p>Exit signals can be <strong><em>normal</em></strong> or <strong>non-normal</strong></p></li><li><p>A process not trapping exits dies if it receives a non-normal one. Normal signals are ignored.</p></li><li><p>A process which is trapping exit signals converts all incoming exit signals to conventional messages handled in a receive statement</p></li><li><p>If the reason is <strong><em>kill</em></strong>, the process is terminated unconditionally with reason <strong><em>killed</em></strong></p></li></ul></div></section>
+<section id="_robust_systems"><h2>Robust Systems</h2><div class="ulist"><ul><li><p>Building a system in layers can make it robust</p><div class="ulist"><ul><li><p>Level N-1 traps and fixes errors occurring in level N</p></li><li><p>The leaves of the tree are workers</p></li></ul></div></li><li><p>In well designed systems, application programmers will not have to worry about error handling code</p><div class="ulist"><ul><li><p>Error handling will be isolated by higher levels of the system, managed uniformly across processes</p></li></ul></div></li><li><p>Processes whose only task is to supervise children are called supervisors</p></li></ul></div></section>
+<section id="_robust_systems_2"><h2>Robust Systems</h2><div class="imageblock left w_700" style=""><div class="content"><img src="images/robust_systems.png" alt="Robust Systems" width="auto" height="auto"></div></div>
+<div class="ulist right w_400"><ul><li><p>Robust systems can be designed by layering</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

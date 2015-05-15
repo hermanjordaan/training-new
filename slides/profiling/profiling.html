@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Profiling Erlang Code</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Profiling Erlang Code</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_profiling_erlang_code"><h2>Profiling Erlang Code</h2><div class="ulist"><ul><li><p>Introduction to Profiling</p></li><li><p>Metrics to Consider</p></li><li><p>A Profiling Example</p></li><li><p>Profiling Tools</p></li><li><p>Miscellanea</p></li></ul></div></section>
+<section id="_introduction_to_profiling"><h2>Introduction to Profiling</h2><div class="quoteblock"><blockquote>“ Gathering <strong>statistics</strong> about the code <br>
+    as it’s <strong>running</strong>, <br>
+      <strong>associating</strong> the data with <br>
+        corresponding points in the <strong>code</strong> ”</blockquote><div class="attribution">&#8212; Erlang and OTP in Action, Chapter 14</div></div></section>
+<section id="_introduction_to_profiling_2"><h2>Introduction to Profiling</h2><div class="quoteblock"><blockquote>“ Make it <strong>work</strong>, <br>
+    then make it <strong>beautiful</strong>, <br>
+      then if you really, really have to, make it <strong>fast</strong>. ”</blockquote><div class="attribution">&#8212; Joe Armstrong, inventor of Erlang</div></div></section>
+<section id="_introduction_to_profiling_3"><h2>Introduction to Profiling</h2><div class="quoteblock"><blockquote>“ 90 percent of the time, <br>
+    if you make it beautiful, it will already be fast. <br>
+      So really, <strong>just make it beautiful</strong>!”</blockquote><div class="attribution">&#8212; Joe Armstrong, inventor of Erlang</div></div></section>
+<section id="_introduction_to_profiling_4"><h2>Introduction to Profiling</h2><div class="quoteblock"><blockquote>“ Premature optimization is the root of all <strong>evil</strong>. ”</blockquote><div class="attribution">&#8212; Donald Knuth, Stanford University</div></div></section>
+<section id="_introduction_to_profiling_5"><h2>Introduction to Profiling</h2><div class="ulist"><ul><li><p><strong>Do not guess</strong> about performance</p></li><li><p>Profile <strong>before</strong> optimizing</p></li><li><p>Be <strong>systematic</strong></p></li><li><p>Change <strong>one</strong> thing at the time</p></li><li><p>Start <strong>simple</strong></p></li></ul></div></section>
+<section id="_introduction_to_profiling_6"><h2>Introduction to Profiling</h2><div style="text-align:center; margin-top:100pt; font-size:36pt; font-family:'Gill Sans'">
+<img src="images/workflow.png" style="margin:10px auto 120px;" />
+<p><b>Lather,  Rinse, Repeat</b></p>
+<p><i>until the performance requirements are met</i></p>
+</div></section>
+<section id="_metrics_to_consider"><h2>Metrics to Consider</h2><div class="ulist"><ul><li><p>CPU time</p><div class="ulist"><ul><li><p>How much CPU time do I spend?</p></li><li><p>Where do I spend CPU time?</p></li></ul></div></li><li><p>Wall-clock time</p><div class="ulist"><ul><li><p>How much time does my task take?</p></li></ul></div></li><li><p>Processes ready to run</p><div class="ulist"><ul><li><p>Are there any processes blocked by other processes?</p></li></ul></div></li><li><p>Memory consumption</p><div class="ulist"><ul><li><p>Are there any obvious memory leaks in my application?</p></li></ul></div></li><li><p>&#8230;&#8203;</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>“Time” is often approximated &#8594; Number of calls, number of lines executed
+High CPU Time &#8594; I might use a bad algorithm, with exponential complexity.
+Wall-clock time &#8594; If this is high, but CPU time is low, I’m probably spending time in I/O or network.--</p></div></aside></section>
+<section id="_a_profiling_example"><h2>A Profiling Example</h2><div class="literalblock"><div class="content"><pre>-module(example).
+
+-export([factorial/1]).
+
+factorial(0) -&gt; 1;
+factorial(N) when N &gt; 0 -&gt;
+  N * factorial(N - 1).</pre></div></div>
+<div class="literalblock"><div class="content"><pre>Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1&gt; example:factorial(5).
+120.
+2&gt; example:factorial(1000).
+4023872600770937735...</pre></div></div></section>
+<section id="_a_profiling_example_2"><h2>A Profiling Example</h2><div class="literalblock"><div class="content"><pre>Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1&gt; {Time, Value} = timer:tc(example, factorial, [1000]).
+{813, 4023872600770937735...}</pre></div></div>
+<div class="ulist"><ul><li><p><code><strong>timer:tc/3</strong></code> evaluates apply/3 and measures the elapsed real time, returning {Time, Value}</p></li><li><p>Time is in <strong>microseconds</strong></p></li><li><p><strong>Not</strong> really reliable</p></li></ul></div></section>
+<section id="_a_profiling_example_3"><h2>A Profiling Example</h2><div class="literalblock"><div class="content"><pre>Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1&gt; statistics(runtime).
+{330,330}
+2&gt; example:factorial(1000).
+4023...
+3&gt; statistics(runtime).
+{340,10}</pre></div></div>
+<div class="ulist"><ul><li><p><code><strong>statistics/1</strong></code> measures CPU time spent in the Erlang VM</p></li><li><p>More consistent that timer:tc/3</p></li><li><p>Misleading if I/O is involved (OS kernel time not included)</p></li></ul></div></section>
+<section id="_profiling_tools"><h2>Profiling Tools</h2><div class="ulist"><ul><li><p>cprof</p></li><li><p>fprof</p></li><li><p>eprof</p></li></ul></div></section>
+<section id="_profiling_using_cprof"><h2>Profiling using cprof</h2><div class="pre">Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> <strong>cprof:start().</strong>
+5883
+2> example:factorial(1000).
+4023872600770937735...
+3> <strong>cprof:pause().</strong>
+5883
+4> <strong>cprof:analyse(example).</strong>
+{example,1001,[{{example,factorial,1},1001}]}
+5> <strong>cprof:stop().</strong>
+5905
+
+</div></section>
+<section id="_cprof"><h2>cprof</h2><div class="ulist"><ul><li><p><strong>start/1</strong></p><div class="ulist"><ul><li><p>Start call count tracing</p></li><li><p>Trace all functions in all modules</p></li></ul></div></li><li><p><strong>pause/1</strong></p><div class="ulist"><ul><li><p>Pause call count tracing</p></li></ul></div></li><li><p><strong>analyse/1</strong></p><div class="ulist"><ul><li><p>Collect and analyse the call counters for a given module</p></li></ul></div></li><li><p><strong>stop/0</strong></p><div class="ulist"><ul><li><p>Stop call count tracing</p></li></ul></div></li></ul></div></section>
+<section id="_cprof_strong_interpreting_the_output_strong"><h2>cprof: <strong>interpreting the output</strong></h2><div class="literalblock"><div class="content"><pre>{example, 1001,
+  [
+    {
+      {example,factorial,1},
+      1001
+    }
+  ]
+}
+ 
+ 
+ 
+ 
+ </pre></div></div></section>
+<section id="_cprof_2"><h2>cprof</h2><div class="ulist"><ul><li><p>The <strong>simplest</strong> Erlang/OTP profiling tool</p></li><li><p>Part of the <strong>tools</strong> application</p></li><li><p>Counts <strong>number</strong> of function calls</p></li><li><p>Works on a <strong>per module</strong> basis</p></li><li><p><strong>No</strong> need to compile code with <strong>debug_info</strong></p></li><li><p><strong>Low</strong> impact (10% performance degradation)</p></li><li><p>Very <strong>limited</strong> information</p></li><li><p><strong>Cannot</strong> profile <strong>BIFs</strong></p></li></ul></div></section>
+<section id="_profiling_using_fprof"><h2>Profiling using fprof</h2><div class="pre">Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> <strong>fprof:trace(start).</strong>
+ok
+2> <strong>example:factorial(100000).</strong>
+2824229407960347...
+3> <strong>fprof:trace(stop).</strong>
+ok
+4> <strong>fprof:profile().</strong>
+...
+ok
+5> <strong>fprof:analyse({dest, "profile.txt"}).</strong>
+...
+ok
+</div></section>
+<section id="_fprof"><h2>fprof</h2><div class="ulist"><ul><li><p><strong>trace/1</strong></p><div class="ulist"><ul><li><p>Start/stop tracing</p></li></ul></div></li><li><p><strong>profile/0</strong></p><div class="ulist"><ul><li><p>Compile a trace into raw profile data held by the fprof server</p></li></ul></div></li><li><p><strong>analyse/1</strong></p><div class="ulist"><ul><li><p>Analyses raw profile data in the fprof server</p></li></ul></div></li></ul></div></section>
+<section id="_fprof_strong_interpreting_the_output_strong"><h2>fprof: <strong>interpreting the output</strong></h2><div class="literalblock"><div class="content"><pre>$ cat profile.txt
+%% Analysis results:
+{analysis_options,
+  [{callers, true},
+   {sort, acc},
+   {totals, false},
+   {details, true}]}.
+
+%                          CNT         ACC         OWN
+[{ totals,              122159,  87359.657,  42304.516}].  %%%
+
+%                          CNT         ACC         OWN
+[{ "&lt;0.32.0&gt;",          122159,  undefined,  42304.516}].   %%
+...
+ </pre></div></div></section>
+<section id="_fprof_strong_interpreting_the_output_strong_2"><h2>fprof: <strong>interpreting the output</strong></h2><div class="ulist"><ul><li><p>Output in Erlang format</p><div class="ulist"><ul><li><p>Use <strong>file:consult/1</strong> to parse it</p></li></ul></div></li><li><p>Three Sections</p><div class="ulist"><ul><li><p>Analysis options (useful to reproduce it)</p></li><li><p>Summary</p></li><li><p>Detailed analysis per process</p></li></ul></div></li><li><p>Times expressed in <strong>milliseconds</strong></p></li></ul></div></section>
+<section id="_interpreting_the_fprof_output"><h2>Interpreting the fprof output</h2><div class="literalblock"><div class="content"><pre>{analysis_options,
+ [{callers, true},
+  {sort, acc},
+  {totals, false},
+  {details, true}]}.
+ 
+...</pre></div></div>
+<div class="ulist"><ul><li><p>Print callers and called information</p></li><li><p>Sort lines by execution time (ACC)</p></li><li><p>Do not include a summary for call statistics</p></li><li><p>Print detailed call statistics for each process</p></li></ul></div></section>
+<section id="_fprof_strong_interpreting_the_output_strong_3"><h2>fprof: <strong>interpreting the output</strong></h2><div class="literalblock"><div class="content"><pre>...
+                 CNT             ACC         OWN
+[{ totals,       122159,   87359.657,  42304.516}].  %%%
+
+...
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>CNT</p><div class="ulist"><ul><li><p>Number of function calls</p></li></ul></div></li><li><p>ACC</p><div class="ulist"><ul><li><p>Total execution time</p></li></ul></div></li><li><p>OWN</p><div class="ulist"><ul><li><p>Execution time spent on profiled functions</p></li></ul></div></li></ul></div></section>
+<section id="_fprof_strong_interpreting_the_output_strong_4"><h2>fprof: <strong>interpreting the output</strong></h2><div class="literalblock"><div class="content"><pre>...
+                 CNT             ACC         OWN
+[{ “&lt;0.32.0&gt;”,   122159,   undefined,  42304.516}].   %%
+
+...
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>An entry for each process</p></li><li><p>In our case, CNT and OWN coincide with TOTALS (1 process)</p></li></ul></div></section>
+<section id="_fprof_strong_interpreting_the_output_strong_5"><h2>fprof: <strong>interpreting the output</strong></h2><div class="literalblock"><div class="content"><pre>...
+{[{{shell,apply_fun,3},                      1,14065.965, 5271.820},
+  {{error_handler,undefined_function,3},     1,  127.642,   51.671},
+  {{example,factorial,1},               110000,    0.000,  519.431}],
+ { {example,factorial,1},               110002,14193.607,10842.922}, %
+ [{garbage_collect,                       7514, 3349.796, 3349.796},
+  {suspend,                                 55,    0.889,    0.000},
+  {{example,factorial,1},               110000,    0.000, 5519.431}]}.
+...
+ </pre></div></div>
+<div class="ulist"><ul><li><p>A paragraph for each function</p></li><li><p><strong>%</strong> tells us which function the paragraph is about</p></li><li><p>Above % are the <strong>calling</strong> functions</p></li><li><p>Below % are the <strong>called</strong> functions</p></li><li><p><strong>suspend</strong> indicates the process has been suspended</p></li></ul></div></section>
+<section id="_fprof_2"><h2>fprof</h2><div class="ulist"><ul><li><p>More <strong>powerful</strong> profiling tool</p></li><li><p>Part of the <strong>tools</strong> application</p></li><li><p>Implemented using Erlang <strong>tracing BIFs</strong></p></li><li><p>Works on a <strong>per process</strong> basis</p></li><li><p><strong>Verbose</strong> information</p></li><li><p>Trace to file to reduce <strong>impact</strong></p></li></ul></div></section>
+<section id="_fprof_strong_notes_strong"><h2>fprof: <strong>notes</strong></h2><div class="ulist"><ul><li><p>If you find the fprof output complicated:</p><div class="ulist"><ul><li><p>Convert it to callgrind format</p></li><li><p>Use the existing visualizing tools</p></li><li><p><a href="https://github.com/isacssouza/erlgrind" class="bare">https://github.com/isacssouza/erlgrind</a></p></li></ul></div></li></ul></div></section>
+<section id="_fprof_strong_notes_strong_2"><h2>fprof: <strong>notes</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/qcachegrind.png" alt="fprof: notes" width="auto" height="600"></div></div></section>
+<section id="_profiling_using_eprof"><h2>Profiling using eprof</h2><div class="pre">Erlang R16B
+
+Eshell V5.10.1  (abort with ^G)
+1> <strong>eprof:start().</strong>
+{ok,<0.36.0>}
+2> <strong>eprof:start_profiling([self()]).</strong>
+profiling
+3> example:factorial(1000).
+4023872600770937735...
+4> <strong>eprof:stop_profiling().</strong>
+profiling_stopped
+5> <strong>eprof:analyze().</strong>
+...
+6> <strong>eprof:stop().</strong>
+stopped
+
+</div></section>
+<section id="_eprof"><h2>eprof</h2><div class="ulist"><ul><li><p><strong>start/0</strong></p><div class="ulist"><ul><li><p>Start the eprof server</p></li></ul></div></li><li><p><strong>start_profiling/1</strong></p><div class="ulist"><ul><li><p>Start profiling for a given set of processes</p></li></ul></div></li><li><p><strong>stop_profiling/0</strong></p><div class="ulist"><ul><li><p>Display the results of the analysis for each process</p></li></ul></div></li><li><p><strong>analyse/0</strong></p><div class="ulist"><ul><li><p>Display the results of the analysis for each process</p></li></ul></div></li><li><p><strong>stop/0</strong></p><div class="ulist"><ul><li><p>Stop the eprof server</p></li></ul></div></li></ul></div></section>
+<section id="_eprof_strong_interpreting_the_output_strong"><h2>eprof: <strong>interpreting the output</strong></h2><div class="literalblock"><div class="content"><pre>*** Process &lt;0.32.0     -- 100.00 % of profiled time ***
+FUNCTION                  CALLS      %  TIME  [uS / CALLS]
+--------                  -----    ---  ----  [----------]
+io_lib:write_atom/1           1   0.00     0  [      0.00]
+...
+erlang:integer_to_list/1      1  27.44  1011  [   1011.00]
+example:factorial/1        1001  30.54  1125  [      1.12]
+ </pre></div></div>
+<div class="ulist"><ul><li><p>The factorial/1 function has been executed 1001 times</p></li><li><p>30.54% (i.e. ~1.12 seconds) of the total execution time has been spent in the factorial/1 function</p></li><li><p>In average, a single execution of the factorial/1 function took 1.63 microseconds</p></li></ul></div></section>
+<section id="_eprof_2"><h2>eprof</h2><div class="ulist"><ul><li><p>Part of the <strong>tools</strong> application</p></li><li><p>Implemented using Erlang <strong>tracing BIFs</strong></p></li><li><p>Somewhere in between <strong>cprof</strong> and <strong>fprof</strong></p></li><li><p><strong>High</strong> impact</p></li></ul></div></section>
+<section id="_miscellanea"><h2>Miscellanea</h2><div class="ulist"><ul><li><p>observer</p><div class="ulist"><ul><li><p>General tool for inspecting Erlang system</p></li><li><p>Can view overall system data and load</p></li></ul></div></li><li><p>percept</p><div class="ulist"><ul><li><p>Erlang Concurrency Profiling Tool</p></li><li><p>Focus on application-level concurrency</p></li><li><p>Help identifying concurrency-bottlenecks</p></li><li><p>Focus on the <em>state</em> of a process</p></li><li><p>waiting/running/etc</p></li><li><p>Percept2 under active development</p></li></ul></div></li></ul></div></section>
+<section id="_miscellanea_2"><h2>Miscellanea</h2><div class="ulist"><ul><li><p>etop</p><div class="ulist"><ul><li><p>Erlang equivalent of UNIX <code><em>top</em></code> command</p></li><li><p>Available in both textual and graphical format</p></li><li><p><code>etop:start/1</code></p></li></ul></div></li><li><p>cover</p><div class="ulist"><ul><li><p>A <code><em>Coverage Analysis Tool</em></code> for Erlang</p></li><li><p>HTML pages generated (with colours!)</p></li></ul></div></li></ul></div></section>
+<section id="_miscellanea_3"><h2>Miscellanea</h2><div class="ulist"><ul><li><p>eper</p><div class="ulist"><ul><li><p>Loose collection of Erlang Performance related tools.</p></li><li><p><em>sherk</em> (similar to OS X’s <em>Instruments</em>)</p></li><li><p><em>gperf</em> (a graphical performance monitor; shows CPU, memory and network usage)</p></li><li><p><em>dtop</em>  (similar to unix top)</p></li><li><p><em>redbug</em> (improved dbg application)</p></li></ul></div></li></ul></div></section>
+<section id="_profiling_erlang_code_2"><h2>Profiling Erlang Code</h2><div class="ulist"><ul><li><p>Introduction to Profiling</p></li><li><p>Metrics to Consider</p></li><li><p>A Profiling Example</p></li><li><p>Profiling Tools</p></li><li><p>Miscellanea</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

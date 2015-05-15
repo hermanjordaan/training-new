@@ -1,0 +1,608 @@
+EUnit test
+==========
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+EUnit test
+----------
+* What is EUnit?
+* How to use EUnit
+* Testing Functional Code
+* Infrastructure
+* Fixtures
+* Testing Systems With State
+* Testing Concurrent Programs
+
+
+What is EUnit?
+--------------
+* Framework for defining and executing unit tests
+* A unit can be a function, a module, a process, or even a whole application
+* Inspired by JUnit, adapted to functional programming
+* Unobtrusive, should cause no conflicts in existing code.
+* Built with macros
+
+
+How to use EUnit
+----------------
+* Modules need to include the +eunit+ library:  +  
+  +-include_lib("eunit/include/eunit.hrl").+
+** Creates an exported function *test()* that will run all tests in the module
+** Automatically exports all functions of arity 0 ending in *\_test()* or *_test_()*
+** Makes all the EUnit macros available in the module
+* The functions can be in a module *Mod* or another module named *Mod_tests*  
+* Run the tests with *eunit:test(Mod)* or *Mod:test()*
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Have the students try to run demo.erl as demo:test() and eunit:test(demo).
+--
+
+
+How to use EUnit
+----------------
+[role="left"]
+....
+-module(testex).
+-include_lib("eunit/include/eunit.hrl").
+
+reverse([]) -> [];
+reverse([H|T]) ->
+    [reverse(T)|H].
+
+reverse_empty_test() ->
+    [] = reverse([]).
+reverse_one_test() ->
+    [1] = reverse([1]).
+reverse_many_test() ->
+    [3,2,1] = reverse([1,2,3]).
+ 
+ 
+....
+
+[role="right"]
+* *reverse/1* is the actual implementation
+* *reverse_*_test/0* are the test functions
+* If an exception is raised in one of the test functions, the test fails.
+* Otherwise, the test succeeds.
+
+
+How to use EUnit
+----------------
+++++
+<svg id="how_to_use_eunit_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#how_to_use_eunit_1");
+
+var arrow = s1.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(10,40,"1> c(testex).").addClass("code");
+s1.text(10,80,"{ok,testex}").addClass("code");
+s1.text(10,120,"2> eunit:test(testex).").addClass("code");
+s1.text(10,160,"testex: reverse_one_test...*failed*").addClass("code");
+s1.text(10,200,"::error:{badmatch,[[]|1]}").addClass("code");
+s1.text(10,240,"  in function testex:reverse_one_test/0").addClass("code");
+
+s1.text(10,320,"testex: reverse_many_test...*failed*").addClass("code");
+s1.text(10,360,"::error:{badmatch,[[[[]|3]|2]|1]}").addClass("code");
+s1.text(10,400,"  in function testex:reverse_many_test/0").addClass("code");
+
+s1.text(10,480,"=======================================================").addClass("code");
+s1.text(10,520,"  Failed: 2.  Skipped: 0.  Passed: 1.").addClass("code");
+
+s1_g1 = s1.g(s1.text(670,70,"test name").addClass("darkred"),
+             s1.path("M650,55 l-235,70").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.path("M660,70 l-230,215").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s1_g2 = s1.g(s1.text(700,150,"output obtained").addClass("darkred"),
+             s1.path("M685,140 l-225,45").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.path("M690,150 l-208,178").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g1.animate({"opacity":"0"}, 250, mina.linear); s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+How to use EUnit: *test macros*
+-------------------------------
+....
+reverse_empty_test() ->
+    ?assertEqual([], reverse([])).
+reverse_one_test() ->
+    ?assertEqual([1], reverse([1])).
+reverse_many_test() ->
+    ?assertEqual([1,2,3], reverse([1,2,3])).
+ 
+....
+
+* Using EUnit macros allow for more informative error output
+** *?assert(X)* and *?assertNot(X)* for boolean values
+** *?assertEqual(A,B)* for strict comparisons
+** *?assertMatch(Pattern, Exp)* to test pattern matching
+** *?assertException(Class, Pattern, Exp)*, *?assertExit(Pattern, Exp)*, *?assertError(Pattern, Exp)* and *?assertThrow(Pattern, Exp)* for exceptions. 
+
+
+How to use EUnit: *test macros*
+-------------------------------
+*?assert(X)*, *?assertNot(X)*::
+Can be used as a replacement of *true = X* or *false = Y*
+
+*?assertEqual(X,Y)*::
+Equivalent to *true = X =:= Y*
+
+*?assertMatch(Pattern, Expression)*::
+Allows to work in a manner similar to *Pattern = Expression*, except that no variable becomes bound.  +  
+*{X,_} = ExpA,*  +  
+*{X,_} = ExpB*  +  
+has a different meaning than  +
+*?assertMatch({X,_}, ExpA)*,  +  
+*?assertMatch({X,_}, ExpB)*.
+
+
+How to use EUnit: *test macros*
+-------------------------------
+*?assertError(Pattern, Exp)*::
+Tells that the code expects an error. If *Exp* were *erlang:error(err)*, the expected *Pattern* would be *err*.
+
+*?assertThrow(Pattern, Exp)*::
+Tells that the code expects a throw. If *Exp* is *throw(err)*, the expected *Pattern* should be *err*.
+
+*?assertExit(Pattern, Exp)*::
+Tells that the code expects an exit. If *Exp* is *exit(err)*, the expected *Pattern* is *err*.
+
+*?assertException(Class, Pattern Exp)*::
+A generic form of the 3 previous assertions.
+
+
+How to use EUnit: *test macros*
+-------------------------------
+++++
+<svg id="how_to_use_eunit_test_macros_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#how_to_use_eunit_test_macros_1");
+
+var arrow = s2.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.text(10,60,"7> eunit:test(testex).").addClass("code darkred bold");
+s2.text(10,100,"testex: reverse_one_test...*failed*").addClass("code");
+s2.text(10,140,"::error:{assertEqual_failed,[{module,testex},").addClass("code");
+s2.text(10,180,"                           {line,11},").addClass("code");
+s2.text(10,220,"                           {expression,\"reverse([1])\"},").addClass("code");
+s2.text(10,260,"                           {expected,[1]},").addClass("code");
+s2.text(10,300,"                           {value,[[]|1]}]}").addClass("code");
+s2.text(10,340,"  in function testex:'-reverse_one_test/0-fun-0-'/1").addClass("code");
+
+s2.text(10,420,"[... output truncated ...]").addClass("code");
+
+s2.text(10,540,"=======================================================").addClass("code");
+s2.text(10,580,"  Failed: 2.  Skipped: 0.  Passed: 1.").addClass("code");
+
+s2_g1 = s2.g(s2.text(490,40,"test name").addClass("darkred"),
+             s2.path("M480,30 l-70,40").addClass("line_darkred").attr({"marker-end":marker}),
+             s2.text(120,225,"expected value").addClass("darkred"),
+             s2.path("M340,215 l310,30").addClass("line_darkred").attr({"marker-end":marker}),
+             s2.text(140,275,"actual result").addClass("darkred"),
+             s2.path("M330,270 l268,18").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2.click(function() {s2_g1.animate({"opacity":"1"}, 375, mina.linear)});
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Run the exercises 1.A here
+--
+
+
+Testing Functional Code
+-----------------------
+* Testing code without side effects is usually simple
+* need to look at the input/output of the function
+* The *reverse/1* examples were in fact about testing functional code
+
+
+Testing Functional Code: *example*
+----------------------------------
+[role="plain"]
+....
+serialise({leaf,N}) -> [2,N];
+serialise({node,T1,T2}) ->
+    L1 = [Size1|_] = serialise(T1),
+    [Size2 | L2] = serialise(T2),
+    [Size1+Size2|L1++L2].
+
+deserialise([_|Ls]) -> list_to_tree(Ls).
+list_to_tree([2,N]) -> {leaf, N};
+list_to_tree([N]) -> {leaf, N};
+list_to_tree([M|Rest]) ->
+    {Code1, Code2} = lists:split(M-1, Rest),
+    {node, list_to_tree(Code1),
+           list_to_tree(Code2)}.
+....
+
+
+Testing Functional Code: *example*
+----------------------------------
+[role="plain"]
+....
+leaf() -> {leaf,ant}.
+tree() ->
+  {node, {node, {leaf, cat},
+                {node, {leaf, dog},
+                       {leaf, emu}}},
+         {leaf, fish}}.
+
+%% Sanity checks
+leaf_test() ->
+    ?assertEqual(leaf(), deserialise(serialise(leaf()))).
+node_test() ->
+    ?assertEqual(tree(), deserialise(serialise(tree()))).
+....
+
+
+Testing Functional Code: *example*
+----------------------------------
+[role="plain"]
+....
+%% Test the format itself
+leaf_value_test() ->
+    ?assertEqual([2,ant], serialise(leaf())).
+node_value_test() ->
+    ?assertEqual([8,6,2,cat,2,dog,emu,fish],
+                 serialise(tree())).
+
+%% test that the function does die on incorrect input
+leaf_negative_test() ->
+    ?assertError(function_clause, list_to_tree([1,ant])).
+node_negative_test() ->
+    ?assertError(function_clause, list_to_tree([8,6,2,cat,2,dog,emu,fish])).
+
+....
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that coupling tests too tightly with the underlying implementation rather than what the function needs to do can be a problem. In this case, if the serialisation format is published to be used in an API, testing it in the manner presented above can be appropriate as it is now part of the specification
+--
+
+
+Testing Functional Code: *example*
+----------------------------------
+[role="plain"]
+....
+1> c(tree).         
+{ok,tree}
+2> eunit:test(tree).
+  All 6 tests passed.
+ok
+3> tree:test().     
+  All 6 tests passed.
+ok
+
+
+....
+
+
+Infrastructure: *test generators*
+---------------------------------
+[role="left"]
+....
+function_test() ->
+   ?assert(A == B).
+
+function_test_() ->
+   fun() -> ?assert(A == B) end.
+
+function2_test_() ->
+   ?_assert(A == B).
+
+function3_test_() ->
+   [?_assert(A == B),
+    ?_assertEqual(C, D),
+    ?_assertNot(A =:= D)].
+ 
+ 
+ 
+....
+
+[role="right"]
+* Previous tests required one function for each test case.
+* Test generators allow to write functions that return many tests, instead of being tests
+* Test generator functions require to end in \'*\_test_*' rather than \'*_test*'.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Run the exercises 1.B here
+--
+
+
+Infrastructure: *test representations*
+--------------------------------------
+....
+my_test_() ->
+   [?_assert(A),
+    [?_assert(B),
+     ?_assert(C),
+     [?_assert(D)]],
+    [[?_assert(E)]]].
+ 
+....
+
+* *Test objects* can be functions that take 0 arguments, a pair of atoms of the form +{ModuleName, FunctionName}+ or a +?_Test+ macro
+* *Test sets* are sequences of test objects in lists or deep lists or a module name
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Run examples or write them out explicitly so people can remember them better
+--
+
+
+Infrastructure: *test representations*
+--------------------------------------
+++++
+<div class="pre">1> eunit:test(<b>{module, demo}</b>).
+  All 3 tests passed.
+2> eunit:test(<b>{generator,fun demo2:reverse_many_test_/0}</b>).
+  All 2 tests passed.
+3> eunit:test(<b>{file, "demo2.beam"}</b>).
+  All 4 tests passed.
+
+</div>
+++++
+
+* *Primitives* describe how to find tests when running them with the function *eunit:test/1*:
+** *{module, Mod}* runs all tests in *Mod*
+** *{dir, Path}* runs all tests in modules compiled in the *Path* directory
+** *{file, Path}* runs the tests contained in a single compiled module
+** *{generator, Fun}* runs a single generator function as a test
+** *{application, App}* runs tests for all modules in the *.app* file for *App*
+
+
+Fixtures
+--------
+* Fixtures allow to define an environment for a set of tests to run in
+* Let you create a set up function and a tear down function (regardless of the outcome)
+* Can define when or where to run the set up and tear down functions (locally, remote node, for each test, etc.)
+
+
+Fixtures
+--------
+*Setup*::
+A function with no argument. Each of the tests will be passed the value returned by the setup function.
+
+*Cleanup*::
+A function that takes the result of setup as an argument and takes care of cleaning up whatever is needed.
+
+*Instantiator*::
+Function that takes the result of setup and returns a test set where all tests were instantiated with it.
+
+*Where*::
+Specifies how to run a test: local, spawn, {spawn, Node()}
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Mention that 'local' spawned tests won't have the cleanup function running if they're killed by timeout -- avoid them for file operations. Better just omit the \'Where' part if needed. 
+\'local' allows the process that runs the test to do its own teardown though.
+--
+
+
+Fixtures: *setup*
+-----------------
+....
+{setup, Setup, Tests | Instantiator}
+{setup, Setup, Cleanup, Tests | Instantiator}
+{setup, Where, Setup, Tests | Instantiator}
+{setup, Where, Setup, Cleanup, Tests | Instantiator}
+ 
+ 
+....
+
+* The *Where* and *Cleanup* parts are optional
+* *Setup*'s return value will be used by all tests in *Tests* or in the instantiator.
+
+
+Fixtures: *foreach*
+-------------------
+....
+{foreach, Where, Setup, Cleanup, [Tests | Instantiator]}
+{foreach, Setup, Cleanup, [Tests | Instantiator]}
+{foreach, Where, Setup, [Tests | Instantiator]}
+{foreach, Setup, [Tests | Instantiator]}
+ 
+ 
+....
+
+* Runs *Setup* for each of the test sets
+* Otherwise is the same as the *setup* fixture.
+
+
+Testing Systems With State
+--------------------------
+[role="plain"]
+....
+-module(test).
+-include_lib("eunit/include/eunit.hrl").
+
+setup() ->
+    TabId = ets:new(test, [ordered_set, public]),
+    ets:insert(TabId, {alison, 10}),
+    ets:insert(TabId, {fred, 12}),
+    ets:insert(TabId, {mark, 65}),
+    TabId.
+
+teardown(TabId) ->
+    ets:delete(TabId).
+
+....
+
+
+Testing Systems With State
+--------------------------
+++++
+<svg id="testing_systems_with_state_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#testing_systems_with_state_1");
+
+var arrow = s3.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.text(10,60,"setup_test_() ->").addClass("code");
+s3.text(10,100,"    {setup,").addClass("code");
+s3.text(10,140,"     fun setup/0,").addClass("code");
+s3.text(10,180,"     fun teardown/1,").addClass("code");
+s3.text(10,220,"     fun(TabId) -> ").addClass("code");
+s3.text(10,260,"        [?_assertEqual([{alison, 10}],").addClass("code");
+s3.text(10,300,"                        ets:lookup(TabId, alison)),").addClass("code");
+s3.text(10,340,"         ?_assertEqual(mark, ets:last(TabId)),").addClass("code");
+s3.text(10,380,"         ?_assert(ets:insert(TabId, {zachary, 99})),").addClass("code");
+s3.text(10,420,"         ?_assertEqual(zachary, ets:last(TabId))]").addClass("code");
+s3.text(10,460,"     end}.").addClass("code");
+
+s3_g1 = s3.g(s3.text(500,50,"Setup").addClass("darkred"),
+             s3.path("M490,40 l-175,80").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g2 = s3.g(s3.text(490,100,"Cleanup").addClass("darkred"),
+             s3.path("M480,95 l-120,65").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g3 = s3.g(s3.text(530,150,"Instantiator").addClass("darkred"),
+             s3.path("M520,142 l-230,60").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g4 = s3.g(s3.text(720,170,"Test set").addClass("darkred"),
+             s3.path("M770,180 l-35,45").addClass("line_darkred").attr({"marker-end":marker}),
+             s3.rect(140,230,780,202,10).addClass("shape line_darkred").attr({"stroke-width":"2px", "strokeDasharray":"2,4"})).addClass("hide");
+
+s3_g5 = s3.g(s3.text(980,290,"Tests").addClass("darkred"),
+             s3.path("M970,280 l-270,-25").addClass("line_darkred").attr({"marker-end":marker}),
+             s3.path("M970,280 l-150,48").addClass("line_darkred").attr({"marker-end":marker}),
+             s3.path("M970,280 l-92,70").addClass("line_darkred").attr({"marker-end":marker}),
+             s3.path("M970,280 l-88,125").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_g1.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 2: {s3_g1.animate({"opacity":"0"}, 250, mina.linear); s3_g2.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 3: {s3_g2.animate({"opacity":"0"}, 250, mina.linear); s3_g3.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 4: {s3_g3.animate({"opacity":"0"}, 250, mina.linear); s3_g4.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    case 5: {s3_g4.animate({"opacity":"0"}, 250, mina.linear); s3_g5.animate({"opacity":"1"}, 375, mina.linear); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Point that the state is passed from the setup function down to the Cleanup, and then the Instantiator, which makes it available to all tests in the test set
+
+Mention that the setup fixtures can be wrapped in a tuple of the form {"Description", Fixture}
+--
+
+
+Test Control
+------------
+*{spawn, Tests}*::
+Runs the tests in a separate subprocess, with the test process waiting for all the tests to finish
+
+*{timeout, Time::number(), Tests}*::
+Will run the tests for *Time* seconds, terminating any unfinished process at that time
+
+*{inorder, Tests}*::
+Will run the tests in strict order
+
+*{inparallel, Tests}*::
+Will run the tests in parallel where possible.
+
+
+Test Control
+------------
+++++
+<svg id="test_control_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#test_control_1");
+
+s4.text(10,40,"setup_test_() ->").addClass("code");
+s4.text(10,80,"  {setup,").addClass("code");
+s4.text(10,120,"   fun setup/0,").addClass("code");
+s4.text(10,160,"   fun teardown/1,").addClass("code");
+s4.text(10,200,"   fun(TabId) ->").addClass("code");
+s4.text(10,240,"     {inparallel,").addClass("code darkred bold");
+s4.text(10,280,"      [?_assertEqual([{jim, 10}], ets:lookup(TabId, jim)),").addClass("code");
+s4.text(10,320,"       ?_assertEqual(mark, ets:last(TabId)),").addClass("code");
+s4.text(10,360,"       ?_assert(ets:insert(TabId, {zachary, 99})),").addClass("code");
+s4.text(10,400,"       ?_assertEqual(zachary, ets:last(TabId))").addClass("code");
+s4.text(10,440,"      ]").addClass("code");
+s4.text(10,440,"       }").addClass("code darkred bold");
+s4.text(10,480,"   end}.").addClass("code");
+   
+s4.rect(115,250,920,161,10).addClass("shape line_darkred").attr({"stroke-width":"2px", "strokeDasharray":"2,4"});
+
+</script>
+</svg>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Demo on spawn/inparallel
+--
+
+
+Testing Concurrent Programs
+---------------------------
+* Harder to monitor the evolution and interaction of many processes in EUnit
+* Especially hard to test for race conditions if *inparallel* test control is not enough
+* Use *?assert* to verify when or if a pre- or post-condition is broken
+* Use *?debugVal* and *?debugTime* to verify the order of execution of different processes
+
+[NOTE.speaker]
+[role="speaker"]
+--
+There is sadly no good way to test for concurrent code with EUnit. Common Test and the commercial version of Quickcheck might be better bets. Also McErlang.
+--
+
+
+EUnit test
+----------
+* What is EUnit?
+* How to use EUnit
+* Testing Functional Code
+* Infrastructure
+* Fixtures
+* Testing Systems With State
+* Testing Concurrent Programs

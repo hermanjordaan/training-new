@@ -1,0 +1,231 @@
+Release Handling
+================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Release Handling
+----------------
+* Releases
+* Release Resource Files
+* Creating a Release
+* Starting a Release
+* Creating a Release Package
+* Release Directory Structure
+
+
+Releases
+--------
+* A Release contains a system comprising
+** A set of user applications
+** the OTP applications they use
+** The Erlang runtime system
+* Every Erlang system runs a release
+* The minimal and default release contains the kernel and stdlib applications
+* A release is defined by a *Release resource file*
+
+
+FSM Example: supervisor
+-----------------------
+....
+-module(coffee_sup).
+-behaviour(supervisor).
+-export([start/2, stop/1, init/1]).
+
+start(normal, Args) ->
+    supervisor:start_link(?MODULE, Args).
+
+init(none) -> 
+    {ok, {{one_for_one, 2, 5000}, 
+         [{coffee_fsm, {coffee_fsm, start_link, []}, 
+           permanent, 500, worker, [coffee_fsm, hw]}]}}.
+ stop(_) -> ok. 
+ 
+....
+
+FSM Example: *application*
+--------------------------
+++++
+<div class="left">
+<div class="pre"><span class="comment">%% File: coffee.app</span>
+
+{application, coffee,
+ [{id,          "coffee"},
+  {vsn,         "1.0"},
+  {modules,     [coffee_sup,                   coffee_fsm,                   hw]},
+  {registered,  [coffee_fsm]},
+  {applications,[kernel,                  stdlib]},
+  {mod,         {coffee_sup,                  none}}}
+ ]}.
+
+
+</div></div>
+++++
+
+[role="right"]
+* The FSM example extended with a supervisor and made into an application
+
+image::images/fsm_example.png[Application, 350, auto]
+
+
+FSM Example: *release resource file*
+------------------------------------
+++++
+<svg id="fsm_example_release_resource_file_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#fsm_example_release_resource_file_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s1.text(380,160,"%% File: coffee-1.0.rel").addClass("code").attr({"fill":"#4B5056"});
+s1.text(380,200,"{release, ").addClass("code");
+s1.text(380,240," {\"coffee\", \"1.0\"},").addClass("code");
+s1.text(380,280," {erts, \"5.5\"}, ").addClass("code");
+s1.text(380,320," [{kernel, \"2.11\"}, ").addClass("code");
+s1.text(380,360,"  {stdlib, \"1.14\"}, ").addClass("code");
+s1.text(380,400,"  {coffee, \"1.0\"}]}.").addClass("code");
+
+s1_g3 = s1.g(s1.text(880,220,"Release").addClass("darkred"),
+          s1.path("M865,210 Q680,160 645,200").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g2 = s1.g(s1.text(820,320,"Runtime version").addClass("darkred"),
+             s1.path("M870,290 C830,250 650,305 595,286").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s1_g1 = s1.g(s1.text(260,520,"Applications").addClass("darkred"),
+             s1.path("M450,510 Q560,505 575,430").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Release Resource File
+---------------------
+....
+ 
+ 
+    {release, {Name,Vsn}, {erts, EVsn}, 
+     [{Application1, AppVsn1}, ... 
+      {ApplicationN, AppVsnN}]}.
+ 
+ 
+....
+
+* The resource file is named ReleaseName.rel
+* Name is the name of the Release
+* Vsn is the version of the Release
+* EVsn is the version of the Erlang runtime system
+* ApplicationN and AppVsnN are the names and versions of the applications
+
+
+Creating a Release
+------------------
+....
+1> systools:make_script("coffee-1.0",
+1>       [{path, "/home/.../coffee-1.0/ebin"]}]).
+ok
+ 
+ 
+ 
+ 
+....
+
+* From the resource files, generates the *coffee-1.0.boot* and readable *coffee-1.0.script* files
+* The *coffee-1.0.boot* file is used to start the release
+
+
+Creating a Release
+------------------
+* *systools:make_script(Name, [Opt])*.
+* *Name* is the name of the release
+* Options:
+** *no_module_tests*: omits object code up to date test
+** *{path,[Dir]}*: add paths to search for files
+** *local*: the system installed locally and not in *$ROOT*
+** *{variables,[Var]}*: replaces path-prefixes with variables
+** *exref, {exref,[App]}*: test with the xref tool.
+** *silent*: Warnings are returned rather than printed
+
+
+Starting a Release
+------------------
+....
+erl -boot_var Var Dir -boot File -init_debug
+ 
+ 
+ 
+ 
+ 
+ 
+....
+
+* Starts Erlang using the boot script found in *FILE.boot*
+* If *Var* is present in the script, it is replaced with *Dir*
+* *init_debug* causes the system to print debug information whilst running the boot script
+
+
+Creating a Release
+------------------
+....
+1> systools:make_tar("coffee-1.0",
+1>       [{path, "/home/.../coffee-1.0/ebin"]}]).
+ok
+ 
+ 
+ 
+ 
+.... 
+
+* Creates the *coffee-1.0.tar.gz* package
+** Contains all files in the release directory structure
+** Contains everything needed to run the release
+* Can be unpacked on target
+** Might need local configuration
+
+
+Creating a Release Package
+--------------------------
+* *systools:make_tar(Name, [Opt])*.
+* *Name* is the name of the release
+* Options:
+** *{erts, Dir}* is given to include the runtime system
+** Accepts all options of *make_script*
+
+
+Release Directory Structure
+---------------------------
+image::images/release_dir_structure.png["Release Directory Structure", auto, 380]
+
+* lib: application directories
+* erts-5.5/bin: Erlang runtime system executables
+* releases: contains AppName.rel and boot file in Vsn/start.boot
+* bin: top-level Erlang runtime system executables
+
+
+Release Handling
+----------------
+* Releases
+* Release Resource Files
+* Creating a Release
+* Starting a Release
+* Creating a Release Package
+* Release Directory Structure

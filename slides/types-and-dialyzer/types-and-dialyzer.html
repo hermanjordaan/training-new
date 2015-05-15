@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Types and Dialyzer</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Types and Dialyzer</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_types_and_dialyzer"><h2>Types and Dialyzer</h2><div class="ulist"><ul><li><p>Types in Erlang</p></li><li><p>Dialyzer</p></li><li><p>Typer</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Have the students building the PLT before starting the course:
+$ dialyzer --build_plt --apps kernel stdlib erts
+Should take less than 10 minutes with HiPE, up to 1 hour without it.</p></div></aside></section>
+<section id="_erlang_types"><h2>Erlang Types</h2><div class="ulist"><ul><li><p>Erlang is dynamically typed but there is a notation for declaring types.</p></li><li><p>There exists a group of pre-defined types.</p></li><li><p>New types can be declared by grouping different pre-defined types together</p></li><li><p>Types can be exported to be used in other modules</p></li><li><p>The complete list of types is available in the Erlang Reference manual</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Type specs docs <a href="http://www.erlang.org/doc/reference_manual/typespec.html" class="bare">http://www.erlang.org/doc/reference_manual/typespec.html</a></p></div></aside></section>
+<section id="_built_in_types"><h2>Built-in Types</h2><div class="dlist"><dl><dt class="hdlist1"><strong>any(), term(), _</strong></dt><dd><p>Any Erlang term.</p></dd><dt class="hdlist1"><strong>atom(), <em>atom</em></strong></dt><dd><p>The type atom() represents any atom, while standalone <em>atom</em> is the atom <em>atom</em> itself.</p></dd><dt class="hdlist1"><strong>number(), integer()..integer()</strong></dt><dd><p>An Erlang <strong>integer()</strong> or <strong>float()</strong>. A standalone number can be used. Ranges are also valid: <strong>1..100</strong> includes all integers from 1 to 100.</p></dd><dt class="hdlist1"><strong>boolean()</strong></dt><dd><p>false or true.</p></dd></dl></div></section>
+<section id="_built_in_types_2"><h2>Built-in Types</h2><div class="dlist"><dl><dt class="hdlist1"><strong>list(), list(Type), [Type]</strong></dt><dd><p>A standard Erlang list. If <strong>Type</strong> is specified, it is expected that every element of the list has the type <strong>Type</strong>. Note that <strong>[Type]</strong> is the empty list.</p></dd><dt class="hdlist1"><strong>tuple(), {Type1, Type2, &#8230;&#8203;, TypeN}</strong></dt><dd><p>Specifies a tuple. Each tuple field can be typed.</p></dd><dt class="hdlist1"><strong>pid()</strong></dt><dd><p>An Erlang process identifier.</p></dd><dt class="hdlist1"><strong>map(), #{}, #{Type =&gt; Type, &#8230;&#8203;}</strong></dt><dd><p>A map.</p></dd></dl></div></section>
+<section id="_built_in_types_3"><h2>Built-in Types</h2><div class="dlist"><dl><dt class="hdlist1"><strong>char()</strong></dt><dd><p>An integer from <code>0</code> to <code>16#10fff</code>.</p></dd><dt class="hdlist1"><strong>string()</strong></dt><dd><p>A list of characters (<strong>char()</strong>).</p></dd><dt class="hdlist1"><strong>none(), no_return()</strong></dt><dd><p>No type.</p></dd></dl></div>
+<aside class="notes"><div class="paragraph"><p>More types exist. Please refer to the types documentation</p></div></aside></section>
+<section id="_defining_types"><h2>Defining Types</h2><div class="literalblock"><div class="content"><pre>-type fifo() :: {fifo, list(), list()}.
+
+-record(user, {name="" :: string(),
+               tasks :: fifo(),
+               age :: number(),
+               friends=[] :: [#user{}],
+               bio :: string() | binary()}).</pre></div></div>
+<div class="ulist"><ul><li><p>The characters <strong>::</strong> are used to separate a type&#8217;s name from its definition</p></li><li><p>The new type <strong>fifo()</strong> is added to the module. It comprises a tuple tagged with <strong>'fifo'</strong> that also contains two lists.</p></li><li><p>Records can be typed and used as a type themselves</p></li><li><p>Multiple types can be grouped with a union ('<strong>|</strong>')</p></li></ul></div></section>
+<section id="_defining_types_2"><h2>Defining Types</h2><div class="literalblock"><div class="content"><pre>-type tasks(A) :: {fifo, list(A), list(A)}.
+
+-opaque fifo() :: {fifo, list(), list()}.
+
+-export_type([fifo/0, tasks/1]).
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Types can be polymorphic. The type submitted to <strong>tasks(A)</strong> has to be respected in both lists. The exact type of <strong>A</strong> is decided when using the <strong>tasks/1</strong> type in a function.</p></li><li><p>Types can be declared as <strong>opaque</strong>. Their structure is meant to be invisible to modules outside the one where they are defined.</p></li><li><p>Types can be exported with <strong>-export_type([Type])</strong>. Other modules can refer to them in declarations by using <strong>Mod:Type()</strong>.</p></li></ul></div></section>
+<section id="_function_specifications"><h2>Function Specifications</h2><div class="literalblock"><div class="content"><pre>-spec push(tasks(A), A) -&gt; tasks(A).
+push({fifo, In, Out}, X) -&gt; {fifo, [X|In], Out}.
+ -spec id(X) -&gt; X when X :: tuple().
+-spec convert(atom())   -&gt; string()
+      ;      (string()) -&gt; atom().
+ </pre></div></div>
+<div class="ulist"><ul><li><p>The function <strong>push/2</strong> takes a queue of tasks of type <strong>A</strong> with a task of type <strong>A</strong> and returns a new queue of tasks.</p></li><li><p><strong>id/1</strong> only accepts tuples</p></li><li><p><strong>convert/1</strong> should return different types depending on the input it received in the first place</p></li></ul></div></section>
+<section id="_example"><h2>Example</h2><div class="literalblock"><div class="content"><pre>-type suit() :: spades | clubs | hearts | diamonds.
+-type value() :: 1..10 | j | q | k.
+-type card() :: {suit(), value()}.
+
+-spec kind(card()) -&gt; face | number.
+kind({_, A}) when A &gt;= 1, A =&lt; 10 -&gt; number;
+kind(_) -&gt; face.
+
+main() -&gt;
+    number = kind({spades, 7}),
+    face   = kind({hearts, k}),
+    number = kind({rubies, 4}),
+    face   = kind({clubs, q}).
+ </pre></div></div></section>
+<section id="_dialyzer"><h2>Dialyzer</h2><div class="ulist"><ul><li><p>Types can be checked with <strong>dialyzer</strong></p></li><li><p>Uses <strong>success typing</strong></p><div class="ulist"><ul><li><p>Will not try to find the exact type of every expression</p></li><li><p>Will guarantee that the inferred types are right</p></li><li><p>Guarantees that the type errors it finds are really errors that will cause run time crashes</p></li></ul></div></li><li><p>The more used a function is, the better type inference will be</p></li><li><p>Type annotations can be added</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Dialyzer&#8217;s type signatures are second-class citizens; if the type signature is not as precise as the inferred code, it will know to ignore it and use what is more precise</p></div></aside></section>
+<section id="_dialyzer_strong_success_typing_strong"><h2>Dialyzer: <strong>success typing</strong></h2><svg id="dialyzer_success_typing_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#dialyzer_success_typing_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s1.text(300,35,"Most type systems").addClass("darkred bold").attr({"text-anchor":"middle"});
+s1_g1 = s1.circle(300,130,10).addClass("shape white")
+s1_g2 = s1.path("M300,130 420,330 Q300,410 180,330 M180,330 300,130").addClass("line").addClass("hide");
+s1_g4 = s1.path("M312,130 l0,220").addClass("line").attr({"marker-end":marker}).transform("t57 -17 r-31").addClass("hide");
+
+s1.text(700,35,"Success Types").addClass("darkred bold").attr({"text-anchor":"middle"});
+s1_g5_1 = s1.path("M580,230 Q700,150 820,230 Q700,310 580,230 M580,230 700,430 820,230").addClass("line");
+s1_g7 = s1.path("M580,230 l0,215").addClass("line").attr({"marker-end":marker}).transform("t47 -7 r-31").addClass("hide");
+
+s1.text(150,150,"Assumes very").addClass("darkred").attr({"text-anchor":"middle"});
+s1.text(150,185,"narrow types").addClass("darkred").attr({"text-anchor":"middle"});
+
+s1_g3 = s1.g(s1.text(300,420,"Expands the types as").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(300,455,"strictly as possible given").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(300,490,"new information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s1_g5_2 = s1.text(850,120,"Assumes the types").addClass("darkred").attr({"text-anchor":"middle"});
+s1_g5_3 = s1.text(850,155,"are very generic").addClass("darkred").attr({"text-anchor":"middle"});
+
+s1_g6 = s1.g(s1.text(890,390,"Narrow down the").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(890,425,"types given new").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(890,460,"information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s1_g5 = s1.g(s1_g5_1, s1_g5_2, s1_g5_3).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"0"}, 250, mina.linear);  s1_g2.animate({"opacity":"1"}, 250, mina.linear, s1_anim2) }
+s1_anim2 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear); s1_g4.animate({"opacity":"1"}, 250, mina.linear); }
+
+s1_anim5 = function() { s1_g5.animate({"opacity":"1"}, 250, mina.linear, s1_anim6); }
+s1_anim6 = function() { s1_g6.animate({"opacity":"1"}, 250, mina.linear, s1_anim7); }
+s1_anim7 = function() { s1_g7.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim5(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_dialyzer_2"><h2>Dialyzer</h2><svg id="dialyzer_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#dialyzer_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2.rect(10,15,1090,620).addClass("rect_code");
+
+s2.text(20,50,"$ dialyzer --build_plt --apps erts kernel stdlib").addClass("code darkred bold");
+s2.text(20,90,"  Compiling some key modules to native code... done in").addClass("code");
+s2.text(20,130,"0m30.74s").addClass("code");
+s2.text(20,170,"  Creating PLT...").addClass("code");
+s2.text(20,210,"...").addClass("code");
+
+s2.text(20,290,"$ dialyzer cards.erl").addClass("code darkred bold");
+s2.text(20,330,"  Checking whether the PLT is up to date...").addClass("code");
+s2.text(20,370,"  Proceeding with analysis...").addClass("code");
+s2.text(20,410,"cards.erl:12: Function main/0 has no local return").addClass("code");
+s2.text(20,450,"cards.erl:15: The call cards:kind({'rubies',4}) breaks the").addClass("code");
+s2.text(20,490,"contract (card()) -> 'face' | 'number'").addClass("code");
+s2.text(20,530," done in 0m0.24s").addClass("code");
+s2.text(20,570,"done (warnings were emitted)").addClass("code");
+
+s2_g1 = s2.g(s2.text(600,160,"Only needs to be done once.").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.text(600,195,"Can take a long time").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.path("M390,140 l-80,-75").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_g2 = s2.g(s2.text(810,290,"'rubies' is not a correct suit!").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.path("M810,300 l-110,125").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s2_anim2 = function() { s2_g1.animate({"opacity":"0"}, 375, mina.linear); s2_g2.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim2(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Note that running the code will still succeed. The function uses <em>_</em> as a pattern and won&#8217;t fail.</p></div></aside></section>
+<section id="_typer"><h2>Typer</h2><div class="pre"><b>$ typer cards.erl </b>
+
+%% File: "cards.erl"
+%% -----------------
+-spec kind(card()) -> 'face' | 'number'.
+-spec main() -> none().
+
+</div>
+<div class="ulist"><ul><li><p>TypEr will list out all the specs of a module</p></li><li><p>If the types are not specified, it will infer them the same way Dialyzer would</p></li><li><p>The specifications generated by TypEr can be used to:</p><div class="ulist"><ul><li><p>Annotate modules</p></li><li><p>Verify possible types used and rewrite code accordingly</p></li><li><p>Understand what Dialyzer is inferring</p></li></ul></div></li></ul></div></section>
+<section id="_types_and_dialyzer_2"><h2>Types and Dialyzer</h2><div class="ulist"><ul><li><p>Types in Erlang</p></li><li><p>Dialyzer</p></li><li><p>Typer</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

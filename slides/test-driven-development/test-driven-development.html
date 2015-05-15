@@ -1,0 +1,194 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>What is Test-Driven            Development?</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>What is Test-Driven            Development?</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_what_is_test_driven_development"><h2>What is Test-Driven Development?</h2><div class="ulist"><ul><li><p>Concepts Behind TDD</p></li><li><p>Advantages and Disadvantages of TDD</p></li><li><p>Terminology</p></li><li><p>Case Studies</p></li></ul></div></section>
+<section id="_concepts_behind_tdd"><h2>Concepts Behind TDD</h2><div class="ulist"><ul><li><p>Testing is as old as programming itself. Useful to:</p><div class="ulist"><ul><li><p>Document behaviours</p></li><li><p>Demonstrate that a program has the required properties</p></li></ul></div></li><li><p>Testing was traditionally done after writing code</p></li><li><p>Test-Driven Development dictates that tests should be written before the code</p></li><li><p>Writing tests before the code is not used for testing, but for design</p></li></ul></div></section>
+<section id="_concepts_behind_tdd_strong_it_s_design_strong"><h2>Concepts Behind TDD: <strong>it&#8217;s design</strong></h2><div class="ulist"><ul><li><p>Tests represent the specification to be implemented</p></li><li><p>Testing before writing code asks the developer to think about interfaces and how to use the code</p></li><li><p>Ensures that the application is written for testability</p></li><li><p>Ensures that parts of the application are modular and reusable</p></li><li><p>Tests are a side effect of test-driven development</p></li></ul></div></section>
+<section id="_concepts_behind_tdd_strong_practices_strong"><h2>Concepts Behind TDD: <strong>practices</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/practices.png" alt="Practices" width="auto" height="620"></div></div>
+<aside class="notes"><div class="paragraph"><p>Describe how some projects start with an assumption that you know more about the solution than the others. The type on the right is more frequently used by XP practitioners who let design emerge from the tests. On the left, we can assume existing applications forcing the design in certain directions.</p></div>
+<div class="paragraph"><p>They are not the only ways to do TDD, but the most common ones</p></div></aside></section>
+<section id="_concepts_behind_tdd_strong_practices_strong_2"><h2>Concepts Behind TDD: <strong>practices</strong></h2><div style="text-align:center; margin-top:100px">
+<svg id="concepts_behind_tdd_practices_1" style="width:770px; height:420px;" viewBox="0 0 770 420" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#concepts_behind_tdd_practices_1");
+
+var arrow = s1.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+var f_Shadow = s1.filter(Snap.filter.shadow(-2, 4, 2));
+
+s1.rect(400,50,280,60).addClass("shape lightgrey").attr({filter:f_Shadow});
+s1.text(540,90,"Write Test").addClass("darkred middle");
+s1_g1 = s1.g(s1.path("M540,110 l0,73").addClass("line").attr({"marker-end":marker}),
+             s1.rect(400,190,280,60).addClass("shape lightgrey").attr({filter:f_Shadow}),
+             s1.text(540,230,"Run Test").addClass("darkred middle")).addClass("hide");
+s1_g2 = s1.g(s1.path("M540,250 l0,73").addClass("line").attr({"marker-end":marker}),
+             s1.rect(400,330,280,60).addClass("shape lightgrey").attr({filter:f_Shadow}),
+             s1.text(540,370,"Write Code").addClass("darkred middle"),
+             s1.text(560,302,"FAIL").addClass("code bold").attr({"font-size":"19pt"}),
+             s1.path("M680,360 A30,30 0 0,0 687,220").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s1_g3 = s1.g(s1.path("M400,250 305,325").addClass("line").attr({"marker-end":marker}),
+             s1.text(280,290,"PASS").addClass("code bold").attr({"font-size":"19pt"}),
+             s1.rect(20,330,280,60).addClass("shape lightgrey").attr({filter:f_Shadow}),
+             s1.text(150,370,"Refactor").addClass("darkred middle")).addClass("hide");
+
+s1_g4 = s1.g(s1.path("M160,330 Q210,240 400,220").addClass("line"),
+             s1.text(260,210,"PASS").addClass("code bold").attr({"font-size":"19pt"}),
+             s1.path("M400,220 C300,200 300,100 393,80").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_g1.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 2: {s1_g2.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 3: {s1_g3.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    case 4: {s1_g4.animate({"opacity":"1"}, 375, mina.linear); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+</div>
+<aside class="notes"><div class="paragraph"><p>Write test: what your code should look like, how you want to call it. The difference between implementing from the user&#8217;s side vs. from the programmer&#8217;s side</p></div>
+<div class="paragraph"><p>Write code: the simplest thing that can work, elegant or not
+Refactor: make the test that passes the code work better. Similar to Joe&#8217;s saying - make it work, measure, then optimise</p></div>
+<div class="paragraph"><p>Do not write a new test before you got the previous feature working&#8201;&#8212;&#8201;might prompt a question on mock processes?</p></div></aside></section>
+<section id="_concepts_behind_tdd_strong_practices_strong_3"><h2>Concepts Behind TDD: <strong>practices</strong></h2><div class="ulist"><ul><li><p>Avoid writing all tests at once</p></li><li><p>Write a to-do list with tasks that should be completed</p></li><li><p>Take one element at a time and write a test for it</p></li><li><p>Once the test pass, think about adding more</p></li><li><p>When this is done, move on to the next element on the to-do list</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>For larger projects, mention that using a To-Do list rather and writing the tests one by one is preferred to writing all the tests at once</p></div></aside></section>
+<section id="_concepts_behind_tdd_strong_example_strong"><h2>Concepts Behind TDD: <strong>example</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>Specification</strong></dt><dd><p>The function <strong>lists:delete</strong> should be able to accept any proper list and any element that might or might not be in the list. If the element is in  the list, remove the first instance of it and return the new list without it. Leave the list untouched otherwise. <br>
+ <br>
+The function <strong>lists:delete</strong> should be rewritten using test-driven development.</p></dd></dl></div>
+<aside class="notes"><div class="paragraph"><p>The test is a trivial example, but the concepts can be applied to a broader spectrum of functions.</p></div></aside></section>
+<section id="_concepts_behind_tdd_strong_example_strong_2"><h2>Concepts Behind TDD: <strong>example</strong></h2><div class="literalblock"><div class="content"><pre>-module(remove).
+-compile(export_all).
+
+remove_empty_test() -&gt;
+    [] = remove(a, []).
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Code for removing elements from an empty list will not pass the test (or compile)</p></li><li><p>The first test case forces us to see what our API will be:  <strong>remove(Item, List) &#8594; List</strong>.</p></li><li><p>The first test verifies that a list without the element in it will not be changed.</p></li></ul></div></section>
+<section id="_concepts_behind_tdd_strong_example_strong_3"><h2>Concepts Behind TDD: <strong>example</strong></h2><div class="literalblock left"><div class="content"><pre>remove(_Elem, []) -&gt; [].
+
+remove_empty_test() -&gt;
+    [] = remove(a, []).
+
+remove_elem_test() -&gt;
+    [] = remove(a, [a]).
+ 
+ 
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>The test succeeded with the basic <strong>remove/2</strong> implementation</p></li><li><p>A new test can be written on some part of the specification</p></li><li><p>Running this test should fail because the <strong>remove_elem_test/0</strong> case hasn&#8217;t been accounted for when writing <strong>remove/2</strong></p></li></ul></div></section>
+<section id="_concepts_behind_tdd_strong_example_strong_4"><h2>Concepts Behind TDD: <strong>example</strong></h2><div class="literalblock left"><div class="content"><pre>remove(_Elem, []) -&gt; [];
+remove(Elem, [Elem|_]) -&gt; [].
+
+remove_empty_test() -&gt;
+    [] = remove(a, []).
+
+remove_elem_test() -&gt;
+    [] = remove(a, [a]).
+
+remove_list_test() -&gt;
+    [1,2] = remove(3, [1,3,2]).
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Both tests now succeed.</p></li><li><p>The test <strong>remove_list_test/0</strong> is added to make sure the function can handle multiple elements in a list</p></li><li><p>The new test fails, back to the drawing board.</p></li></ul></div></section>
+<section id="_concepts_behind_tdd_strong_example_strong_5"><h2>Concepts Behind TDD: <strong>example</strong></h2><div class="literalblock left"><div class="content"><pre>remove(_Elem, []) -&gt; [];
+remove(Elem, [Elem|T]) -&gt; T;
+remove(Elem, [H|T]) -&gt;
+    [H | remove(Elem, T)].
+...
+
+remove_elem_test() -&gt;
+    [] = remove(a, [a]).
+
+remove_list_test() -&gt;
+    [1,2] = remove(3, [1,3,2]).
+
+remove_one_test() -&gt;
+    [a,b,c,b,d] = remove(b, [a,b,b,c,b,d]).
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>The new implementation of <strong>remove/2</strong> passes the test</p></li><li><p>The <strong>remove_one_test/0</strong> test is added to make sure elements are only removed once in the list</p></li><li><p>The new <strong>remove/2</strong> passes the test without any change.</p></li><li><p>The spec is now implemented.</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Mention that more tests might be needed for edge cases (if any).
+Mention that the set of tests now let the programmer change the function to a tail recursive one with <strong>confidence</strong> that his program&#8217;s behaviour will remain the same.</p></div></aside></section>
+<section id="_terminology"><h2>Terminology</h2><div class="dlist"><dl><dt class="hdlist1"><strong>Test Case</strong></dt><dd><p>Set of conditions or variables under which a tester will determine whether an application or software system is working correctly or not.</p></dd><dt class="hdlist1"><strong>Unit Test</strong></dt><dd><p>A <strong>Unit</strong> is the smallest testable part of an application. <strong>Unit tests</strong> are test cases ideally independent from other unit tests. <br>
+Allow each independent part of a program code to be confirmed as respecting the specification.</p></dd></dl></div></section>
+<section id="_terminology_2"><h2>Terminology</h2><div class="dlist"><dl><dt class="hdlist1"><strong>Integration Testing</strong></dt><dd><p>Software modules or units are combined and tested as a group. Allows to test for requirements in performance, reliability and functionality</p></dd><dt class="hdlist1"><strong>System Testing</strong></dt><dd><p>Black box testing of all components of an application to verify requirement compliance</p></dd><dt class="hdlist1"><strong>Acceptance Testing</strong></dt><dd><p>Formal testing conducted to enable a user, customer or some other entity to determine whether to accept a system or component</p></dd></dl></div></section>
+<section id="_advantages_and_disadvantages"><h2>Advantages and Disadvantages</h2><div class="dlist left comparison darkred"><dl><dt class="hdlist1">Pros</dt><dd><div class="ulist"><ul><li><p>Users of TDD mention needing a debugger less often.</p></li><li><p>The programmer needs to establish an interface before the implementation</p></li><li><p>Development times typically shorter due to eliminating bugs earlier</p></li><li><p>Modular software/code</p></li><li><p>Different code paths better covered</p></li></ul></div></dd></dl></div>
+<div class="dlist right comparison darkred"><dl><dt class="hdlist1">Cons</dt><dd><div class="ulist"><ul><li><p>Difficult to use with programs that need functional tests to work (GUIs, databases, etc.)</p></li><li><p>Tests become a maintenance overhead</p></li><li><p>Bad tests can share the same blind spots as the code and errors will go undetected</p></li><li><p>Reduces flexibility by requiring to change tests when changing code</p></li></ul></div></dd></dl></div>
+<aside class="notes"><div class="paragraph"><p>Add: training overhead</p></div></aside></section>
+<section id="_advantages_and_disadvantages_strong_tips_strong"><h2>Advantages and Disadvantages: <strong>tips</strong></h2><div class="ulist"><ul><li><p>Try to avoid testing a module&#8217;s private functions</p><div class="ulist"><ul><li><p>They are not part of the design</p></li><li><p>Testing them brings an overhead in maintenance</p></li><li><p>They should be tested by the TDD unit tests; otherwise the tests are either incomplete or useless code has been developed</p></li></ul></div></li><li><p>Different developers should write the tests and code</p><div class="ulist"><ul><li><p>Pair programming or code reviews can also be used to help</p></li></ul></div></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>The rules about private functions are not absolute: in some cases, it&#8217;s worth adding a maintenance cost for the sake of testing complex code correctly. Case by Case basis</p></div></aside></section>
+<section id="_case_studies_strong_yenduri_perkins_strong"><h2>Case Studies: <strong>Yenduri-Perkins</strong></h2><div class="paragraph"><p>2 groups of 9 graduate students, same academic level, no restrictions in work areas or tools available</p></div>
+<table class="tableblock frame-all grid-all table1" style="width:100%"><colgroup><col style="width:50%"><col style="width:25%"><col style="width:25%"></colgroup><thead><tr><th class="tableblock halign-center valign-top"></th><th class="tableblock halign-center valign-top">TDD</th><th class="tableblock halign-center valign-top">Test-Last</th></tr></thead><tbody><tr><td class="tableblock halign-center valign-top"><p class="tableblock">Number of Test cases</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">629</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">211</p></td></tr><tr><td class="tableblock halign-center valign-top"><p class="tableblock">Bugs in unit tests</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">74</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">109</p></td></tr><tr><td class="tableblock halign-center valign-top"><p class="tableblock">Bugs in integration tests</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">13</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">15</p></td></tr><tr><td class="tableblock halign-center valign-top"><p class="tableblock">Bugs in acceptance tests</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">14</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">31</p></td></tr><tr><td class="tableblock halign-center valign-top"><p class="tableblock">Total person hours spent</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">928</p></td><td class="tableblock halign-center valign-top"><p class="tableblock">1245</p></td></tr></tbody></table>
+<aside class="notes"><div class="paragraph"><p>link to paper: <a href="http://ucmss.com/books/LFS/CSREA2006/SER4458.pdf" class="bare">http://ucmss.com/books/LFS/CSREA2006/SER4458.pdf</a></p></div></aside></section>
+<section id="_case_studies_strong_itea_strong"><h2>Case Studies: <strong>ITEA</strong></h2><div class="ulist"><ul><li><p>Survey of 13 previous studies about TDD: 3 in an industrial context, 4 in a semi-industrial context and 6 in an academic context</p></li><li><p>All industrial studies report improved software quality.</p></li><li><p>No semi-industrial or academic study reported decreased quality, although half of them reported indications towards improvement</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p><a href="http://www.agile-itea.org/public/deliverables/ITEA-AGILE-D2.7_v1.0.pdf" class="bare">http://www.agile-itea.org/public/deliverables/ITEA-AGILE-D2.7_v1.0.pdf</a> - Test driven development: empirical body of evidence - Siniaalto</p></div></aside></section>
+<section id="_case_studies_strong_itea_strong_2"><h2>Case Studies: <strong>ITEA</strong></h2><div class="ulist"><ul><li><p>Development time varied between a 16% increase or "Significantly decreased project lead-time" in both industrial and semi-industrial contexts</p></li><li><p>Two of the academic studies reported no difference in developer productivity and two others reported gains in productivity</p></li><li><p>Lack of good empirical metrics for productivity makes it harder to measure.</p></li></ul></div></section>
+<section id="_what_is_test_driven_development_2"><h2>What is Test-Driven Development?</h2><div class="ulist"><ul><li><p>Concepts Behind TDD</p></li><li><p>Advantages and Disadvantages of TDD</p></li><li><p>Terminology</p></li><li><p>Case Studies</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

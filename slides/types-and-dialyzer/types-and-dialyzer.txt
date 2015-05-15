@@ -1,0 +1,315 @@
+Types and Dialyzer
+==================
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Types and Dialyzer
+------------------
+* Types in Erlang
+* Dialyzer
+* Typer
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Have the students building the PLT before starting the course:
+$ dialyzer --build_plt --apps kernel stdlib erts
+Should take less than 10 minutes with HiPE, up to 1 hour without it.
+--
+
+
+Erlang Types
+------------
+* Erlang is dynamically typed but there is a notation for declaring types.
+* There exists a group of pre-defined types.
+* New types can be declared by grouping different pre-defined types together
+* Types can be exported to be used in other modules
+* The complete list of types is available in the Erlang Reference manual
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Type specs docs http://www.erlang.org/doc/reference_manual/typespec.html
+--
+
+
+Built-in Types
+--------------
+*any(), term(), _*::
+Any Erlang term.
+*atom(), 'atom'*::
+The type atom() represents any atom, while standalone 'atom' is the atom 'atom' itself.
+*number(), integer()..integer()*::
+An Erlang *integer()* or *float()*. A standalone number can be used. Ranges are also valid: *1..100* includes all integers from 1 to 100.
+*boolean()*::
+false or true.
+
+
+Built-in Types
+--------------
+*list(), list(Type), [Type]*::
+A standard Erlang list. If *Type* is specified, it is expected that every element of the list has the type *Type*. Note that *[Type]* is the empty list.
+*tuple(), {Type1, Type2, ..., TypeN}*::
+Specifies a tuple. Each tuple field can be typed.
+*pid()*::
+An Erlang process identifier.
+*map(), #{}, #{Type \=> Type, ...}*::
+A map.
+
+
+Built-in Types
+--------------
+*char()*::
+An integer from +0+ to +16#10fff+.
+*string()*::
+A list of characters (*char()*).
+*none(), no_return()*::
+No type.
+
+[NOTE.speaker]
+[role="speaker"]
+--
+More types exist. Please refer to the types documentation
+--
+
+
+Defining Types
+--------------
+....
+-type fifo() :: {fifo, list(), list()}.
+
+-record(user, {name="" :: string(),
+               tasks :: fifo(),
+               age :: number(),
+               friends=[] :: [#user{}],
+               bio :: string() | binary()}).
+....
+
+* The characters *::* are used to separate a type's name from its definition
+* The new type *fifo()* is added to the module. It comprises a tuple tagged with *\'fifo'* that also contains two lists.
+* Records can be typed and used as a type themselves
+* Multiple types can be grouped with a union (\'*|*')
+
+
+Defining Types
+--------------
+....
+-type tasks(A) :: {fifo, list(A), list(A)}.
+
+-opaque fifo() :: {fifo, list(), list()}.
+
+-export_type([fifo/0, tasks/1]).
+ 
+ 
+....
+
+* Types can be polymorphic. The type submitted to *tasks(A)* has to be respected in both lists. The exact type of *A* is decided when using the *tasks/1* type in a function.
+* Types can be declared as *opaque*. Their structure is meant to be invisible to modules outside the one where they are defined.
+* Types can be exported with *-export_type([Type])*. Other modules can refer to them in declarations by using *Mod:Type()*.
+
+
+Function Specifications
+-----------------------
+....
+-spec push(tasks(A), A) -> tasks(A).
+push({fifo, In, Out}, X) -> {fifo, [X|In], Out}.
+ -spec id(X) -> X when X :: tuple().
+-spec convert(atom())   -> string()
+      ;      (string()) -> atom().
+ 
+....
+
+* The function *push/2* takes a queue of tasks of type *A* with a task of type *A* and returns a new queue of tasks.
+* *id/1* only accepts tuples
+* *convert/1* should return different types depending on the input it received in the first place
+
+
+Example
+-------
+....
+-type suit() :: spades | clubs | hearts | diamonds.
+-type value() :: 1..10 | j | q | k.
+-type card() :: {suit(), value()}.
+
+-spec kind(card()) -> face | number.
+kind({_, A}) when A >= 1, A =< 10 -> number;
+kind(_) -> face.
+
+main() ->
+    number = kind({spades, 7}),
+    face   = kind({hearts, k}),
+    number = kind({rubies, 4}),
+    face   = kind({clubs, q}).
+ 
+....
+
+
+Dialyzer
+--------
+* Types can be checked with *dialyzer*
+* Uses *success typing*
+** Will not try to find the exact type of every expression
+** Will guarantee that the inferred types are right
+** Guarantees that the type errors it finds are really errors that will cause run time crashes
+* The more used a function is, the better type inference will be
+* Type annotations can be added
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Dialyzer's type signatures are second-class citizens; if the type signature is not as precise as the inferred code, it will know to ignore it and use what is more precise
+--
+
+
+Dialyzer: *success typing*
+--------------------------
+++++
+<svg id="dialyzer_success_typing_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#dialyzer_success_typing_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s1.text(300,35,"Most type systems").addClass("darkred bold").attr({"text-anchor":"middle"});
+s1_g1 = s1.circle(300,130,10).addClass("shape white")
+s1_g2 = s1.path("M300,130 420,330 Q300,410 180,330 M180,330 300,130").addClass("line").addClass("hide");
+s1_g4 = s1.path("M312,130 l0,220").addClass("line").attr({"marker-end":marker}).transform("t57 -17 r-31").addClass("hide");
+
+s1.text(700,35,"Success Types").addClass("darkred bold").attr({"text-anchor":"middle"});
+s1_g5_1 = s1.path("M580,230 Q700,150 820,230 Q700,310 580,230 M580,230 700,430 820,230").addClass("line");
+s1_g7 = s1.path("M580,230 l0,215").addClass("line").attr({"marker-end":marker}).transform("t47 -7 r-31").addClass("hide");
+
+s1.text(150,150,"Assumes very").addClass("darkred").attr({"text-anchor":"middle"});
+s1.text(150,185,"narrow types").addClass("darkred").attr({"text-anchor":"middle"});
+
+s1_g3 = s1.g(s1.text(300,420,"Expands the types as").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(300,455,"strictly as possible given").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(300,490,"new information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s1_g5_2 = s1.text(850,120,"Assumes the types").addClass("darkred").attr({"text-anchor":"middle"});
+s1_g5_3 = s1.text(850,155,"are very generic").addClass("darkred").attr({"text-anchor":"middle"});
+
+s1_g6 = s1.g(s1.text(890,390,"Narrow down the").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(890,425,"types given new").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(890,460,"information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s1_g5 = s1.g(s1_g5_1, s1_g5_2, s1_g5_3).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"0"}, 250, mina.linear);  s1_g2.animate({"opacity":"1"}, 250, mina.linear, s1_anim2) }
+s1_anim2 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear, s1_anim3); }
+s1_anim3 = function() { s1_g3.animate({"opacity":"1"}, 250, mina.linear); s1_g4.animate({"opacity":"1"}, 250, mina.linear); }
+
+s1_anim5 = function() { s1_g5.animate({"opacity":"1"}, 250, mina.linear, s1_anim6); }
+s1_anim6 = function() { s1_g6.animate({"opacity":"1"}, 250, mina.linear, s1_anim7); }
+s1_anim7 = function() { s1_g7.animate({"opacity":"1"}, 250, mina.linear); }
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim5(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Dialyzer
+--------
+++++
+<svg id="dialyzer_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#dialyzer_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2.rect(10,15,1090,620).addClass("rect_code");
+
+s2.text(20,50,"$ dialyzer --build_plt --apps erts kernel stdlib").addClass("code darkred bold");
+s2.text(20,90,"  Compiling some key modules to native code... done in").addClass("code");
+s2.text(20,130,"0m30.74s").addClass("code");
+s2.text(20,170,"  Creating PLT...").addClass("code");
+s2.text(20,210,"...").addClass("code");
+
+s2.text(20,290,"$ dialyzer cards.erl").addClass("code darkred bold");
+s2.text(20,330,"  Checking whether the PLT is up to date...").addClass("code");
+s2.text(20,370,"  Proceeding with analysis...").addClass("code");
+s2.text(20,410,"cards.erl:12: Function main/0 has no local return").addClass("code");
+s2.text(20,450,"cards.erl:15: The call cards:kind({'rubies',4}) breaks the").addClass("code");
+s2.text(20,490,"contract (card()) -> 'face' | 'number'").addClass("code");
+s2.text(20,530," done in 0m0.24s").addClass("code");
+s2.text(20,570,"done (warnings were emitted)").addClass("code");
+
+s2_g1 = s2.g(s2.text(600,160,"Only needs to be done once.").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.text(600,195,"Can take a long time").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.path("M390,140 l-80,-75").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_g2 = s2.g(s2.text(810,290,"'rubies' is not a correct suit!").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.path("M810,300 l-110,125").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s2_anim2 = function() { s2_g1.animate({"opacity":"0"}, 375, mina.linear); s2_g2.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_anim1(); s2_counter++; break};
+    case 2: {s2_anim2(); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Note that running the code will still succeed. The function uses '_' as a pattern and won't fail.
+--
+
+
+Typer
+-----
+++++
+<div class="pre"><b>$ typer cards.erl </b>
+
+%% File: "cards.erl"
+%% -----------------
+-spec kind(card()) -> 'face' | 'number'.
+-spec main() -> none().
+
+</div>
+++++
+
+* TypEr will list out all the specs of a module
+* If the types are not specified, it will infer them the same way Dialyzer would
+* The specifications generated by TypEr can be used to:
+** Annotate modules
+** Verify possible types used and rewrite code accordingly
+** Understand what Dialyzer is inferring
+
+
+Types and Dialyzer
+------------------
+* Types in Erlang
+* Dialyzer
+* Typer

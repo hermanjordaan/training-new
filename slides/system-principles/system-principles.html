@@ -1,0 +1,278 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>System Principles</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>System Principles</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_system_principles"><h2>System Principles</h2><div class="ulist"><ul><li><p>Starting Erlang</p></li><li><p>Making a Release</p></li><li><p>Erlang Directives</p></li><li><p>Release Handling</p></li></ul></div></section>
+<section id="_starting_erlang"><h2>Starting Erlang</h2><div class="literalblock"><div class="content"><pre>erl -boot BootFile -mode ModeType -pa Dir -pz Dir
+    -config ConfigFile -heart
+    -ApplicationName Key Value
+ 
+ 
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Arguments can be passed when starting Erlang</p><div class="ulist"><ul><li><p>Documented in the <strong>erl</strong> manual page</p></li></ul></div></li><li><p>The <strong>erl</strong> command is usually placed in a script</p></li></ul></div></section>
+<section id="_starting_erlang_strong_release_files_strong"><h2>Starting Erlang: <strong>release files</strong></h2><div class="literalblock"><div class="content"><pre>{release,
+ {"OTP  APN 181 01","R14B02"},
+ {erts, "5.8.3"},
+ [{kernel, "2.14.3"},
+  {stdlib, "1.17.3"},
+  {sasl, "2.1.9.3"}]}.
+ </pre></div></div>
+<div class="ulist"><ul><li><p>Every Erlang System has a release specification</p><div class="ulist"><ul><li><p>It contains the system revision information</p></li><li><p>It contains all applications used to build the system and start it</p></li></ul></div></li><li><p>The above is the standard OTP R14B02 release specification</p></li></ul></div></section>
+<section id="_making_a_release_strong_release_files_strong"><h2>Making a Release: <strong>release files</strong></h2><div class="w_700">
+<svg id="making_a_release_release_files_1" style="width:650; height:650px;" class="left" viewBox="0 0 650 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#making_a_release_release_files_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s1.rect(10,10,600,600).addClass("rect_code")
+
+s1.text(20,45,"{release,").addClass("code");
+s1.text(20,85," {ReleaseName, Version},").addClass("code");
+s1.text(20,125," {erts, ErtsVersion},").addClass("code");
+s1.text(20,165," [{Application, Version},").addClass("code");
+s1.text(20,205,"  {Application, Version, Type},").addClass("code");
+s1.text(20,245,"  {Application, Version,").addClass("code");
+s1.text(20,285,"   [IncludedApps]},").addClass("code");
+s1.text(20,325,"  {Application, Version, Type,").addClass("code");
+s1.text(20,365,"   [IncludedApps]}]").addClass("code");
+s1.text(20,405,"}.").addClass("code");
+
+s1_g1 = s1.g(s1.path("M470,400 Q480,380 530,375 C600,370 600,280 540,260 Q510,250 505,230").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.text(450,435,"permanent,").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(450,470,"transient,").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(450,505,"temporary or load").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+
+s1_g2 = s1.g(s1.path("M190,545 l0,-150").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.text(55,580,"{Name, Version} | Name").addClass("darkred")).addClass("hide");
+
+setTimeout( function() {s1_g1.animate({"opacity":"1"}, 375, mina.linear)}, 1500);
+setTimeout( function() {s1_g2.animate({"opacity":"1"}, 375, mina.linear)}, 2000);
+
+</script>
+</svg>
+</div>
+<div class="ulist right w_400"><ul><li><p>Consists of a single Erlang term</p><div class="ulist"><ul><li><p>Included applications override the app file specification</p></li><li><p>All version numbers are strings</p></li></ul></div></li><li><p>Stored in a file with the <strong>.rel</strong> suffix</p></li></ul></div></section>
+<section id="_making_a_release_strong_boot_files_strong"><h2>Making a Release: <strong>boot files</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/boot_files.png" alt="Making a Release: boot files" width="auto" height="400"></div></div>
+<div class="ulist"><ul><li><p>Create the boot file using the <strong>make_script</strong> tool</p><div class="ulist"><ul><li><p>All revision controls are done based on the app and rel files</p></li></ul></div></li><li><p>A binary (boot) and a text (script) file are generated</p><div class="ulist"><ul><li><p>Use the text version for debugging only</p></li></ul></div></li></ul></div></section>
+<section id="_making_a_release_strong_config_files_strong"><h2>Making a Release: <strong>config files</strong></h2><div class="left">
+<div class="pre"><span class="comment">%% SASL.app</span>
+{application, <b>sasl</b>,
+ [{description, "SASL ..."},
+  ...
+  {env,[{sasl_error_logger,tty},
+        {<b>errlog_type</b>, <b>all</b>}]}]}.
+
+<span class="comment">%% Name.config</span>
+[{<b>sasl</b>, [{<b>errlog_type</b>, <b>info</b>}]},
+ {Application1,
+[{Key,Val}, ...]},
+ {Application2, [...]}].
+
+<span class="comment">%% Running</span>
+$ erl -config Name
+$ erl <b>-sasl errlog_type all</b>
+</div></div>
+<div class="ulist right"><ul><li><p>Environment variables can be overridden in config files</p><div class="ulist"><ul><li><p>They are usually target or customer specific</p></li></ul></div></li><li><p>Config files can be overridden by <strong>-App Key Val</strong> directives</p><div class="ulist"><ul><li><p>These values are commonly used for test purposes</p></li></ul></div></li></ul></div></section>
+<section id="_erlang_directives"><h2>Erlang Directives</h2><div class="pre">
+<img src="images/directives.png" style="float:right; width:200px; height:auto; position:relative; margin-top:-40px; margin-right:-40px;" />
+<span></span>erl -heart -env HEARTBEAT_TIMEOUT Seconds
+           -env HEART_COMMAND Script
+
+
+
+
+
+</div>
+<div class="ulist"><ul><li><p>Heart will monitor the Erlang node and call a command</p><div class="ulist"><ul><li><p>Upon failure and if the Erlang node hangs</p></li></ul></div></li><li><p>Environment variables can be set and updated</p><div class="ulist"><ul><li><p>Hardware watchdogs, restart commands, timeout intervals</p></li></ul></div></li></ul></div></section>
+<section id="_erlang_directives_2"><h2>Erlang Directives</h2><div class="dlist"><dl><dt class="hdlist1"><strong>init:restart/0</strong></dt><dd><p>The system is restarted in the Erlang node. Applications are taken down smoothly, modules are unloaded and the ports are closed.</p></dd><dt class="hdlist1"><strong>init:reboot/0</strong></dt><dd><p>Like restart, only that the Erlang node is also restarted</p><div class="ulist"><ul><li><p><strong>Heart</strong> will attempt to restart the system</p></li></ul></div></dd><dt class="hdlist1"><strong>init:stop/0</strong></dt><dd><p>The system is taken down smoothly, and Heart is stopped.</p></dd></dl></div></section>
+<section id="_erlang_directives_3"><h2>Erlang Directives</h2><div class="ulist"><ul><li><p><strong>erl -mode</strong> embedded / interactive</p></li><li><p>Interactive mode loads modules automatically at runtime</p><div class="ulist"><ul><li><p>It will use the code path when the global calls are made</p></li><li><p>The mode is used when developing</p></li></ul></div></li><li><p>Embedded will load code at start-up through the boot file</p><div class="ulist"><ul><li><p>Code can only be loaded using <strong>code:load_file/1</strong></p></li><li><p>Provides strict revision control</p></li></ul></div></li></ul></div></section>
+<section id="_erlang_directives_4"><h2>Erlang Directives</h2><ul style="margin-bottom:15pt;"><li><strong>erl -pa | -pz</strong> Directory <img src="images/directory.png" style="height:40px; width:auto; margin-left:20px; margin-bottom:-5px;" /></li></ul>
+<div class="ulist"><ul><li><p><strong>pa</strong> adds a directory to the beginning of the code search path</p><div class="ulist"><ul><li><p>Commonly used in start scripts for patch directories</p></li><li><p>Same effects as calling <strong>code:add_patha/1</strong></p></li></ul></div></li><li><p><strong>pz</strong> adds the directory to the end of the code search path</p><div class="ulist"><ul><li><p>Same effect as calling <strong>code:add_pathz/1</strong></p></li><li><p>Can be used in all execution modes</p></li></ul></div></li></ul></div></section>
+<section id="_release_handling_strong_creating_strong"><h2>Release Handling: <strong>creating</strong></h2><svg id="release_handling_creating_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#release_handling_creating_1");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s2.rect(10,10,400,100,15).addClass("shape darkred")
+s2.text(210,70,"Create a boot file").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+
+s2.path("M210,116 l0,42").addClass("line").attr({"marker-end":marker});
+s2.rect(10,170,400,100,15).addClass("shape darkred");
+s2.text(210,230,"Create a start script").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s2.text(510,195,"Create a shell script that boots the").addClass("darkred");
+s2.text(510,230,"node and initialises the shell").addClass("darkred");
+s2.text(510,265,"environment").addClass("darkred");
+s2.path("M495,220 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red});
+
+s2_g1 = s2.g(s2.path("M210,276 l0,42").addClass("line").attr({"marker-end":marker}),
+             s2.rect(10,330,400,100,15).addClass("shape darkred"),
+             s2.text(210,390,"systools:make_tar/1").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(510,355,"Creates the target structure,").addClass("darkred"),
+             s2.text(510,390,"including ERTS and applications,").addClass("darkred"),
+             s2.text(510,425,"and tars it all up").addClass("darkred"),
+             s2.path("M495,380 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+s2_g2 = s2.g(s2.path("M210,436 l0,42").addClass("line").attr({"marker-end":marker}),
+             s2.rect(10,490,400,100,15).addClass("shape darkred"),
+             s2.text(210,532,"Un-tar and install on").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(210,568,"target").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(510,515,"Installation of the files might").addClass("darkred"),
+             s2.text(510,550,"require fine tuning based on the").addClass("darkred"),
+             s2.text(510,585,"tar file created.").addClass("darkred"),
+             s2.path("M495,540 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+var s2_counter=1
+s2.click( function() {
+  switch(s2_counter) {
+    case 1: {s2_g1.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    case 2: {s2_g2.animate({"opacity":"1"}, 375, mina.linear); s2_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_release_handling_strong_target_strong"><h2>Release Handling: <strong>target</strong></h2><div class="left w_600">
+<div class="pre"><b>$TARGETROOT</b>/bin/
+                erl
+                start
+           /erts-&lt;VSN&gt;/
+           /releases/
+                &lt;RelName&gt;/
+                &lt;RelName&gt;.rel
+           /lib/
+                /&lt;App1-Vsn&gt;/
+                          priv/
+                          ebin/
+                /&lt;App2-Vsn&gt;/
+                          priv/
+                          ebin/
+
+
+</div></div>
+<div class="ulist right w_500"><ul><li><p>Un-tar and install on target using the release handler</p></li><li><p>The target structure is similar to the Erlang installation</p><div class="ulist"><ul><li><p>Only contains applications specified in the rel file</p></li></ul></div></li><li><p>Application and ERTS versions are part of the directory names</p></li></ul></div></section>
+<section id="_release_handling_strong_upgrade_strong"><h2>Release Handling: <strong>upgrade</strong></h2><div class="ulist"><ul><li><p>Tools for upgrades are included in the SASL app</p><div class="ulist"><ul><li><p>See the <strong>systools</strong> and <strong>release_handler</strong> modules</p></li></ul></div></li><li><p>Application upgrades can be done during runtime</p><div class="ulist"><ul><li><p>Including application data and module upgrades</p></li></ul></div></li><li><p>The ERTS can be upgraded</p><div class="ulist"><ul><li><p>The node must be taken down</p></li><li><p>Often updated through fail and take-over mechanism</p></li></ul></div></li><li><p>Problems to keep in mind during the upgrade</p><div class="ulist"><ul><li><p>Process failures/dependencies, distributed nodes</p></li></ul></div></li></ul></div></section>
+<section id="_release_handling_strong_upgrade_strong_2"><h2>Release Handling: <strong>upgrade</strong></h2><svg id="release_handling_upgrade_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#release_handling_upgrade_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+var arrow_red = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s3.rect(10,10,400,100,15).addClass("shape darkred")
+s3.text(210,70,"Create an appup file").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s3.text(510,35,"Defines how the application is").addClass("darkred");
+s3.text(510,70,"upgraded and downgraded with").addClass("darkred");
+s3.text(510,105,"high-level instructions.").addClass("darkred");
+s3.path("M495,60 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red});
+
+s3_g1 = s3.g(s3.path("M210,116 l0,42").addClass("line").attr({"marker-end":marker}),
+             s3.rect(10,170,400,100,15).addClass("shape darkred"),
+             s3.text(210,230,"systools:make_relup").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(510,195,"Makes a relup file used by the").addClass("darkred"),
+             s3.text(510,230,"release handler, describing how ").addClass("darkred"),
+             s3.text(510,265,"the upgrade works").addClass("darkred"),
+             s3.path("M495,220 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+s3_g2 = s3.g(s3.path("M210,276 l0,42").addClass("line").attr({"marker-end":marker}),
+             s3.rect(10,330,400,100,15).addClass("shape darkred"),
+             s3.text(210,390,"systools:make_tar/1").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"})).addClass("hide");
+
+s3_g3 = s3.g(s3.path("M210,436 l0,42").addClass("line").attr({"marker-end":marker}),
+             s3.rect(10,490,400,100,15).addClass("shape darkred"),
+             s3.text(210,532,"Un-tar and install on").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(210,568,"target").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(510,495,"Functionality is in place to unpack, ").addClass("darkred"),
+             s3.text(510,530,"install and make the new release ").addClass("darkred"),
+             s3.text(510,565,"permanent, or roll back to the ").addClass("darkred"),
+             s3.text(510,600,"previous version").addClass("darkred"),
+             s3.path("M495,540 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red})).addClass("hide");
+
+s3_anim1 = function() {s3_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s3_anim2 = function() {s3_g2.animate({"opacity":"1"}, 375, mina.linear, s3_anim3)};
+s3_anim3 = function() {s3_g3.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim2(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_release_handling"><h2>Release Handling</h2><table class="tableblock frame-all grid-all table2" style="width:100%"><colgroup><col style="width:33%"><col style="width:33%"><col style="width:33%"></colgroup><thead><tr><th class="tableblock halign-left valign-top">Extension</th><th class="tableblock halign-left valign-top">Type</th><th class="tableblock halign-left valign-top">Description</th></tr></thead><tbody><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.erl</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Module</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Erlang Code</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.beam</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Binary Module</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Byte Code</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.app</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Application</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Resource File</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.rel</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Release</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Release script</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.script</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Script</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Start script</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.boot</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Boot</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Binary boot file</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.config</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Configuration</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Override app env variables</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.appup</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Application upgrade</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Application upgrade file</p></td></tr><tr><td class="tableblock halign-left valign-top"><p class="tableblock">.relup</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Release upgrade</p></td><td class="tableblock halign-left valign-top"><p class="tableblock">Release upgrade script</p></td></tr></tbody></table></section>
+<section id="_system_principles_2"><h2>System Principles</h2><div class="ulist"><ul><li><p>Starting Erlang</p></li><li><p>Making a Release</p></li><li><p>Erlang Directives</p></li><li><p>Release Handling</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>

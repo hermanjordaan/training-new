@@ -1,0 +1,865 @@
+Supervisors
+===========
+:revealjs_theme: esl
+:revealjs_slideNumber: true
+:revealjs_history: true
+:revealjs_transition: linear
+:revealjs_center: false
+Erlang Solutions Ltd.
+© 1999–2015 Erlang Solutions Ltd.
+
+++++
+<link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script>
+++++
+
+
+Supervisors
+-----------
+* Supervisors
+* Supervisor Example
+* Generic Supervisors
+* Dynamic Children
+* Non OTP-compliant Processes
+
+
+Supervisors
+-----------
+* Erlang systems consist of supervision trees
+* Supervisors will start child processes
+** Workers
+** Supervisors
+* Supervisors will monitor their children
+** Through links and trapping exits
+* Supervisors can restart the children when they terminate
+
+++++
+<img src="images/supervisors.png" alt="Supervisors" 
+     style="width:400px; height;auto; float:right; position:relative; top:-290pt;" />
+++++
+
+Supervisor Example
+------------------
+....
+-module(my_supervisor).
+-export([start/2, init/1, stop/1]).
+
+start(Name, ChildSpecList) -> 
+    register(Name, spawn(?MODULE, init, [ChildSpecList])).
+
+stop(Name) -> Name ! stop.
+
+init(ChildSpecList) ->
+    process_flag(trap_exit, true),
+    loop(start_children(ChildSpecList, [])).
+ 
+ 
+ 
+....
+
+
+[NOTE.speaker]
+[role="speaker"]
+--
+This shows how the simple the basic concept is and how easy it is to implement it when you have the right primitives
+--
+
+
+Supervisor Example
+------------------
+....
+start_children([], Acc) -> Acc;
+start_children([{M, F, A} | ChildSpecList], Acc) ->
+    {ok, Pid} = apply(M,F,A), 
+    start_children(ChildSpecList, [{Pid, {M,F,A}} | Acc]).
+
+loop(ChildList) ->
+    receive
+	    {'EXIT', Pid, Reason} ->
+	        NewChildList = restart_child(Pid, ChildList),
+	        loop(NewChildList);
+       stop ->
+          terminate(ChildList)
+	 end.
+ 
+....
+
+++++
+<div style="float:right; position:relative; top:-412pt; left:-145pt;">
+<svg id="supervisor_example_1" style="width:340px; height:170px;" viewBox="0 0 340 170" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#supervisor_example_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s1.text(37,40,"Assumes the child").addClass("darkred").attr({"font-size":"20pt"});
+s1.text(10,70,"links to the supervisor").addClass("darkred").attr({"font-size":"20pt"});
+s1.path("M205,83 C235,133 174,128 144,158").addClass("line_darkred").attr({"marker-end":marker});
+</script>
+</svg>
+</div>
+++++
+
+[NOTE.speaker]
+[role="speaker"]
+--
+loop(start_children(ChildSpecList, [])). Both functions here interact together
+--
+
+
+Supervisor Example
+------------------
+....
+restart_child(Pid, ChildList) ->
+    {value, {Pid, {M,F,A}}} = 
+        lists:keysearch(Pid, 1, ChildList),
+    {ok, NewPid} = apply(M,F,A),
+    [{NewPid, {M,F,A}}|lists:keydelete(Pid,1,ChildList)].
+
+terminate([]) -> ok;
+terminate([{Pid, _} | ChildList]) -> 
+   exit(Pid, kill),
+	terminate(ChildList).
+ 
+ 
+ 
+ 
+....
+
+++++
+<div style="float:right; position:relative; top:-230pt; left:-190pt;">
+<svg id="supervisor_example_2" style="width:500px; height:180px;" viewBox="0 0 500 180" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#supervisor_example_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s2.text(190,100,"Clears the crashed").addClass("darkred").attr({"font-size":"20pt"});
+s2.text(200,130,"child and starts a").addClass("darkred").attr({"font-size":"20pt"});
+s2.text(260,160,"new one").addClass("darkred").attr({"font-size":"20pt"});
+s2.path("M210,60 C210,10 20,65 10,10").addClass("line_darkred").attr({"marker-end":marker});
+
+</script>
+</svg>
+</div>
+++++
+
+
+Supervisor Example
+------------------
+++++
+<svg id="supervisor_example_3" style="width:1100px; height:620px;" viewBox="0 0 1100 620" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#supervisor_example_3");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
+
+s3.rect(8,88,1000,520).addClass("rect_code");
+s3.text(15,120, "-module(test).").addClass("code");
+s3.text(15,160, "-export([start/1, init/1]).").addClass("code");
+s3.text(15,200,"").addClass("code");
+s3.text(15,240,"start(Name) -> {ok, spawn_link(?MODULE, init, [Name])}.").addClass("code");
+s3.text(15,280,"").addClass("code");
+s3.text(15,320,"init(Name) ->").addClass("code");
+s3.text(15,360,"    register(Name, self()),").addClass("code");
+s3.text(15,400,"    io:format(\"Started ~p~n\",[Name]),").addClass("code");
+s3.text(15,440,"    loop().").addClass("code");
+s3.text(15,480,"").addClass("code");
+s3.text(15,520,"loop() ->").addClass("code");
+s3.text(15,560,"    receive stop -> exit(byebye) end.").addClass("code");
+
+s3.text(650,35,"The test process links").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(670,65,"itself to the parent,").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(680,95,"prints out a status").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(650,125,"message and waits for").addClass("darkred").attr({"font-size":"20pt"});
+s3.text(700,155,"a stop message").addClass("darkred").attr({"font-size":"20pt"});
+
+s3_g1=s3.g(s3.text(145,25,"Note the").addClass("darkred").attr({"font-size":"20pt"}),
+		  s3.text(120,58,"non-normal").addClass("darkred").attr({"font-size":"20pt"}),
+		  s3.text(128,91,"exit reason").addClass("darkred").attr({"font-size":"20pt"}),
+		  s3.path("M108,35 Q-10,30 16,95").addClass("line_darkred").attr({"marker-end":marker})).attr({"transform":"t430 420"});
+
+</script>
+</svg>
+++++
+
+
+Supervisor Example
+------------------
+++++
+<svg id="supervisor_example_4" style="width:1120px; height:600px;" viewBox="0 0 1120 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#supervisor_example_4");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s4.rect(8,8,1100,500).addClass("rect_code");
+
+explode = s4.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape").transform("t0 0");
+
+s4_e1 = explode.clone().transform("t730 120 s0.7").addClass("hide");
+s4_e2 = explode.clone().transform("t850 120 s0.7").addClass("hide");
+
+explode.attr({"display":"none"})
+
+s4_g1 = s4.g(s4.text(15,40, "1&gt; my_supervisor:start(sup,[{test, start, [a]},").addClass("code darkred bold"),
+			 s4.text(15,80, "                            {test, start, [b]}]).").addClass("code darkred bold"),
+			 s4.text(15,120,"true").addClass("code")).addClass("hide");
+s4_g2 = s4.g(s4.text(15,160,"started a").addClass("code"),
+			 s4.text(15,200,"started b").addClass("code")).addClass("hide");
+s4_g5 = s4.g(s4.text(15,240,"2&gt; a ! stop").addClass("code darkred bold"),
+			 s4.text(15,280,"stop").addClass("code")).addClass("hide");
+s4_g6 = s4.text(15,320,"started a").addClass("code").addClass("hide");
+s4_g7 = s4.g(s4.text(15,360,"3> exit(whereis(b), kill)").addClass("code darkred bold"),
+			 s4.text(15,400,"true").addClass("code")).addClass("hide");
+s4_g8 = s4.text(15,440,"started b").addClass("code").addClass("hide");
+
+s4.circle(900,200,43).addClass("shape").attr({"fill":"#A6A6A6"})
+s4.circle(900,200,38).addClass("shape grey");
+
+s4_g3 = s4.g(s4.path("M900,243 862,278").addClass("line").attr({"marker-end":marker,"stroke-width":"4"}),
+			 s4.circle(840,320,38).addClass("shape darkred"),
+			 s4.text(832,328,"a").addClass("white")).addClass("hide");
+s4_g4 = s4.g(s4.path("M900,243 938,278").addClass("line").attr({"marker-end":marker,"stroke-width":"4"}),
+			 s4.circle(960,320,38).addClass("shape darkred"),
+			 s4.text(952,328,"b").addClass("white")).addClass("hide");
+
+s4_anim1  = function() { s4_g1.animate({"opacity":"1"}, 375, mina.linear, s4_anim2); }
+s4_anim2  = function() { s4_g2.animate({"opacity":"1"}, 375, mina.linear, s4_anim3); }
+s4_anim3  = function() { s4_g3.animate({"opacity":"1"}, 375, mina.linear, s4_anim4); }
+s4_anim4  = function() { s4_g4.animate({"opacity":"1"}, 375, mina.linear); }
+s4_anim5  = function() { s4_g5.animate({"opacity":"1"}, 375, mina.linear, s4_anim6); }
+s4_anim6  = function() { s4_e1.animate({"opacity":"1"}, 375, mina.linear, s4_anim7); }
+s4_anim7  = function() { s4_e1.animate({"opacity":"0"}, 375, mina.linear);
+						 s4_g3.animate({"opacity":"0"}, 375, mina.linear); }
+s4_anim8  = function() { s4_g6.animate({"opacity":"1"}, 375, mina.linear);
+						 s4_g3.animate({"opacity":"1"}, 375, mina.linear); }
+s4_anim9  = function() { s4_g7.animate({"opacity":"1"}, 375, mina.linear, s4_anim10); }
+s4_anim10 = function() { s4_e2.animate({"opacity":"1"}, 375, mina.linear, s4_anim11); }
+s4_anim11 = function() { s4_e2.animate({"opacity":"0"}, 375, mina.linear);
+						 s4_g4.animate({"opacity":"0"}, 375, mina.linear); }
+s4_anim12 = function() { s4_g8.animate({"opacity":"1"}, 375, mina.linear);
+						 s4_g4.animate({"opacity":"1"}, 375, mina.linear); }
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: { s4_anim1(); s4_counter++; break};
+    case 2: { s4_anim5(); s4_counter++; break};
+    case 3: { s4_anim8(); s4_counter++; break};
+    case 4: { s4_anim9(); s4_counter++; break};
+    case 5: { s4_anim12(); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Generic Supervisors
+-------------------
+[role="left comparison green"]
+Generic::
+* Spawning the supervisor
+* Starting the children
+* Monitoring the children
+* Restarting the children
+* Stopping the supervisor
+* Cleaning up
+
+[role="right comparison darkred"]
+Specific::
+* What children to start
+* Specific child handling
+** Start, Restart
+* Child dependencies
+* Supervisor name
+* Supervisor behaviours
+
+
+Generic Supervisors
+-------------------
+image::images/generic_supervisors.png["Generic Supervisors", auto, auto]
+
+* Supervisors are implemented in the *supervisor* module
+* The behaviour directive must be included in the callback module
+
+
+Generic Supervisors
+-------------------
+++++
+<svg id="generic_supervisors_1" style="width:1100px; height:340px;" viewBox="0 0 1100 340" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#generic_supervisors_1");
+
+var arrow = s5.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s5.text(40,40,"supervisor:start_link({Scope,Name},Mod,Args)").addClass("code");
+
+s5.text(70,115,"Supervisor");
+s5.text(65,145,"Application");
+s5.circle(290,120,42).addClass("shape").attr({"fill":"#A6A6A6"});
+s5.circle(290,120,37).addClass("shape grey");
+
+s5_g1 =s5.path("M347,120 l263,0").addClass("line dashed").attr({"stroke-dasharray":"8,6", "marker-end":marker}).addClass("hide");
+
+
+s5_g2 = s5.g(s5.text(730,115,"Name/Pid"),
+			 s5.circle(670,120,42).addClass("shape").attr({"fill":"#860404"}),
+			 s5.circle(670,120,37).addClass("shape darkred"),
+			 s5.text(560,205,"Mod:init(Args)").addClass("code"),
+			 s5.path("M820,30 l60,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
+
+s5_g3 = s5.path("M675,220 l0,40").attr({"marker-end":marker}).addClass("line").addClass("hide");
+
+s5_g4 = s5.g(s5.text(510,300,"{ok,SupervisorSpec}").addClass("code"),
+			 s5.text(900,40,"{ok, Pid}").addClass("code")).addClass("hide");
+
+s5_anim1 = function() { s5_g1.animate({"opacity":"1"}, 500, mina.linear, s5_anim2) };
+s5_anim2 = function() { s5_g2.animate({"opacity":"1"}, 500, mina.linear) };
+s5_anim3 = function() { s5_g3.animate({"opacity":"1"}, 500, mina.linear, s5_anim4) };
+s5_anim4 = function() { s5_g4.animate({"opacity":"1"}, 500, mina.linear) };
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_anim1(); s5_counter++; break};
+    case 2: {s5_anim3(); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+++++
+
+* *supervisor:start_link/3* creates a new supervisor
+** *Name* is the process name. *Scope* can be *local* or *global*
+** *Mod* is the name of the callback module
+** *Args* are the arguments passed to the init function
+* *Mod:init/1* is called by the supervisor in the callback module
+** It returns a supervisor specification
+
+
+Generic Supervisors: *specifications*
+-------------------------------------
+image::images/gs_specifications.png["Generic Supervisors: Specifications", auto, auto]
+
+* The supervisor specification is a tuple containing:
+** Supervisor non-generic information on the restart strategy
+** Child specifications for all static children
+
+
+Generic Supervisors: *restart strategy*
+---------------------------------------
+[role="left w_700"]
+image::images/gs_restart_strategy.png["Generic Supervisors: Restart Strategy", 620, auto]
+
+[role="right w_400"]
+* one_for_one
+** Only the crashed process is restarted
+* one_for_all
+** All processes are terminated and restarted
+* rest_for_one
+** All processes started after the crashed one are terminated and restarted
+* simple_one_for_one
+** Dynamic children of the same type
+
+
+Generic Supervisors: *restart strategy*
+---------------------------------------
+++++
+<svg id="generic_supervisors_restart_strategy_1" style="width:600px; height:620px;" viewBox="0 0 600 620" preserveAspectRatio="xMinYMin meet" class="left">
+<style type="text/css">#generic_supervisors_restart_strategy_1 text.darkred {font-size: 24pt;}</style>
+<script>
+
+var s6 = Snap("#generic_supervisors_restart_strategy_1");
+
+s6.path("M413,113 154,436").addClass("line");
+
+supervisor = s6.g(s6.circle(413,113,41).addClass("shape grey"),
+				 s6.circle(413,113,35).addClass("shape grey"));
+s6.text(403,123,"0").addClass("bold");
+
+supervisor.clone().transform("t-128 162");
+s6_g2_0 = s6.text(275,285,"0").addClass("bold");
+s6_g2_1 = s6.text(275,285,"1").addClass("bold").addClass("hide");
+s6_g2_2 = s6.text(275,285,"2").addClass("bold").addClass("hide");
+
+supervisor.clone().transform("t-259 323")
+s6_g1_0 = s6.text(144,446,"0").addClass("bold");
+s6_g1_1 = s6.text(144,446,"1").addClass("bold").addClass("hide");
+
+s6.path("M154,477 49,538").addClass("line");
+s6.path("M154,477 154,538").addClass("line");
+s6.path("M154,477 259,538").addClass("line");
+
+s6.circle(69,538,33).addClass("shape darkred");
+s6.circle(154,538,33).addClass("shape darkred");
+s6.circle(239,538,33).addClass("shape darkred");
+
+s6.text(335,25,"MaxR =").addClass("darkred");
+s6.text(335,65,"0").addClass("darkred");
+
+s6.text(355,277,"MaxR =").addClass("darkred");
+s6.text(355,317,"1").addClass("darkred");
+
+s6.text(220,430,"MaxR =").addClass("darkred");
+s6.text(220,470,"1").addClass("darkred");
+
+explode = s6.polyline([160,200,196.3543676,225.3559301,152.0626766,227.0320409,168.9374661,268.0174617,130.7707507,245.4815998,122.8083354,289.0839298,102.8842581,249.4910721,72.61264883,281.8668796,77.2569633,237.7874787,34.28718205,248.6576736,62.02535132,214.0866278,20,200,62.02535132,185.9133722,34.28718205,151.3423264,77.2569633,162.2125213,72.61264883,118.1331204,102.8842581,150.5089279,122.8083354,110.9160702,130.7707507,154.5184002,168.9374661,131.9825383,152.0626766,172.9679591,196.3543676,174.6440699]).addClass("darkred shape").transform("t-60 -150 s0.5");
+
+s6_e1 = explode.clone().transform( "t-40,338 s0.75 r40" ).addClass("hide");
+s6_e2 = explode.clone().transform( "t44,236 s0.75 r40" ).addClass("hide");
+s6_e3 = explode.clone().transform( "t176,75 s0.75 r38" ).addClass("hide");
+s6_e4 = explode.clone().transform( "t304,-87 s0.75 r40" ).addClass("hide");
+
+explode.attr({"display":"none"});
+
+s6_anim1 = function() { s6_e1.animate({"opacity":"1"}, 300, mina.linear, s6_anim2); }
+s6_anim2 = function() { s6_e1.animate({"opacity":"0"}, 300, mina.linear);
+						s6_g1_0.animate({"opacity":"0"}, 300, mina.linear);
+						s6_g1_1.animate({"opacity":"1"}, 300, mina.linear); }
+s6_anim3 = function() { s6_e1.animate({"opacity":"1"}, 300, mina.linear, s6_anim4); }
+s6_anim4 = function() { s6_e2.animate({"opacity":"1"}, 300, mina.linear);
+						s6_g1_1.animate({"opacity":"0"}, 300, mina.linear);
+						s6_g1_0.animate({"opacity":"1"}, 300, mina.linear);
+						s6_g2_0.animate({"opacity":"0"}, 300, mina.linear);
+						s6_g2_1.animate({"opacity":"1"}, 300, mina.linear, s6_anim5); }
+s6_anim5 = function() { s6_e2.animate({"opacity":"0"}, 300, mina.linear, s6_anim6); }
+s6_anim6 = function() { s6_e1.animate({"opacity":"0"}, 300, mina.linear); }
+s6_anim7 = function() { s6_e1.animate({"opacity":"1"}, 300, mina.linear, s6_anim8); }
+s6_anim8 = function() { s6_e2.animate({"opacity":"1"}, 300, mina.linear);
+						s6_g1_1.animate({"opacity":"0"}, 300, mina.linear);
+						s6_g1_0.animate({"opacity":"1"}, 300, mina.linear);
+						s6_g2_1.animate({"opacity":"0"}, 300, mina.linear);
+						s6_g2_2.animate({"opacity":"1"}, 300, mina.linear); }
+s6_anim9 = function() { s6_e3.animate({"opacity":"1"}, 300, mina.linear); }
+s6_anim10 = function() { s6_e4.animate({"opacity":"1"}, 300, mina.linear, s6_anim11); }
+s6_anim11 = function() { s6.animate({"opacity":"0"}, 300, mina.linear); }
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: { s6_anim1(); s6_counter++; break };
+    case 2: { s6_anim3(); s6_counter++; break };
+    case 3: { s6_anim1(); s6_counter++; break };
+    case 4: { s6_anim7(); s6_counter++; break };
+    case 5: { s6_anim9(); s6_counter++; break };
+    case 6: { s6_anim10(); s6_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+++++
+
+[role="right"]
+* Max restart
+** Maximum number of restarts in Max Time
+* Max time
+** If Max Restart is reached in Max Time seconds, the supervisor terminates
+* Crashes propagate among supervisors
+
+
+Generic Supervisors: *child specs*
+----------------------------------
+[role="left"]
+image::images/generic_supervisors_child_specs.png["Generic Supervisors: child specs", auto, auto]
+
+[role="right"]
+* Name
+** Any valid Erlang Term
+** Unique for that supervisor
+* Start function
+** {Module, Function, Args}
+** must call an OTP-compliant start_link function
+* Restart Type
+** *permanent* is always restarted
+** *transient* is only restarted after a non-normal exit
+** *temporary* is never restarted
+
+
+Generic Supervisors: *child specs*
+----------------------------------
+[role="left"]
+image::images/generic_supervisors_child_specs.png["Generic Supervisors: child specs", auto, auto]
+
+[role="right"]
+* Shutdown Time
+** Time the process is allowed to spend in terminate
+** Integer > 0 in ms, or *infinity*
+* Process Type
+** Used for software upgrades
+** *supervisor* for supervisors
+** *worker* for other behaviours
+* Modules
+** List of modules implementing the child
+** *dynamic* if modules are not known (ex.: event handlers)
+
+[NOTE.speaker]
+[role="speaker"]
+--
+Shutdown time can also be *brutal_kill*
+--
+
+
+Supervisor Example
+------------------
+....
+-module(sup).
+-behaviour(supervisor).
+-export([start_link/0, init/1, stop/0]).
+
+start_link() -> 
+  supervisor:start_link({local,?MODULE},?MODULE, []).
+
+stop() -> exit(whereis(?MODULE), shutdown).
+init(_) ->{ok,{{one_for_one,2,3600}, [child(frequency)]}}. 
+
+child(Module) -> 
+    {Module, {Module, start_link, []}, 
+     permanent, 2000, worker, [Module]}.
+ 
+....
+
+
+Supervisor Example
+------------------
+
+++++
+<svg id="supervisor_example_5" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#supervisor_example_5");
+
+var arrow = s7.polygon([0,0, 4,2, 0,4]).attr({"fill":"#000"}).transform('r0');
+var marker = arrow.marker(0,0, 4,4, 3,2);
+
+s7_g1 = s7.text(10,40,"1> sup:start_link().").addClass("code bold darkred hide");
+
+s7_g7 = s7.text(10,80,"{ok, <0.42.0>}").addClass("code bold darkred hide");
+
+s7.circle(880,120,40).addClass("shape grey");
+s7.text(845,195,"Shell").addClass("darkred");
+
+s7_g3_1 = s7.path("M920,120 C980,160 980,235 930,275").attr({"stroke-dasharray":"7,8", "marker-end":marker}).addClass("line dashed");
+
+
+s7_g3_2 = s7.g(s7.circle(880,280,46).addClass("shape").attr({"fill":"#A6A6A6"}),
+               s7.circle(880,280,40).addClass("shape darkred"),
+               s7.text(835,355,"SupPid").addClass("darkred"));
+
+s7_g5_1 = s7.path("M920,285 C980,325 980,400 924,440").attr({"stroke-dasharray":"7,8", "marker-end":marker}).addClass("line dashed");
+
+s7_g5_2 = s7.g(s7.circle(880,440,40).addClass("shape grey"),
+               s7.text(810,515,"WorkerPid").addClass("darkred"));
+
+s7_g2 = s7.rect(5,135,755,155,12).addClass("line_darkred hide").attr({"stroke-width":"2","stroke-dasharray":"4,6"});
+
+s7_g3_3 = s7.text(20,180,"sup:start_link() => ").addClass("code");
+
+s7_g6 = s7.g(s7.text(20,180,"                    {ok,       }").addClass("code darkred"),
+             s7.text(20,180,"                         SupPid").addClass("code darkred bold")).addClass("hide");
+
+s7_g4 = s7.g(s7.text(20,220,"sup:init([]) => ").addClass("code"),
+             s7.text(20,220,"                {ok, {{one_for_one, ...}").addClass("code darkred")).addClass("hide");
+
+s7_g5_3 = s7.g(s7.text(20,260,"frequency:start_link() => ").addClass("code"),
+             s7.text(20,260,"                          {ok,          }").addClass("code darkred"),
+             s7.text(20,260,"                               WorkerPid").addClass("code darkred bold"));
+
+s7_g8 = s7.g(s7.text(10,360,"• Synchronous start"),
+             s7.text(10,420,"• A crash during process start will cause the"),
+             s7.text(35,460,"supervisor to fail"),
+             s7.text(10,520,"• Minimise the amount of work done during"),
+             s7.text(35,560,"initialisation")).addClass("hide");
+
+s7_g3 = s7.g(s7_g3_1, s7_g3_2, s7_g3_3).addClass("hide");
+s7_g5 = s7.g(s7_g5_1, s7_g5_2, s7_g5_3).addClass("hide");
+
+s7_anim1 = function() { s7_g1.animate({"opacity":"1"}, 300, mina.linear, s7_anim2); }
+s7_anim2 = function() { s7_g2.animate({"opacity":"1"}, 300, mina.linear); }
+s7_anim3 = function() { s7_g3.animate({"opacity":"1"}, 300, mina.linear); }
+s7_anim4 = function() { s7_g4.animate({"opacity":"1"}, 300, mina.linear); }
+s7_anim5 = function() { s7_g5.animate({"opacity":"1"}, 300, mina.linear); }
+s7_anim6 = function() { s7_g6.animate({"opacity":"1"}, 300, mina.linear); }
+s7_anim7 = function() { s7_g7.animate({"opacity":"1"}, 300, mina.linear); }
+s7_anim8 = function() { s7_g8.animate({"opacity":"1"}, 300, mina.linear); }
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: { s7_anim1(); s7_counter++; break };
+    case 2: { s7_anim3(); s7_counter++; break };
+    case 3: { s7_anim4(); s7_counter++; break };
+    case 4: { s7_anim5(); s7_counter++; break };
+    case 5: { s7_anim6(); s7_counter++; break };
+    case 6: { s7_anim7(); s7_counter++; break };
+    case 7: { s7_anim8(); s7_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Dynamic Children
+----------------
+++++
+<svg id="dynamic_children_1" style="width:1100px; height:330px;" viewBox="0 0 1100 330" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#dynamic_children_1");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s8.circle(550,80,46).addClass("shape").attr({"fill":"#A6A6A6"});
+s8.circle(550,80,40).addClass("shape darkred");
+s8.path("M830,80 l-180,0").addClass("line_darkred").attr({"marker-end":marker});
+s8.text(670,70,"start child").addClass("darkred");
+
+s8_g1 = s8.g(s8.path("M550,126 l-120,70").attr({"stroke-dasharray":"7,6"}).addClass("line dashed"),
+             s8.circle(430,226,40).addClass("shape grey")).addClass("hide");
+
+s8_g2 = s8.g(s8.path("M550,126 l-60,70").attr({"stroke-dasharray":"7,6"}).addClass("line dashed"),
+             s8.circle(490,226,40).addClass("shape grey")).addClass("hide");
+
+s8_g3 = s8.g(s8.path("M550,126 l0,60").attr({"stroke-dasharray":"7,6"}).addClass("line dashed"),
+             s8.circle(550,226,40).addClass("shape grey")).addClass("hide");
+
+s8_g4 = s8.g(s8.path("M550,126 l55,70").attr({"stroke-dasharray":"7,6"}).addClass("line dashed"),
+             s8.circle(610,226,40).addClass("shape grey")).addClass("hide");
+
+s8_g5 = s8.g(s8.path("M550,126 l115,70").attr({"stroke-dasharray":"7,6"}).addClass("line dashed"),
+             s8.circle(670,226,40).addClass("shape grey")).addClass("hide");
+
+s8_anim1 = function() { setTimeout( function() {s8_g1.animate({"opacity":"1"}, 375, mina.linear, s8_anim2)}, 500) };
+s8_anim2 = function() { setTimeout( function() {s8_g2.animate({"opacity":"1"}, 375, mina.linear, s8_anim3)}, 500) };
+s8_anim3 = function() { setTimeout( function() {s8_g3.animate({"opacity":"1"}, 375, mina.linear, s8_anim4)}, 500) };
+s8_anim4 = function() { setTimeout( function() {s8_g4.animate({"opacity":"1"}, 375, mina.linear, s8_anim5)}, 500) };
+s8_anim5 = function() { setTimeout( function() {s8_g5.animate({"opacity":"1"}, 375, mina.linear)}, 450) };
+
+s8.click( function() { s8_anim1() } );
+
+</script>
+</svg>
+++++
+
+* What if we do not know the children at start up time?
+* What if they are many and all of the same type?
+** Use Dynamic Children
+** Set the supervisor restart type to simple_one_for_one
+* We can add or remove children during runtime
+
+
+Dynamic Children
+----------------
+++++
+<svg id="dynamic_children_2" style="width:1100px; height:660px;" viewBox="0 0 1100 660" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#dynamic_children_2");
+
+s9.rect(8,2,1050,645).addClass("rect_code")
+
+s9_g1 = s9.g(s9.text(15,32,"1> {ok, SupPid} = my_supervisor:start_link().").addClass("code darkred bold"),
+             s9.text(15,70,"{ok,<0.66.0>}").addClass("code")).addClass("hide");
+
+s9_g2 = s9.g(s9.text(15,108,"2> Spec = {lr,{lr,start_link,[]},transient,1,worker,[lr]}.").addClass("code darkred bold"),
+             s9.text(15,146,"{lr, {lr, start_link, []}, transient, 1, worker, [lr]}").addClass("code")).addClass("hide");
+
+s9_g3 = s9.g(s9.text(15,184,"3> supervisor:check_childspecs([Spec]).").addClass("code darkred bold"),
+             s9.text(15,222,"ok").addClass("code")).addClass("hide");
+
+s9_g4 = s9.g(s9.text(15,260,"4> supervisor:start_child(SupPid, ChildSpec).").addClass("code darkred bold"),
+             s9.text(15,298,"{ok,<0.70.0>}").addClass("code")).addClass("hide");
+
+s9_g5 = s9.g(s9.text(15,336,"5> supervisor:terminate_child(SupPid, lr).").addClass("code darkred bold"),
+             s9.text(15,374,"ok").addClass("code")).addClass("hide");
+
+s9_g6 = s9.g(s9.text(15,412,"6> supervisor:restart_child(SupPid, lr).").addClass("code darkred bold"),
+             s9.text(15,450,"{ok,<0.73.0>}").addClass("code")).addClass("hide");
+
+s9_g7 = s9.g(s9.text(15,488,"7> supervisor:which_children(SupPid).").addClass("code darkred bold"),
+             s9.text(15,526,"[{lr,<0.73.0>,worker,[lr]}]").addClass("code")).addClass("hide");
+
+s9_g8 = s9.g(s9.text(15,564,"8> supervisor:terminate_child(SupPid, lr), ").addClass("code darkred bold"),
+             s9.text(15,602,"   supervisor:delete_child(SupPid, lr).").addClass("code darkred bold"),
+             s9.text(15,640,"ok").addClass("code")).addClass("hide");
+
+var s9_counter=1
+s9.click( function() {
+  switch(s9_counter) {
+    case 1: { s9_g1.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break};
+    case 2: { s9_g2.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    case 3: { s9_g3.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    case 4: { s9_g4.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    case 5: { s9_g5.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    case 6: { s9_g6.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    case 7: { s9_g7.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    case 8: { s9_g8.animate({"opacity":"1"}, 250, mina.linear); s9_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+simple_one_for_one Example
+--------------------------
+....
+-module(sup).
+-behaviour(supervisor).
+-export([start_link/0, init/1]).
+start_link() ->  
+    supervisor:start_link({local, ?MODULE},?MODULE,  []).
+init(_) -> 
+    {ok, {{simple_one_for_one, 2, 3600}, 
+           [{test, {test, start_link, []},
+             permanent, 2000, worker, [test]}]}}.
+....
+
+* There can only be one child specification
+* It is shared by all children
+* The only difference will be arguments passed when starting the children.
+
+
+simple_one_for_one Example
+--------------------------
+....
+-module(test).
+-export([start_link/1, init/1]).
+
+start_link(Name) -> 
+    Pid = spawn_link(test, init, [Name]),
+    register(Name, Pid),
+    {ok, Pid}.
+
+init(Name) ->
+    io:format(“~p started~n”, [Name]), 
+    loop().
+
+loop() -> receive X -> X end.
+ 
+
+....
+
+
+simple_one_for_one Example
+--------------------------
+....
+-module(test).
+-export([start_link/1, init/1]).
+
+start_link(Name) -> 
+    Pid = spawn_link(test, init, [Name]),
+    register(Name, Pid),
+    {ok, Pid}.
+
+init(Name) ->
+    io:format(“~p started~n”, [Name]), 
+    loop().
+
+loop() -> receive X -> X end.
+ 
+....
+
+
+simple_one_for_one Example
+--------------------------
+++++
+<svg id="simple_one_for_one_example_1" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#simple_one_for_one_example_1");
+
+s10.rect(8,10,1050,645).addClass("rect_code")
+
+s10_g1 = s10.g(s10.text(15,40,"1> sup:start_link().").addClass("code darkred bold"),
+               s10.text(15,80,"{ok,<0.42.0>}").addClass("code")).addClass("hide");
+s10_g2 = s10.g(s10.text(15,120,"2> supervisor:start_child(sup, [one]).").addClass("code darkred bold"),
+               s10.text(15,160,"one started").addClass("code"),
+               s10.text(15,200,"{ok,<0.43.0>}").addClass("code")).addClass("hide");
+s10_g3 = s10.g(s10.text(15,240,"3> supervisor:start_child(sup, [two]).").addClass("code darkred bold"),
+               s10.text(15,280,"two started").addClass("code"),
+               s10.text(15,320,"{ok,<0.44.0>}").addClass("code")).addClass("hide");
+s10_g4 = s10.g(s10.text(15,360,"4> supervisor:which_children(sup).").addClass("code darkred bold"),
+               s10.text(15,400,"[{undefined,<0.44.0>,worker,[test]},").addClass("code"),
+               s10.text(15,440," {undefined,<0.43.0>,worker,[test]}]").addClass("code")).addClass("hide");
+
+var s10_counter=1
+s10.click( function() {
+  switch(s10_counter) {
+    case 1: { s10_g1.animate({"opacity":"1"}, 250, mina.linear); s10_counter++; break};
+    case 2: { s10_g2.animate({"opacity":"1"}, 250, mina.linear); s10_counter++; break };
+    case 3: { s10_g3.animate({"opacity":"1"}, 250, mina.linear); s10_counter++; break };
+    case 4: { s10_g4.animate({"opacity":"1"}, 250, mina.linear); s10_counter++; break };
+    }
+} );
+
+</script>
+</svg>
+++++
+
+
+Non OTP-compliant Processes
+---------------------------
+[role="left"]
+image::images/non_otp-compliant_processes_1.png["Non OTP-compliant Processes", 400px, auto]
+
+[role="right"]
+* Non OTP process structures can be added to supervisors
+* They are done through the supervisor_bridge behaviour
+* Acts as a supervisor to the process it is connected to
+** No code upgrade
+** No debug functionality
+** Limited supervision
+
+[NOTE.speaker]
+[role="speaker"]
+--
+A supervisor-bridge is a worker for its supervisor
+--
+
+
+Non OTP-compliant Processes
+---------------------------
+image::images/non_otp-compliant_processes_2.png["Non OTP-compliant Processes", auto, 350px]
+{empty} +
+
+* C code can be part of the system (C Nodes, Ports, etc.)
+* It can be attached to supervision trees
+
+
+Non OTP-compliant Processes
+---------------------------
+* Erlang processes can be made to act as behaviours
+** Implemented for performance reasons
+** Implemented in systems without OTP
+* These processes can be connected to the supervision tree
+* Use the *proc_lib* module to spawn your processes
+* Handle system messages in the *sys* module
+* The sys debug/stats options can be added
+
+
+Supervisors
+-----------
+* Supervisors
+* Supervisor Example
+* Generic Supervisor
+* Dynamic Children
+* Non OTP-compliant Processes

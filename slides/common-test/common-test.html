@@ -1,0 +1,846 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="author" content="Erlang Solutions Ltd."><title>Common Test</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="reveal.js/css/reveal.min.css" rel="stylesheet"><link rel="stylesheet" href="reveal.js/css/theme/default.css" id="theme"><link href="reveal.js/lib/css/zenburn.css" rel="stylesheet"><script type="text/javascript">document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );</script></head><body><div class="reveal"><div class="slides"><section><h1>Common Test</h1><p>Erlang Solutions Ltd.</p></section><div id="preamble"><div class="sectionbody"><link rel="stylesheet" type="text/css" href="../../styles/svg.css"></link>
+<script type="text/javascript" src="../../tools/snap.svg/snap.svg-min.js"></script></div></div>
+<section id="_common_test"><h2>Common Test</h2><div class="ulist"><ul><li><p>What is Common Test</p></li><li><p>Common Test Cases</p></li><li><p>Testing With State</p></li><li><p>Test Groups</p></li><li><p>Test Suites</p></li><li><p>Configuration for Tests</p></li><li><p>Test Specifications</p></li><li><p>Large Scale Testing</p></li></ul></div></section>
+<section id="_what_is_common_test"><h2>What is Common Test</h2><div class="ulist"><ul><li><p>Black-box testing tool for servers through Erlang RPC, SSH, Telnet, FTP, etc. supporting many concurrent connections</p></li><li><p>White-box testing framework for Erlang/OTP applications</p></li><li><p>Supports distributed testing with centralised control and logging</p></li><li><p>Support for large scale testing</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>CT also supports code coverage, RTFM.</p></div></aside></section>
+<section id="_common_test_cases"><h2>Common Test Cases</h2><div class="dlist"><dl><dt class="hdlist1"><strong>Test root</strong></dt><dd><p>Contains one or more test object directories</p></dd><dt class="hdlist1"><strong>Test object directories</strong></dt><dd><p>Contains one or more test suites</p></dd><dt class="hdlist1"><strong>Test suite</strong></dt><dd><p>Erlang module with a name ending in <strong>_SUITE</strong>, containing test cases. Each suite has an optional <strong>mod_SUITE_data/</strong> directory for files needed when running tests</p></dd><dt class="hdlist1"><strong>Test case</strong></dt><dd><p>Erlang function that either succeeds or throws an exception.</p></dd></dl></div></section>
+<section id="_common_test_cases_2"><h2>Common Test Cases</h2><div class="ulist"><ul><li><p>A test suite must use  <strong>-include_lib("common_test/include/ct.hrl")</strong></p></li><li><p>The module must export a function <strong>all/0</strong> that returns a list of test names</p></li><li><p>Test functions take a configuration variable as an argument</p></li><li><p>The configuration&#8217;s values can be fetched with the <strong>?config(Key, Config)</strong> macro.</p></li><li><p>By default, the Config has <strong>data_dir</strong> and <strong>priv_dir</strong> variables</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>data_dir is for a suite&#8217;s own data dependencies and refers to the directory Mod_SUITE_data/
+priv_dir is for writing your own temporary files. The directory is created by CT.</p></div></aside></section>
+<section id="_common_test_cases_strong_example_strong"><h2>Common Test Cases: <strong>example</strong></h2><svg id="common_test_cases_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s1 = Snap("#common_test_cases_example_1");
+
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s1.text(10,40,"-module(example_SUITE).").addClass("code");
+s1.text(10,80,"-include_lib(\"common_test/include/ct.hrl\").").addClass("code");
+s1.text(10,120,"-export([all/0]).            % CT callbacks").addClass("code");
+s1.text(10,160,"-export([test1/1, test2/1]). % Tests").addClass("code");
+
+s1.text(10,240,"all() -> [test1, test2].").addClass("code");
+
+s1.text(10,320,"test1(Config) ->").addClass("code");
+s1.text(10,360,"    1 = 1.").addClass("code");
+
+s1.text(10,440,"test2(_Config) ->").addClass("code");
+s1.text(10,480,"    A = 0, 1/A.").addClass("code");
+
+s1_g1 = s1.g(s1.text(610,270,"Names of").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.text(610,305,"tests to run").addClass("darkred").attr({"text-anchor":"middle"}),
+             s1.path("M520,275 l-110,-25").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.path("M520,275 l-235,-22").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s1_g2 = s1.g(s1.text(470,410,"Tests").addClass("darkred"),
+             s1.path("M455,400 l-190,-60").addClass("line_darkred").attr({"marker-end":marker}),
+             s1.path("M455,400 l-170,60").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s1_anim1 = function() { s1_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s1_anim2 = function() { s1_g1.animate({"opacity":"0"}, 375, mina.linear); s1_g2.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s1_counter=1
+s1.click( function() {
+  switch(s1_counter) {
+    case 1: {s1_anim1(); s1_counter++; break};
+    case 2: {s1_anim2(); s1_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_common_test_cases_strong_example_strong_2"><h2>Common Test Cases: <strong>example</strong></h2><svg id="common_test_cases_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s2 = Snap("#common_test_cases_example_2");
+
+var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s2.text(10,40,"$ ct_run").addClass("code bold");
+s2.text(10,40,"         -suite example_SUITE").addClass("code darkred bold");
+s2.text(10,80,"... snip ...").addClass("code");
+s2.text(10,120,"TEST INFO: 1 test(s), 2 case(s) in 1 suite(s)").addClass("code");
+s2.text(10,160,"Testing ex.ct: Starting test, 2 test cases").addClass("code");
+s2.text(10,200,"- - - - - - - - - - - - - - - - - - - - - - - - - -").addClass("code");
+s2.text(10,240,"example_SUITE:test2 failed on line 14").addClass("code");
+s2.text(10,280,"Reason: badarith").addClass("code");
+s2.text(10,320,"- - - - - - - - - - - - - - - - - - - - - - - - - -").addClass("code");
+s2.text(10,360,"Testing ex.ct: *** FAILED *** test case 2 of 2").addClass("code");
+s2.text(10,400,"Testing ex.ct: TEST COMPLETE, 1 ok, 1 failed of 2 test cases").addClass("code");
+s2.text(10,440,"Updating /Users/ferd/ct/index.html... done").addClass("code");
+s2.text(10,480,"Updating /Users/ferd/ct/all_runs.html... done").addClass("code");
+
+s2_g1 = s2.g(s2.text(735,45,"Erlang shell form:").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.text(735,80,"ct:run_test([{suite, Suite}])").addClass("darkred").attr({"text-anchor":"middle"}),
+             s2.path("M540,70 l-85,-15").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s2.click( function() {s2_g1.animate({"opacity":"1"}, 375, mina.linear)})
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Before R14B01, 'run_test' was the way to run the tests. It has since been deprecated and should be replaced with <em>ct_run</em></p></div>
+<div class="paragraph"><p>Do the CT Exercise 1.A</p></div></aside></section>
+<section id="_testing_with_state"><h2>Testing With State</h2><div class="ulist"><ul><li><p>More complex test cases might require initialisation and termination</p></li><li><p>The functions <strong>init_per_testcase(Name, Config)</strong> and <strong>end_per_testcase(Name, Config)</strong> can be exported to do it</p></li><li><p>These functions can pattern match on the test&#8217;s name and modify the configuration with the required state.</p></li></ul></div></section>
+<section id="_test_suites_and_test_cases"><h2>Test suites and test cases</h2><svg id="test_suites_and_test_cases_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s3 = Snap("#test_suites_and_test_cases_1");
+
+var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s3.text(10,40,"-module(example_SUITE).").addClass("code");
+s3.text(10,80,"-include_lib(\"common_test/include/ct.hrl\").").addClass("code");
+s3.text(10,120,"-export([all/0, init_per_testcase/2, end_per_testcase/2]).").addClass("code");
+s3.text(10,160,"-export([ets_tests/1]).").addClass("code");
+
+s3.text(10,240,"all() -> [ets_tests].").addClass("code");
+
+s3.text(10,320,"init_per_testcase(ets_tests, Config) ->").addClass("code");
+s3.text(10,360,"    TabId = ets:new(test, [ordered_set, public]),").addClass("code");
+s3.text(10,400,"    ets:insert(TabId, {alison, 10}),").addClass("code");
+s3.text(10,440,"    ets:insert(TabId, {fred, 12}),").addClass("code");
+s3.text(10,480,"    ets:insert(TabId, {mark, 65}),").addClass("code");
+s3.text(10,520,"    [{table,TabId} | Config].").addClass("code");
+
+s3_g1 = s3.g(s3.text(550,220,"Setup and Teardown").addClass("darkred"),
+             s3.path("M695,185 l-210,-42").addClass("line_darkred").attr({"marker-end":marker}),
+             s3.path("M695,185 l110,-42").addClass("line_darkred").attr({"marker-end":marker}),
+             s3.path("M695,230 l-190,70").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s3_g2 = s3.g(s3.text(680,450,"State added to config").addClass("darkred"),
+             s3.path("M660,440 l-325,65").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s3_anim2 = function() { s3_g1.animate({"opacity":"0"}, 375, mina.linear); s3_g2.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s3_counter=1
+s3.click( function() {
+  switch(s3_counter) {
+    case 1: {s3_anim1(); s3_counter++; break};
+    case 2: {s3_anim2(); s3_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_testing_with_state_2"><h2>Testing With State</h2><svg id="testing_with_state_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s4 = Snap("#testing_with_state_1");
+
+var arrow = s4.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
+
+s4.text(10,40,"end_per_testcase(ets_tests, Config) ->").addClass("code");
+s4.text(10,80,"    ets:delete(?config(table, Config)).").addClass("code");
+
+s4.text(10,160,"ets_tests(Config) ->").addClass("code");
+s4.text(10,200,"    TabId = ?config(table, Config),").addClass("code");
+s4.text(10,240,"    [{alison, 10}] = ets:lookup(TabId, alison),").addClass("code");
+s4.text(10,280,"    mark = ets:last(TabId),").addClass("code");
+s4.text(10,320,"    true = ets:insert(TabId, {zachary, 99}),").addClass("code");
+s4.text(10,360,"    zachary = ets:last(TabId).").addClass("code");
+
+s4_g1 = s4.g(s4.text(780,90,"Tear down").addClass("darkred"),
+             s4.path("M770,80 l-92,-28").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s4_g2 = s4.g(s4.text(695,180,"Accessing the state").addClass("darkred"),
+             s4.path("M685,165 l-230,-60").addClass("line_darkred").attr({"marker-end":marker}),
+             s4.path("M685,165 l-65,25").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s4_anim1 = function() { s4_g1.animate({"opacity":"1"}, 375, mina.linear)};
+s4_anim2 = function() { s4_g1.animate({"opacity":"0"}, 375, mina.linear); s4_g2.animate({"opacity":"1"}, 375, mina.linear)};
+
+var s4_counter=1
+s4.click( function() {
+  switch(s4_counter) {
+    case 1: {s4_anim1(); s4_counter++; break};
+    case 2: {s4_anim2(); s4_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Do the CT Exercise 1.B</p></div></aside></section>
+<section id="_test_groups"><h2>Test Groups</h2><div class="ulist"><ul><li><p>Tests might share similar configurations and need similar execution environments; test groups are the solution</p></li><li><p>Groups can have their tests ran sequentially, in parallel or in random order</p></li><li><p>Tests can be ran until one or many failures are found, or until one or all tests succeed</p></li><li><p>Groups can be nested</p></li></ul></div></section>
+<section id="_test_groups_strong_declaration_strong"><h2>Test Groups: <strong>declaration</strong></h2><div class="literalblock left"><div class="content"><pre>groups() -&gt;
+ [{group1,
+   [shuffle],
+   [test1a,
+    {group2,[],[test2a,test2b]},
+    test1b]},
+  {group3,[],[{group,group4},
+              {group,group5}]},
+  {group4,
+   [parallel],
+   [test4a,test4b]},
+  {group5,
+   [sequence],
+   [test5a,test5b,test5c]}].
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Groups are declared in a <strong>groups/0</strong> function</p></li><li><p>3-Tuples of the form <code><strong>{Name, Properties, GroupsAndTests}</strong></code> define groups</p></li><li><p>Properties include <code><strong>parallel</strong></code>, <code><strong>sequence</strong></code>, <code><strong>shuffle</strong></code>, <code><strong>{shuffle, Seed}</strong></code> and <code><strong>{Repeat, N}</strong></code>, where Repeat is <code><strong>repeat_until_</strong>&lt;all_ok| all_fail | any_ok |any_fail&gt;</code></p></li></ul></div></section>
+<section id="_test_groups_strong_properties_strong"><h2>Test Groups: <strong>properties</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>parallel</strong></dt><dd><p>Tests are ran in parallel</p></dd><dt class="hdlist1"><strong>shuffle, {shuffle, {Int, Int, Int}}</strong></dt><dd><p>Tests are executed in random order. The seed can be given explicitly to repeat failing cases.</p></dd><dt class="hdlist1"><strong>sequence</strong></dt><dd><p>Tests that depends on each other are ran in order. If a test fails, the others are skipped</p></dd><dt class="hdlist1"><strong>{repeat_until_all|any_ok|fail, Int | forever}</strong></dt><dd><p>Orders Common Test to repeat execution in the group <strong>Int</strong> times, or until any, or all, cases fail or succeed</p></dd></dl></div></section>
+<section id="_test_groups_2"><h2>Test Groups</h2><div class="ulist"><ul><li><p>Groups can be initialised with the mandatory functions <strong>init_per_group(GroupName, Config)</strong> and <strong>end_per_group(GroupName, Config)</strong>, which are ran in a distinct process before and after each group. Exporting them is mandatory to control the test group properties.</p></li><li><p>The <strong>init_per_test/2</strong> and <strong>end_per_test/2</strong> functions will still be called if defined</p></li><li><p>Groups are to be included in the <strong>all/0</strong> function with the form <strong>{group, GroupName}</strong> along with regular tests, if any</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>If you don&#8217;t export init/end_per_group, CT will not error out, but it will also not be able to run tests in parallel in test control!</p></div></aside></section>
+<section id="_test_groups_3"><h2>Test Groups</h2><svg id="test_groups_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s5 = Snap("#test_groups_1");
+
+s5_g3 = s5.g(s5.rect(240,97,270,50,15).addClass("shape white"),
+             s5.text(375,133,"Init").addClass("darkred middle"),
+             s5.rect(240,155,270,247,15).addClass("shape white"),
+             s5.text(375,187,"Test Group").addClass("darkred bold middle"),
+             s5.rect(240,410,270,50,15).addClass("shape white"),
+             s5.text(375,446,"end").addClass("darkred middle")).addClass("hide");
+
+s5_g2 = s5.g(s5.rect(250,200,120,42,0).addClass("shape white"),
+             s5.text(310,232,"init").addClass("darkred middle"),
+             s5.rect(250,250,120,92,0).addClass("shape white"),
+             s5.text(310,305,"Test").addClass("darkred middle"),
+             s5.rect(250,350,120,42,0).addClass("shape white"),
+             s5.text(310,382,"init").addClass("darkred middle")).addClass("hide");
+
+s5_g1 = s5.g(s5.rect(380,200,120,42,0).addClass("shape white"),
+             s5.text(440,232,"init").addClass("darkred middle"),
+             s5.rect(380,250,120,92,0).addClass("shape white"),
+             s5.text(440,305,"Test").addClass("darkred middle"),
+             s5.rect(380,350,120,42,0).addClass("shape white"),
+             s5.text(440,382,"init").addClass("darkred middle")).addClass("hide");
+
+s5_g6 = s5.g(s5.rect(600,97,270,50,15).addClass("shape white"),
+             s5.text(735,133,"Init").addClass("darkred middle"),
+             s5.rect(600,155,270,247,15).addClass("shape white"),
+             s5.text(735,187,"Test Group").addClass("darkred bold middle"),
+             s5.rect(600,410,270,50,15).addClass("shape white"),
+             s5.text(735,446,"end").addClass("darkred middle")).addClass("hide");
+
+s5_g4 = s5.g(s5.rect(610,200,120,42,0).addClass("shape white"),
+             s5.text(670,232,"init").addClass("darkred middle"),
+             s5.rect(610,250,120,92,0).addClass("shape white"),
+             s5.text(670,305,"Test").addClass("darkred middle"),
+             s5.rect(610,350,120,42,0).addClass("shape white"),
+             s5.text(670,382,"init").addClass("darkred middle")).addClass("hide");
+
+s5_g5 = s5.g(s5.rect(740,200,120,30,15).addClass("shape white"),
+             s5.rect(740,235,120,122,15).addClass("shape white"),
+             s5.text(800,290,"Test").addClass("darkred bold middle").attr({"font-size":"20pt"}),
+             s5.text(800,320,"Group").addClass("darkred bold middle").attr({"font-size":"20pt"}),
+             s5.rect(740,362,120,30,15).addClass("shape white")).addClass("hide");
+
+var s5_counter=1
+s5.click( function() {
+  switch(s5_counter) {
+    case 1: {s5_g1.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 2: {s5_g2.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 3: {s5_g3.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 4: {s5_g4.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 5: {s5_g5.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    case 6: {s5_g6.animate({"opacity":"1"}, 375, mina.linear); s5_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Show the hierarchy with test groups</p></div></aside></section>
+<section id="_test_groups_strong_example_strong"><h2>Test Groups: <strong>example</strong></h2><svg id="test_groups_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s6 = Snap("#test_groups_example_1");
+
+var arrow = s6.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s6.text(10,100,"init_per_group(_Name, Config) ->").addClass("code");
+s6.text(10,140,"    Heir = spawn(fun() -> timer:sleep(infinity) end),").addClass("code");
+s6.text(10,180,"    TabId = ets:new(test, [ordered_set, public, {heir,").addClass("code");
+s6.text(10,220,"Heir, ok}]),").addClass("code");
+s6.text(10,260,"    ets:insert(TabId, {alison, 10}),").addClass("code");
+s6.text(10,300,"    ets:insert(TabId, {fred, 12}),").addClass("code");
+s6.text(10,340,"    ets:insert(TabId, {mark, 65}),").addClass("code");
+s6.text(10,380,"    [{table, TabId}, {heir, Heir} | Config].").addClass("code");
+
+s6.text(10,460,"end_per_group(_, Config) ->").addClass("code");
+s6.text(10,500,"    ets:delete(?config(table, Config)),").addClass("code");
+s6.text(10,540,"    exit(?config(heir, Config), end_test).").addClass("code");
+
+s6_g1 = s6.g(s6.text(800,35,"Allows the table to").addClass("darkred middle"),
+             s6.text(800,70,"survive after initialisation").addClass("darkred middle"),
+             s6.path("M610,60 l-450,70").addClass("line_darkred").attr({"marker-end":marker}),
+             s6.path("M610,60 l-518,150").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s6_g2 = s6.g(s6.text(660,450,"Clean everything up").addClass("darkred"),
+             s6.path("M650,440 l-155,-40").addClass("line_darkred").attr({"marker-end":marker}),
+             s6.path("M650,440 l-280,75").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s6_counter=1
+s6.click( function() {
+  switch(s6_counter) {
+    case 1: {s6_g1.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    case 2: {s6_g1.animate({"opacity":"0"}, 375, mina.linear); s6_g2.animate({"opacity":"1"}, 375, mina.linear); s6_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Mention that ETS tables are “linked” to the process that created tem and by default are deleted when that process dies.</p></div></aside></section>
+<section id="_test_groups_strong_example_strong_2"><h2>Test Groups: <strong>example</strong></h2><svg id="test_groups_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s7 = Snap("#test_groups_example_2");
+
+var arrow = s7.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s7.text(10,100,"groups() ->").addClass("code");
+s7.text(10,140,"  [{group1, [sequence], [single, same, same_split, diff]},").addClass("code");
+s7.text(10,180,"   {group2, [shuffle, sequence], [same, diff, single]},").addClass("code");
+s7.text(10,220,"   {group3, ").addClass("code");
+s7.text(10,260,"    [parallel, {repeat_until_any_fail, 30}],").addClass("code");
+s7.text(10,300,"    [single, same, same_split]}].").addClass("code");
+
+s7.text(10,460,"all() ->").addClass("code");
+s7.text(10,500,"  [{group, group1}, {group, group2}, {group, group3}].").addClass("code");
+
+s7_g1 = s7.g(s7.text(800,50,"Test names").addClass("darkred middle"),
+             s7.path("M800,60 l-240,55").addClass("line_darkred").attr({"marker-end":marker}),
+             s7.path("M800,60 l-140,55").addClass("line_darkred").attr({"marker-end":marker}),
+             s7.path("M800,60 l-28,55").addClass("line_darkred").attr({"marker-end":marker}),
+             s7.path("M800,60 l95,55").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s7_g2 = s7.g(s7.text(800,360,"Runs randomly. If one").addClass("darkred middle"),
+             s7.text(800,395,"fails, others are").addClass("darkred middle"),
+             s7.text(800,430,"skipped").addClass("darkred middle"),
+             s7.path("M705,330 l-275,-130").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s7_g3 = s7.g(s7.text(480,420,"Groups to be run").addClass("darkred middle"),
+             s7.path("M480,430 l-290,50").addClass("line_darkred").attr({"marker-end":marker}),
+             s7.path("M480,430 l3,45").addClass("line_darkred").attr({"marker-end":marker}),
+             s7.path("M480,430 l300,50").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s7_counter=1
+s7.click( function() {
+  switch(s7_counter) {
+    case 1: {s7_g1.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 2: {s7_g1.animate({"opacity":"0"}, 250, mina.linear); s7_g2.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    case 3: {s7_g2.animate({"opacity":"0"}, 250, mina.linear); s7_g3.animate({"opacity":"1"}, 375, mina.linear); s7_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_test_groups_strong_example_strong_3"><h2>Test Groups: <strong>example</strong></h2><svg id="test_groups_example_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s8 = Snap("#test_groups_example_3");
+
+var arrow = s8.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s8.text(10,40,"single(Config) ->").addClass("code");
+s8.text(10,80,"  TabId = ?config(table, Config),").addClass("code");
+s8.text(10,120,"  ets:insert(TabId, {alison, 25}),").addClass("code");
+s8.text(10,160,"  [{alison, 25}] = ets:lookup(TabId, alison).").addClass("code");
+
+s8.text(10,320,"same(Config) ->").addClass("code");
+s8.text(10,360,"  TabId = ?config(table, Config),").addClass("code");
+s8.text(10,400,"  ets:insert(TabId,[{alison,10},{alison,32},{alison,22}]),").addClass("code");
+s8.text(10,440,"  timer:sleep(10),").addClass("code");
+s8.text(10,480,"  [{alison, 22}] = ets:lookup(TabId, alison).").addClass("code");
+
+s8_g1 = s8.g(s8.text(600,250,"The delay makes this more").addClass("darkred middle"),
+             s8.text(600,285,"time-sensitive").addClass("darkred middle"),
+             s8.path("M480,270 l-168,154").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s8.click( function() {s8_g1.animate({"opacity":"1"}, 375, mina.linear)} );
+
+</script>
+</svg></section>
+<section id="_test_groups_strong_example_strong_4"><h2>Test Groups: <strong>example</strong></h2><div class="pre plain">same_split(Config) ->
+    TabId = ?config(table, Config),
+    ets:insert(TabId, {alison, 10}),
+    ets:insert(TabId, {alison, 32}),
+    ets:insert(TabId, {alison, 22}),
+    [{alison, 22}] = ets:lookup(TabId, alison).
+
+diff(Config) ->
+    TabId = ?config(table, Config),
+    ets:insert(TabId, [{mark,44}, {jim,25}, {fred,13}]),
+    [{mark, 44}] = ets:lookup(TabId, mark).
+
+</div></section>
+<section id="_test_groups_strong_results_strong"><h2>Test Groups: <strong>results</strong></h2><svg id="test_groups_results_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s9 = Snap("#test_groups_results_2");
+
+var arrow = s9.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s9.image("images/results.png",20,10);
+s9.rect(12,387,500,55,15).addClass("shape white line_darkred").attr({"stroke-width":"2px"});
+s9.path("M532,160 l-72,218").addClass("line_darkred").attr({"marker-end":marker});
+
+s9.text(525,40,"• Running the tests"); s9.text(806,40,"might").addClass("darkred bold");
+s9.text(550,75,"show errors happening");
+s9.text(550,110,"depending on timing");
+
+s9.text(525,165,"• The HTML log will tell you");
+s9.text(550,200,"why the tests failed");
+
+s9.text(525,255,"• In this case, it is due to");
+s9.text(550,290,"different actors accessing");
+s9.text(550,325,"the same resources in");
+s9.text(550,360,"parallel");
+
+s9.text(525,415,"• Groups give flexibility");
+s9.text(550,450,"when trying to test");
+s9.text(550,485,"concurrent code");
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>Mention that one way to solve the problem could be with locks or transactions over the database
+If the students have done the EUnit course, mention that testing parallel code is a bit easier with Common Test because of groups</p></div>
+<div class="paragraph"><p>Exercise 2 on Test groups</p></div></aside></section>
+<section id="_test_suites"><h2>Test Suites</h2><svg id="test_suites_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s10 = Snap("#test_suites_1");
+
+s10_g1 = s10.g(s10.rect(215,25,680,567,15).addClass("shape white"),
+             s10.rect(230,40,650,75,0).addClass("shape white"),
+             s10.text(555,90,"init_per_suite").addClass("darkred middle").attr({"font-size":"28pt"}),
+             s10.rect(230,502,650,75,0).addClass("shape white"),
+             s10.text(555,552,"end_per_suite").addClass("darkred middle").attr({"font-size":"28pt"})).addClass("hide");
+
+s10.rect(270,127,270,50,15).addClass("shape white");
+s10.text(405,163,"Init").addClass("darkred middle");
+s10.rect(270,185,270,247,15).addClass("shape white");
+s10.text(405,217,"Test Group").addClass("darkred bold middle");
+s10.rect(270,440,270,50,15).addClass("shape white");
+s10.text(405,476,"end").addClass("darkred middle");
+
+s10.rect(280,230,120,42,0).addClass("shape white");
+s10.text(340,262,"init").addClass("darkred middle");
+s10.rect(280,280,120,92,0).addClass("shape white");
+s10.text(340,335,"Test").addClass("darkred middle");
+s10.rect(280,380,120,42,0).addClass("shape white");
+s10.text(340,412,"init").addClass("darkred middle");
+
+s10.rect(410,230,120,42,0).addClass("shape white");
+s10.text(470,262,"init").addClass("darkred middle");
+s10.rect(410,280,120,92,0).addClass("shape white");
+s10.text(470,335,"Test").addClass("darkred middle");
+s10.rect(410,380,120,42,0).addClass("shape white");
+s10.text(470,412,"init").addClass("darkred middle");
+
+s10.rect(570,127,270,50,15).addClass("shape white");
+s10.text(705,163,"Init").addClass("darkred middle");
+s10.rect(570,185,270,247,15).addClass("shape white");
+s10.text(705,217,"Test Group").addClass("darkred bold middle");
+s10.rect(570,440,270,50,15).addClass("shape white");
+s10.text(705,476,"end").addClass("darkred middle");
+
+s10.rect(580,230,120,42,0).addClass("shape white");
+s10.text(640,262,"init").addClass("darkred middle");
+s10.rect(580,280,120,92,0).addClass("shape white");
+s10.text(640,335,"Test").addClass("darkred middle");
+s10.rect(580,380,120,42,0).addClass("shape white");
+s10.text(640,412,"init").addClass("darkred middle");
+
+s10.rect(710,230,120,30,15).addClass("shape white");
+s10.rect(710,265,120,122,15).addClass("shape white");
+s10.text(770,320,"Test").addClass("darkred bold middle").attr({"font-size":"20pt"});
+s10.text(770,350,"Group").addClass("darkred bold middle").attr({"font-size":"20pt"});
+s10.rect(710,392,120,30,15).addClass("shape white");
+
+s10.click( function() {s10_g1.animate({"opacity":"1"}, 375, mina.linear)} );
+
+</script>
+</svg></section>
+<section id="_test_suites_2"><h2>Test Suites</h2><div class="literalblock left"><div class="content"><pre>init_per_suite(Conf) -&gt;
+  [{key, Val}|Conf].
+
+end_per_suite(Conf) -&gt;
+  ok.
+
+suite() -&gt;
+  [{timetrap, {seconds,10}},
+   {userdata, some_atom},
+   {require, id},
+   {default_config,id,"jim"}].
+ 
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>The functions <strong>init_per_suite(Conf)</strong> and <strong>end_per_suite(Conf)</strong> allow to initialise elements common to all tests of a suite</p></li><li><p>The <strong>info function</strong> <code><strong>suite/0</strong></code> allows to give metadata about a test suite.</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Might want to draw a diagram of the CT hierarchy, from top to bottom (suites &#8594; groups &#8594; test cases, where groups can contain other groups)</p></div></aside></section>
+<section id="_test_suites_strong_info_function_strong"><h2>Test Suites: <strong>info function</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>{timetrap, {Unit, Int}}</strong></dt><dd><p>Gives a time limit for the whole suite to be ran. The Unit can be hours, minutes or seconds. Without any unit, the time is in milliseconds. The atom <em>infinity</em> is accepted.</p></dd><dt class="hdlist1"><strong>{userdata, Data}</strong></dt><dd><p>Arbitrary data that should be accessible to all test cases. Can be retrieved with <strong>ct:userdata(Directory, ?MODULE)</strong>.</p></dd><dt class="hdlist1"><strong>{require, Var}</strong></dt><dd><p>A variable that must be present in a suite&#8217;s configuration files is declared as required. A default value can be given with <strong>{default_config, Var, Value}</strong>.</p></dd></dl></div></section>
+<section id="_configuration_for_tests"><h2>Configuration for Tests</h2><div class="ulist"><ul><li><p>External configuration files allow to store values about the System Under Test (SUT)</p></li><li><p>It makes it possible to change the configuration values without changing the test suite</p></li><li><p>Can contain login information, file names, external application names, addresses, etc.</p></li><li><p>A test case must <strong>require</strong> a variable before getting it. Use <strong>ct:get_config(Var)</strong> to get the value.</p></li></ul></div></section>
+<section id="_configuration_for_tests_strong_consult_files_strong"><h2>Configuration for Tests: <strong>consult files</strong></h2><div class="literalblock"><div class="content"><pre>{id, "carl"}.
+{size, 3}.
+{items, [car, moose, food]}.
+{ftp_host, [{ftp,"host"},
+            {username,"My Name"},
+            {password,"My voice is my passport"}]}.
+ </pre></div></div>
+<div class="ulist"><ul><li><p>A configuration file can have the format accepted by <strong>file:consult/1</strong></p></li><li><p>The file can be given to the test suite by using the arguments  <code><strong>-config File1 File2 ... FileN</strong></code> from the command line</p></li><li><p>Configuration files can also be specified in XML, by using the arguments <code><strong>-userconfig ct_config_xml File1 File2 ... FileN</strong></code> from the command line</p></li></ul></div>
+<aside class="notes"><div class="paragraph"><p>Mention that callback modules can be used to use any configuration file format. The official guide has the details.</p></div></aside></section>
+<section id="_configuration_for_tests_strong_info_functions_strong"><h2>Configuration for Tests: <strong>info functions</strong></h2><div class="literalblock left"><div class="content"><pre>-module(conf_SUITE).
+-include_lib("common_test/include/ct.hrl").
+-export([all/0]).
+-export([my_test/0, my_test/1]).
+
+all() -&gt; [my_test].
+
+my_test() -&gt;
+  [{require, id},
+   {require, items}].
+ 
+ 
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>The info function <strong>my_test/0</strong> tells which variables <strong>my_test/1</strong> will need</p></li><li><p>Test info functions can return the same type of values as suite info functions</p></li><li><p>No reference to the configuration file is made from within the suite. It is purely external and configurable</p></li></ul></div></section>
+<section id="_configuration_for_tests_strong_results_strong"><h2>Configuration for Tests: <strong>results</strong></h2><svg id="configuration_for_tests_results_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s11 = Snap("#configuration_for_tests_results_1");
+
+var arrow = s11.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s11.text(10,40,"$ ct_run -suite conf_SUITE").addClass("code bold");
+s11.text(10,40,"                           -config conf.txt").addClass("code darkred bold");
+s11.text(10,80,"... snip ...").addClass("code");
+
+s11.text(10,160,"Common Test: Running make in test directories...").addClass("code");
+s11.text(10,200,"CWD set to: \"/Users/ferd/ex/ct/ct_run@...\"").addClass("code");
+
+s11.text(10,280,"TEST INFO: 1 test(s), 1 case(s) in 1 suite(s)").addClass("code");
+
+s11.text(10,360,"Testing ex.ct.conf_SUITE: Starting test, 1 test cases").addClass("code");
+s11.text(10,400,"Testing ex.ct.conf_SUITE: TEST COMPLETE, 1 ok, 0 failed of ").addClass("code");
+s11.text(10,440,"1 test cases").addClass("code");
+s11.text(10,480,"Updating /Users/ferd/dump/ex/ct/index.html... done").addClass("code");
+s11.text(10,520,"Updating /Users/ferd/dump/ex/ct/all_runs.html... done").addClass("code");
+
+s11_g1 = s11.g(s11.text(680,90,"In the Erlang shell:").addClass("darkred middle"),
+               s11.text(680,125,"ct:run_test([{suite, Suite}, {config, File}])").addClass("darkred middle"),
+               s11.path("M535,95 l-85,-30").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s11.click( function() {s11_g1.animate({"opacity":"1"}, 375, mina.linear)} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>The file name must be quoted when in
+ct:run_test([{suite,conf_SUITE},{config,”conf.txt”}]).
+Exercise 3 on CT configuration should be done here</p></div></aside></section>
+<section id="_test_specifications"><h2>Test Specifications</h2><div class="ulist"><ul><li><p>A test specification is a sequence of Erlang terms, either in a file or passed to the test server.</p></li><li><p>Allows to define general test configurations</p></li><li><p>Expressive way to have tests, groups and/or suites executed in a well-defined order</p></li><li><p>Allows to specify tests, groups and/or suites to skip</p></li><li><p>Allows to specify configuration files, logging directories, include paths, etc.</p></li></ul></div></section>
+<section id="_test_specifications_strong_config_syntax_strong"><h2>Test Specifications: <strong>config syntax</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>{include, IncludeDirs}</strong></dt><dd><p>Tells the compiler where to look for header (.hrl) files. Equivalent to the <strong>-include</strong> option.</p></dd><dt class="hdlist1"><strong>{config, ConfigFiles}</strong></dt><dd><p>Automatically loads the configuration file for a test. Equivalent to the -config option.</p></dd><dt class="hdlist1"><strong>{alias, Alias::atom(), Dir}</strong></dt><dd><p>Allows to use <strong>Alias</strong> to refer to a directory <strong>Dir</strong> for the rest of the test specification file.</p></dd><dt class="hdlist1"><strong>{logdir, LogDir}</strong></dt><dd><p>Specifies where the HTML logs will be created.</p></dd></dl></div></section>
+<section id="_test_specifications_strong_tests_syntax_strong"><h2>Test Specifications: <strong>tests syntax</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>{suites, Dir, all | Suites}</strong></dt><dd><p>Takes one or more suites in <strong>Dir</strong> and runs them.</p></dd><dt class="hdlist1"><strong>{skip_suites, Dir, all | Suites, Comment}</strong></dt><dd><p>Avoids executing one or more suites in <strong>Suites</strong>. Marks each of them as <strong>SKIPPED</strong> in the logs, with <strong>Comment</strong> as an explanation.</p></dd><dt class="hdlist1"><strong>{groups, Dir, Suite, all | Groups}</strong></dt><dd><p>Runs the tests inside the <strong>Groups</strong> in the given suite.</p></dd></dl></div></section>
+<section id="_test_specifications_strong_tests_syntax_strong_2"><h2>Test Specifications: <strong>tests syntax</strong></h2><div class="dlist"><dl><dt class="hdlist1"><strong>{groups, Dir, Suite, Group, {cases, all | Cases}}</strong></dt><dd><p>Runs the specific test cases in <strong>Cases</strong> as if they were running in their own group (including group initialisation and termination)</p></dd><dt class="hdlist1"><strong>{cases, Dir, Suite, all | Cases}</strong></dt><dd><p>Runs <strong>Cases</strong> from the given suite individually.</p></dd><dt class="hdlist1"><strong>{skip_cases, Dir, Suite, all | Cases, Comment}</strong></dt><dd><p>Avoids executing one or more test cases. Marks each of them as <strong>SKIPPED</strong> in the logs, with <strong>Comment</strong> as an explanation.</p></dd></dl></div></section>
+<section id="_test_specifications_strong_example_strong"><h2>Test Specifications: <strong>example</strong></h2><svg id="test_specifications_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s12 = Snap("#test_specifications_example_1");
+
+var arrow = s12.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s12.text(20,80,"{config, \"/Users/ferd/ct/conf.txt\"}.").addClass("code");
+s12.text(20,120,"{alias, root, \"/Users/ferd/ct/\"}.").addClass("code");
+s12.text(20,160,"{logdir, \"/Users/ferd/ct/logs/\"}.").addClass("code");
+
+s12.text(20,240,"{suites, root, suite_SUITE}.").addClass("code");
+s12.text(20,280,"{cases, root, suite_SUITE, [my_test, my_other_test]}.").addClass("code");
+s12.text(20,320,"{cases, root, example_SUITE, ets_tests}.").addClass("code");
+s12.text(20,360,"{cases, root, conf_SUITE, all}.").addClass("code");
+s12.text(20,400,"{groups, root, group_SUITE, [group1, group3]}.").addClass("code");
+s12.text(20,440,"{groups, root, group_SUITE, group2, {cases, [single]}}.").addClass("code");
+
+s12_g1 = s12.g(s12.text(820,75,"Config file for").addClass("darkred middle"),
+               s12.text(820,110,"conf_SUITE").addClass("darkred middle"),
+               s12.path("M730,90 l-90,-12").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s12_g2 = s12.g(s12.text(810,195,"The directory must exist").addClass("darkred middle"),
+               s12.path("M630,185 l-60,-15").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s12_g3 = s12.g(s12.rect(16,208,1000,250,12).addClass("shape line_darkred dashed").attr({"stroke-width":"2px", "strokeDasharray":"2,4"}),
+               s12.text(508,530,"Tests to be executed").addClass("darkred middle"),
+               s12.path("M508,500 l0,-40").addClass("line_darkred dashed").attr({"stroke-width":"2px", "strokeDasharray":"2,4"})).addClass("hide");
+
+var s12_counter=1
+s12.click( function() {
+  switch(s12_counter) {
+    case 1: {s12_g1.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    case 2: {s12_g1.animate({"opacity":"0"}, 250, mina.linear); s12_g2.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    case 3: {s12_g2.animate({"opacity":"0"}, 250, mina.linear); s12_g3.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_test_specifications_strong_example_strong_2"><h2>Test Specifications: <strong>example</strong></h2><svg id="test_specifications_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s13 = Snap("#test_specifications_example_2");
+
+var arrow = s13.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s13.text(10,40,"$ ct_run").addClass("code bold");
+s13.text(10,40,"         -spec test_spec.cfg").addClass("code darkred bold");
+s13.text(10,80,"... snip ..").addClass("code");
+s13.text(10,120,"CWD set to: \"/Users/ferd/ct/logs/ct_run...").addClass("code");
+
+s13.text(10,200,"TEST INFO: 4 test(s), 4 suite(s)").addClass("code");
+
+s13.text(10,280,"Testing ct.suite_SUITE: Starting test, 2 test cases").addClass("code");
+s13.text(10,320,"Testing ct.suite_SUITE: TEST COMPLETE, 2 ok, 0 failed of 2 test cases").addClass("code");
+
+s13.text(10,400,"Testing ct.example_SUITE.ets_tests: Starting test, 1 test cases").addClass("code");
+s13.text(10,440,"Testing ct.example_SUITE.ets_tests: TEST COMPLETE, 1 ok, 0 failed of 1 test cases").addClass("code");
+
+s13_g1 = s13.g(s13.text(785,50,"Erlang shell:").addClass("darkred middle"),
+               s13.text(785,85,"ct:run_test([{spec, File}]).").addClass("darkred middle"),
+               s13.path("M680,55 l-160,-12").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s13.click( function() {s13_g1.animate({"opacity":"1"}, 375, mina.linear)} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>The spec file name must be quoted in ct:run_test call.
+Exercise 4 here</p></div></aside></section>
+<section id="_test_specifications_strong_example_strong_3"><h2>Test Specifications: <strong>example</strong></h2><div class="literalblock"><div class="content"><pre>Testing ct.group_SUITE.groups: Starting test (with repeated test cases)
+- - - - - - - - - - - - - - - - - - - - - - - - - -
+group_SUITE:same failed on line 36
+Reason: {badmatch,[{alison,25}]}
+- - - - - - - - - - - - - - - - - - - - - - - - - -
+Testing ct.group_SUITE.groups: *** FAILED *** test case 75
+Testing ct.group_SUITE.groups: Stopping repeat operation {repeat_until_any_fail,7}
+Testing ct.group_SUITE.groups: TEST COMPLETE, 76 ok, 1 failed of 77 test cases
+
+Updating /Users/ferd/ct/logs/index.html... done
+Updating /Users/ferd/ct/logs/all_runs.html... done</pre></div></div></section>
+<section id="_test_specifications_strong_reports_strong"><h2>Test Specifications: <strong>reports</strong></h2><div class="left">
+	<img src="images/reports.png" style="border:1px dotted #7F7F7F !important;" />
+</div>
+<div class="ulist right"><ul><li><p>All runs are reported</p></li><li><p>Test specifications that overlap are merged into a single run</p></li><li><p>Compiling suites and deciding the order of execution of test cases is fully configurable without modifying the suites themselves</p></li></ul></div></section>
+<section id="_large_scale_testing"><h2>Large Scale Testing</h2><div class="ulist"><ul><li><p>Needs to be able to run tests on many nodes</p></li><li><p>The nodes might be on different hosts, testing different systems and code</p></li><li><p>Common Test offers a master test node that can start and connect to test nodes and handle tests from a central configuration</p></li><li><p>All nodes need to be in the same network and need to use the same file system</p></li></ul></div></section>
+<section id="_large_scale_testing_2"><h2>Large Scale Testing</h2><div class="ulist"><ul><li><p>Test specifications can be modified to support distributed testing</p></li><li><p>Add a node name or alias as the second element of pre-existing tuples</p></li><li><p>The operations specified by that tuple will take place on the node mentioned for it only.</p></li><li><p>Large Scale tests must be run with <strong>ct_master:run(TestSpecFile)</strong>.</p></li></ul></div></section>
+<section id="_large_scale_testing_strong_syntax_strong"><h2>Large Scale Testing: <strong>syntax</strong></h2><div class="literalblock left w_600"><div class="content"><pre>{node, NodeAlias, Node}.
+{init, InitOptions}.
+{init, Nodes, InitOptions}.
+
+{include, Nodes, IncludeDirs}.
+{config, Nodes, ConfigFiles}.
+{logdir, Nodes, LogDir}.
+
+{suites, Nodes, Dir, Suites}.
+{skip_suites, Nodes, Dir,
+ Suites, Comment}.
+{groups,Nodes,Dir,Suite,Groups}.
+{cases, Nodes,Dir,Suite,Cases}.
+{skip_cases, Nodes, Dir, Suite,
+ Cases, Comment}.
+ </pre></div></div>
+<div class="ulist right"><ul><li><p>Nodes can be aliased and started with the right specifications</p></li><li><p>Logging, configuration and include files can be handled on a per-node basis</p></li><li><p>Commands with <strong>Nodes</strong> will only be executed on said nodes</p></li><li><p>More commands exist and are documented in the Common Test user guide.</p></li></ul></div></section>
+<section id="_large_scale_testing_strong_starting_nodes_strong"><h2>Large Scale Testing: <strong>starting nodes</strong></h2><div class="ulist"><ul><li><p>Nodes can be started with <strong>{init, Node, Options}</strong>.</p></li><li><p><strong>Options</strong> will be passed to the other node directly.</p><div class="ulist"><ul><li><p><strong>{username, Username}</strong> and <strong>{password, Password}</strong> can be used to connect to protected hosts with SSH</p></li><li><p><strong>{startup_functions, [{M,F,A}]}</strong> will run each function when the node is started</p></li><li><p><strong>{monitor_master, Bool}</strong> stops the node if the master dies. Defaults to false.</p></li><li><p>See the documentation for the <strong>ct_slave</strong> module for more options.</p></li></ul></div></li></ul></div></section>
+<section id="_large_scale_testing_strong_example_strong"><h2>Large Scale Testing: <strong>example</strong></h2><svg id="large_scale_testing_example_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s14 = Snap("#large_scale_testing_example_1");
+
+var arrow = s14.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s14.text(10,40,"{node,      , 'ct_node1@host1'}.").addClass("code");
+s14.text(10,40,"       node1").addClass("code darkred bold");
+s14.text(10,80,"{node,      , 'ct_node2@host2'}.").addClass("code");
+s14.text(10,80,"       node2").addClass("code darkred bold");
+s14.text(10,120,"{node,      , 'ct_node3@host3'}.").addClass("code");
+s14.text(10,120,"       node3").addClass("code darkred bold");
+
+s14.text(10,200,"{init,      , [{node_start, [{monitor_master, true}]}]}.").addClass("code");
+s14.text(10,200,"       node1").addClass("code darkred bold");
+s14.text(10,240,"{init       , [{node_start, [{kill_if_fail, true}, ").addClass("code");
+s14.text(10,240,"       node2").addClass("code darkred bold");
+s14.text(10,280,"                             {monitor_master, true}]}]}.").addClass("code");
+s14.text(10,320,"{init       , [{node_start, []}]}.").addClass("code");
+s14.text(10,320,"       node3").addClass("code darkred bold");
+
+s14.text(10,400,"{config,      , \"/Users/ferd/ct/conf.txt\"}.").addClass("code");
+s14.text(10,400,"         node1").addClass("code darkred bold");
+s14.text(10,440,"{alias, root, \"/Users/ferd/ct/\"}.").addClass("code");
+s14.text(10,480,"{logdir, \"/Users/ferd/ct/slave-logs/\"}.").addClass("code");
+
+s14_g1 = s14.g(s14.text(750,45,"Tests on").addClass("darkred middle"),
+               s14.text(750,80,"3 nodes").addClass("darkred middle"),
+               s14.path("M685,50 l-100,-12").addClass("line_darkred").attr({"marker-end":marker}),
+               s14.path("M685,50 l-100,23").addClass("line_darkred").attr({"marker-end":marker}),
+               s14.path("M685,50 l-100,58").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s14_g2 = s14.g(s14.text(980,85,"Nodes are").addClass("darkred middle"),
+               s14.text(980,120,"started by the").addClass("darkred middle"),
+               s14.text(980,155,"master").addClass("darkred middle"),
+               s14.path("M920,148 l-190,25").addClass("line_darkred").attr({"marker-end":marker}),
+               s14.path("M920,148 l-388,146").addClass("line_darkred").attr({"marker-end":marker}),
+               s14.path("M920,148 l-86,72").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s14_g3 = s14.g(s14.text(950,385,"Only node with").addClass("darkred middle"),
+               s14.text(950,420,"the config").addClass("darkred middle"),
+               s14.path("M860,410 l-88,-12").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s14_counter=1
+s14.click( function() {
+  switch(s14_counter) {
+    case 1: {s14_g1.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    case 2: {s14_g1.animate({"opacity":"0"}, 250, mina.linear); s14_g2.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    case 3: {s14_g2.animate({"opacity":"0"}, 250, mina.linear); s14_g3.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    }
+} );
+
+</script>
+</svg>
+<aside class="notes"><div class="paragraph"><p>monitor_master: if the master dies, so does this node
+kill_if_fail: kill the node if it times out.</p></div></aside></section>
+<section id="_large_scale_testing_strong_example_strong_2"><h2>Large Scale Testing: <strong>example</strong></h2><div class="pre">
+{suites, <b>node2</b>, root, suite_SUITE}.
+
+{cases, <b>node2</b>, root, suite_SUITE, [my_test,
+                                   my_other_test]}.
+{cases, <b>node3</b>, root, example_SUITE, ets_tests}.
+{cases, <b>node1</b>, root, conf_SUITE, all}.
+
+{groups, <b>node3</b>, root, group_SUITE, [group1, group3]}.
+{groups, <b>node3</b>, root, group_SUITE, group2, {cases,
+                                            [single]}}.
+
+
+
+
+</div></section>
+<section id="_large_scale_testing_strong_example_strong_3"><h2>Large Scale Testing: <strong>example</strong></h2><svg id="large_scale_testing_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
+<script>
+
+var s15 = Snap("#large_scale_testing_example_2");
+
+var arrow = s15.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
+var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
+
+s15.text(10,60,"$").addClass("code");
+s15.text(10,60,"  erl -name ct").addClass("code darkred bold");
+s15.text(10,100,"Erlang R14B (erts-5.8.1) [source] [smp:4:4] [rq:4] [async-").addClass("code");
+s15.text(10,140,"threads:0] [hipe] [kernel-poll:false]").addClass("code");
+
+s15.text(10,220,"Eshell V5.8.1  (abort with ^G)").addClass("code");
+s15.text(10,260,"(ct@host)1> ct_master:run(\"dist_spec.cfg\").").addClass("code darkred bold");
+s15.text(10,300,"=== Master Logger process started ===").addClass("code");
+s15.text(10,340,"<0.41.0>").addClass("code");
+s15.text(10,380,"Node 'ct_node1@host' started successfully with callback").addClass("code");
+s15.text(10,420,"ct_slave").addClass("code");
+s15.text(10,460,"...snip...").addClass("code");
+s15.text(10,500,"=== Cookie ===").addClass("code");
+s15.text(10,540,"'ICRUDRQHZMHVQJXYGBST'").addClass("code");
+
+s15_g1 = s15.g(s15.text(510,40,"Start the master node").addClass("darkred"),
+               s15.path("M500,34 l-227,23").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+s15_g2 = s15.g(s15.text(760,220,"Start tests").addClass("darkred"),
+               s15.path("M750,210 l-84,25").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+
+var s15_counter=1
+s15.click( function() {
+  switch(s15_counter) {
+    case 1: {s15_g1.animate({"opacity":"1"}, 375, mina.linear); s15_counter++; break};
+    case 2: {s15_g1.animate({"opacity":"0"}, 250, mina.linear); s15_g2.animate({"opacity":"1"}, 375, mina.linear); s15_counter++; break};
+    }
+} );
+
+</script>
+</svg></section>
+<section id="_large_scale_testing_strong_example_strong_4"><h2>Large Scale Testing: <strong>example</strong></h2><div class="literalblock"><div class="content"><pre>=== Starting Tests ===
+Tests starting on: ['ct_node3@host', 'ct_node2@host',
+                    'ct_node1@host']
+=== Test Info ===
+Starting test(s) on 'ct_node3@host'...
+...snip...
+=== Test Info ===
+Test(s) on node 'ct_node1@ferd-macbook.local' finished.
+=== TEST RESULTS ===
+ct_node2@ferd-macbook.local_____________finished_ok
+ct_node1@ferd-macbook.local_____________finished_ok
+ct_node3@ferd-macbook.local_____________finished_ok
+...snip...
+ </pre></div></div></section>
+<section id="_large_scale_testing_strong_example_strong_5"><h2>Large Scale Testing: <strong>example</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/large_results.png" alt="Large Scale Testing: example" width="auto" height="auto"></div></div>
+<aside class="notes"><div class="paragraph"><p>Exercise 5 here.</p></div>
+<div class="paragraph"><p>Announce the advanced exercises?
+When the students are done, show the Exercise 8 (the distributed tests for the distributed database) as a demo.</p></div></aside></section>
+<section id="_common_test_2"><h2>Common Test</h2><div class="ulist"><ul><li><p>What is Common Test</p></li><li><p>Common Test Test Cases</p></li><li><p>Testing With State</p></li><li><p>Test Groups</p></li><li><p>Test Suites</p></li><li><p>Configuration for Tests</p></li><li><p>Test Specifications</p></li><li><p>Large Scale Testing</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Display the page number of the current slide
+  slideNumber: true,
+  // Push each slide change to the browser history
+  history: true,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: false,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, blond, default, moon, night, serif, simple, sky, solarized)
+  theme: Reveal.getQueryHash().theme || 'esl',
+  // Transition style (e.g., default, cube, page, concave, zoom, linear, fade, none)
+  transition: Reveal.getQueryHash().transition || 'linear',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., default, none, slide, concave, convex, zoom)
+  backgroundTransition: 'default',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      
+      { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});</script></body></html>
