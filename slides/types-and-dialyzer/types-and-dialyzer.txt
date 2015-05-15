@@ -183,28 +183,28 @@ var s1 = Snap("#dialyzer_success_typing_1");
 var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
 
-s1.text(300,35,"Most type systems").addClass("darkred bold").attr({"text-anchor":"middle"});
+s1.text(300,35,"Most type systems").addClass("darkred bold middle");
 s1_g1 = s1.circle(300,130,10).addClass("shape white")
 s1_g2 = s1.path("M300,130 420,330 Q300,410 180,330 M180,330 300,130").addClass("line").addClass("hide");
 s1_g4 = s1.path("M312,130 l0,220").addClass("line").attr({"marker-end":marker}).transform("t57 -17 r-31").addClass("hide");
 
-s1.text(700,35,"Success Types").addClass("darkred bold").attr({"text-anchor":"middle"});
+s1.text(700,35,"Success Types").addClass("darkred bold middle");
 s1_g5_1 = s1.path("M580,230 Q700,150 820,230 Q700,310 580,230 M580,230 700,430 820,230").addClass("line");
 s1_g7 = s1.path("M580,230 l0,215").addClass("line").attr({"marker-end":marker}).transform("t47 -7 r-31").addClass("hide");
 
-s1.text(150,150,"Assumes very").addClass("darkred").attr({"text-anchor":"middle"});
-s1.text(150,185,"narrow types").addClass("darkred").attr({"text-anchor":"middle"});
+s1.text(150,150,"Assumes very").addClass("darkred middle");
+s1.text(150,185,"narrow types").addClass("darkred middle");
 
-s1_g3 = s1.g(s1.text(300,420,"Expands the types as").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(300,455,"strictly as possible given").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(300,490,"new information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+s1_g3 = s1.g(s1.text(300,420,"Expands the types as").addClass("darkred middle"),
+             s1.text(300,455,"strictly as possible given").addClass("darkred middle"),
+             s1.text(300,490,"new information").addClass("darkred middle")).addClass("hide");
 
-s1_g5_2 = s1.text(850,120,"Assumes the types").addClass("darkred").attr({"text-anchor":"middle"});
-s1_g5_3 = s1.text(850,155,"are very generic").addClass("darkred").attr({"text-anchor":"middle"});
+s1_g5_2 = s1.text(850,120,"Assumes the types").addClass("darkred middle");
+s1_g5_3 = s1.text(850,155,"are very generic").addClass("darkred middle");
 
-s1_g6 = s1.g(s1.text(890,390,"Narrow down the").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(890,425,"types given new").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(890,460,"information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+s1_g6 = s1.g(s1.text(890,390,"Narrow down the").addClass("darkred middle"),
+             s1.text(890,425,"types given new").addClass("darkred middle"),
+             s1.text(890,460,"information").addClass("darkred middle")).addClass("hide");
 
 s1_g5 = s1.g(s1_g5_1, s1_g5_2, s1_g5_3).addClass("hide");
 
@@ -257,11 +257,11 @@ s2.text(20,490,"contract (card()) -> 'face' | 'number'").addClass("code");
 s2.text(20,530," done in 0m0.24s").addClass("code");
 s2.text(20,570,"done (warnings were emitted)").addClass("code");
 
-s2_g1 = s2.g(s2.text(600,160,"Only needs to be done once.").addClass("darkred").attr({"text-anchor":"middle"}),
-             s2.text(600,195,"Can take a long time").addClass("darkred").attr({"text-anchor":"middle"}),
+s2_g1 = s2.g(s2.text(600,160,"Only needs to be done once.").addClass("darkred middle"),
+             s2.text(600,195,"Can take a long time").addClass("darkred middle"),
              s2.path("M390,140 l-80,-75").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s2_g2 = s2.g(s2.text(810,290,"'rubies' is not a correct suit!").addClass("darkred").attr({"text-anchor":"middle"}),
+s2_g2 = s2.g(s2.text(810,290,"'rubies' is not a correct suit!").addClass("darkred middle"),
              s2.path("M810,300 l-110,125").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s2_anim1 = function() { s2_g1.animate({"opacity":"1"}, 375, mina.linear)};

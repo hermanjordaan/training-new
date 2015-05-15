@@ -336,12 +336,12 @@ s6.text(10,460,"    {ok, Pid} = apply(M,F,A),").addClass("code");
 s6.text(10,500,"    start_children(ChildSpecList, [{Pid, {M,F,A}} | Acc]).").addClass("code");
 
 s6.path("M925,80 C1025,310 865,210 660,215").addClass("line_darkred").attr({"marker-end":marker});
-s6.text(900,30,"reply to the").addClass("darkred").attr({"text-anchor":"middle"});
-s6.text(900,65,"spawner").addClass("darkred").attr({"text-anchor":"middle"});;
+s6.text(900,30,"reply to the").addClass("darkred middle");
+s6.text(900,65,"spawner").addClass("darkred middle");
 
 s6.path("M730,315 l-110,-50").addClass("line_darkred").attr({"marker-end":marker});
-s6.text(820,345,"initialise debug").addClass("darkred").attr({"text-anchor":"middle"});
-s6.text(820,380,"parameters").addClass("darkred").attr({"text-anchor":"middle"});
+s6.text(820,345,"initialise debug").addClass("darkred middle");
+s6.text(820,380,"parameters").addClass("darkred middle");
 
 </script>
 </svg>
@@ -365,8 +365,8 @@ s7.text(10,120,"    {'EXIT', Parent, Reason} ->").addClass("code");
 s7.text(10,160,"      terminate(ChildList, Reason);").addClass("code");
 s7_g1 = s7.g(s7.text(10,120,"    {'EXIT', Parent, Reason} ->").addClass("code darkred bold"),
              s7.text(10,160,"      terminate(ChildList, Reason);").addClass("code darkred bold"),
-             s7.text(890,80,"Handle parent").addClass("darkred").attr({"text-anchor":"middle"}),
-             s7.text(890,115,"termination").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.text(890,80,"Handle parent").addClass("darkred middle"),
+             s7.text(890,115,"termination").addClass("darkred middle"),
              s7.path("M780,90 l-200,25").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s7.text(10,200,"    {system, From, Message} ->").addClass("code");
@@ -375,8 +375,8 @@ s7.text(10,280,"                            ?MODULE,
 s7_g2 = s7.g(s7.text(10,200,"    {system, From, Message} ->").addClass("code darkred bold"),
              s7.text(10,240,"      sys:handle_system_msg(Message, From, Parent, ").addClass("code darkred bold"),
              s7.text(10,280,"                            ?MODULE, Debug, ChildList);").addClass("code darkred bold"),
-             s7.text(950,170,"Handle system").addClass("darkred").attr({"text-anchor":"middle"}),
-             s7.text(950,205,"messages").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.text(950,170,"Handle system").addClass("darkred middle"),
+             s7.text(950,205,"messages").addClass("darkred middle"),
              s7.path("M840,180 l-60,20").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s7.text(10,320,"    {'EXIT', Pid, Reason} ->").addClass("code");
@@ -386,8 +386,8 @@ s7.text(10,360,"      NewDebug=sys:handle_debug(Debug,fun ?MODULE:debug/3,
 
 s7_g3 = s7.g(s7.text(10,360,"      NewDebug=sys:handle_debug(Debug,fun ?MODULE:debug/3,").addClass("code darkred bold"),
              s7.text(10,400,"                          ?MODULE, {'EXIT', Pid, Reason}),").addClass("code darkred bold"),
-             s7.text(970,510,"Create debug").addClass("darkred").attr({"text-anchor":"middle"}),
-             s7.text(970,545,"events").addClass("darkred").attr({"text-anchor":"middle"}),
+             s7.text(970,510,"Create debug").addClass("darkred middle"),
+             s7.text(970,545,"events").addClass("darkred middle"),
              s7.path("M960,475 l-30,-55").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s7.text(10,480,"      loop(NewChildList, Parent, NewDebug);").addClass("code");
@@ -437,8 +437,8 @@ s8.text(10,310,"   io:format(Dev, \"~p event = ~p~n\", [Name, Event]).").addC
 
 s8_g2 = s8.g(s8.text(10,270,"debug(Dev, Event, Name) ->").addClass("code darkred bold"),
              s8.text(10,310,"   io:format(Dev, \"~p event = ~p~n\", [Name, Event]).").addClass("code darkred bold"),
-             s8.text(920,410,"Print debug").addClass("darkred").attr({"text-anchor":"middle"}),
-             s8.text(920,445,"events").addClass("darkred").attr({"text-anchor":"middle"}),
+             s8.text(920,410,"Print debug").addClass("darkred middle"),
+             s8.text(920,445,"events").addClass("darkred middle"),
              s8.path("M860,380 795,330").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s8.text(10,380,"terminate([], Reason) -> exit(Reason);").addClass("code");

@@ -82,9 +82,9 @@ s1.text(20,365,"   [IncludedApps]}]").addClass("code");
 s1.text(20,405,"}.").addClass("code");
 
 s1_g1 = s1.g(s1.path("M470,400 Q480,380 530,375 C600,370 600,280 540,260 Q510,250 505,230").addClass("line_darkred").attr({"marker-end":marker}),
-             s1.text(450,435,"permanent,").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(450,470,"transient,").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(450,505,"temporary or load").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+             s1.text(450,435,"permanent,").addClass("darkred middle"),
+             s1.text(450,470,"transient,").addClass("darkred middle"),
+             s1.text(450,505,"temporary or load").addClass("darkred middle")).addClass("hide");
 
 s1_g2 = s1.g(s1.path("M190,545 l0,-150").addClass("line_darkred").attr({"marker-end":marker}),
              s1.text(55,580,"{Name, Version} | Name").addClass("darkred")).addClass("hide");
@@ -220,11 +220,11 @@ var arrow_red = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("d
 var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
 s2.rect(10,10,400,100,15).addClass("shape darkred")
-s2.text(210,70,"Create a boot file").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s2.text(210,70,"Create a boot file").addClass("white middle").attr({"font-size":"24pt"});
 
 s2.path("M210,116 l0,42").addClass("line").attr({"marker-end":marker});
 s2.rect(10,170,400,100,15).addClass("shape darkred");
-s2.text(210,230,"Create a start script").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s2.text(210,230,"Create a start script").addClass("white middle").attr({"font-size":"24pt"});
 s2.text(510,195,"Create a shell script that boots the").addClass("darkred");
 s2.text(510,230,"node and initialises the shell").addClass("darkred");
 s2.text(510,265,"environment").addClass("darkred");
@@ -232,7 +232,7 @@ s2.path("M495,220 l-60,0").addClass("line_darkred").attr({"marker-end":marker_re
 
 s2_g1 = s2.g(s2.path("M210,276 l0,42").addClass("line").attr({"marker-end":marker}),
              s2.rect(10,330,400,100,15).addClass("shape darkred"),
-             s2.text(210,390,"systools:make_tar/1").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(210,390,"systools:make_tar/1").addClass("white middle").attr({"font-size":"24pt"}),
              s2.text(510,355,"Creates the target structure,").addClass("darkred"),
              s2.text(510,390,"including ERTS and applications,").addClass("darkred"),
              s2.text(510,425,"and tars it all up").addClass("darkred"),
@@ -240,8 +240,8 @@ s2_g1 = s2.g(s2.path("M210,276 l0,42").addClass("line").attr({"marker-end":marke
 
 s2_g2 = s2.g(s2.path("M210,436 l0,42").addClass("line").attr({"marker-end":marker}),
              s2.rect(10,490,400,100,15).addClass("shape darkred"),
-             s2.text(210,532,"Un-tar and install on").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
-             s2.text(210,568,"target").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s2.text(210,532,"Un-tar and install on").addClass("white middle").attr({"font-size":"24pt"}),
+             s2.text(210,568,"target").addClass("white middle").attr({"font-size":"24pt"}),
              s2.text(510,515,"Installation of the files might").addClass("darkred"),
              s2.text(510,550,"require fine tuning based on the").addClass("darkred"),
              s2.text(510,585,"tar file created.").addClass("darkred"),
@@ -318,7 +318,7 @@ var arrow_red = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("d
 var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
 s3.rect(10,10,400,100,15).addClass("shape darkred")
-s3.text(210,70,"Create an appup file").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"});
+s3.text(210,70,"Create an appup file").addClass("white middle").attr({"font-size":"24pt"});
 s3.text(510,35,"Defines how the application is").addClass("darkred");
 s3.text(510,70,"upgraded and downgraded with").addClass("darkred");
 s3.text(510,105,"high-level instructions.").addClass("darkred");
@@ -326,7 +326,7 @@ s3.path("M495,60 l-60,0").addClass("line_darkred").attr({"marker-end":marker_red
 
 s3_g1 = s3.g(s3.path("M210,116 l0,42").addClass("line").attr({"marker-end":marker}),
              s3.rect(10,170,400,100,15).addClass("shape darkred"),
-             s3.text(210,230,"systools:make_relup").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(210,230,"systools:make_relup").addClass("white middle").attr({"font-size":"24pt"}),
              s3.text(510,195,"Makes a relup file used by the").addClass("darkred"),
              s3.text(510,230,"release handler, describing how ").addClass("darkred"),
              s3.text(510,265,"the upgrade works").addClass("darkred"),
@@ -334,12 +334,12 @@ s3_g1 = s3.g(s3.path("M210,116 l0,42").addClass("line").attr({"marker-end":marke
 
 s3_g2 = s3.g(s3.path("M210,276 l0,42").addClass("line").attr({"marker-end":marker}),
              s3.rect(10,330,400,100,15).addClass("shape darkred"),
-             s3.text(210,390,"systools:make_tar/1").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"})).addClass("hide");
+             s3.text(210,390,"systools:make_tar/1").addClass("white middle").attr({"font-size":"24pt"})).addClass("hide");
 
 s3_g3 = s3.g(s3.path("M210,436 l0,42").addClass("line").attr({"marker-end":marker}),
              s3.rect(10,490,400,100,15).addClass("shape darkred"),
-             s3.text(210,532,"Un-tar and install on").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
-             s3.text(210,568,"target").addClass("white").attr({"text-anchor":"middle","font-size":"24pt"}),
+             s3.text(210,532,"Un-tar and install on").addClass("white middle").attr({"font-size":"24pt"}),
+             s3.text(210,568,"target").addClass("white middle").attr({"font-size":"24pt"}),
              s3.text(510,495,"Functionality is in place to unpack, ").addClass("darkred"),
              s3.text(510,530,"install and make the new release ").addClass("darkred"),
              s3.text(510,565,"permanent, or roll back to the ").addClass("darkred"),

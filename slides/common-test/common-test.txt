@@ -92,8 +92,8 @@ s1.text(10,360,"    1 = 1.").addClass("code");
 s1.text(10,440,"test2(_Config) ->").addClass("code");
 s1.text(10,480,"    A = 0, 1/A.").addClass("code");
 
-s1_g1 = s1.g(s1.text(610,270,"Names of").addClass("darkred").attr({"text-anchor":"middle"}),
-             s1.text(610,305,"tests to run").addClass("darkred").attr({"text-anchor":"middle"}),
+s1_g1 = s1.g(s1.text(610,270,"Names of").addClass("darkred middle"),
+             s1.text(610,305,"tests to run").addClass("darkred middle"),
              s1.path("M520,275 l-110,-25").addClass("line_darkred").attr({"marker-end":marker}),
              s1.path("M520,275 l-235,-22").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
@@ -142,8 +142,8 @@ s2.text(10,400,"Testing ex.ct: TEST COMPLETE, 1 ok, 1 failed of 2 test cases").a
 s2.text(10,440,"Updating /Users/ferd/ct/index.html... done").addClass("code");
 s2.text(10,480,"Updating /Users/ferd/ct/all_runs.html... done").addClass("code");
 
-s2_g1 = s2.g(s2.text(735,45,"Erlang shell form:").addClass("darkred").attr({"text-anchor":"middle"}),
-             s2.text(735,80,"ct:run_test([{suite, Suite}])").addClass("darkred").attr({"text-anchor":"middle"}),
+s2_g1 = s2.g(s2.text(735,45,"Erlang shell form:").addClass("darkred middle"),
+             s2.text(735,80,"ct:run_test([{suite, Suite}])").addClass("darkred middle"),
              s2.path("M540,70 l-85,-15").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s2.click( function() {s2_g1.animate({"opacity":"1"}, 375, mina.linear)})

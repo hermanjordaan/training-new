@@ -375,57 +375,57 @@ s9.click( function() {
 <section id="_trace_tool_builder_extended_strong_example_strong_2"><h2>Trace Tool Builder Extended: <strong>example</strong></h2><svg id="trace_tool_builder_extended_example_2" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s9 = Snap("#trace_tool_builder_extended_example_2");
+var s10 = Snap("#trace_tool_builder_extended_example_2");
 
-s9.image("images/ttbe_processes-tab.png",170,100);
-s9_g1 = s9.image("images/ttbe_processes-tab-select.png",245,245).addClass("hide");
+s10.image("images/ttbe_processes-tab.png",170,100);
+s10_g1 = s10.image("images/ttbe_processes-tab-select.png",245,245).addClass("hide");
 
-s9.text(210,45,"Set trace flags").addClass("darkred middle");
-s9.path("M210,55 l73,147").addClass("line_darkred").attr({"stroke-width":"2px"});
-s9.rect(165,202,560,27,15).addClass("line_darkred").attr({"stroke-width":"2px"});
+s10.text(210,45,"Set trace flags").addClass("darkred middle");
+s10.path("M210,55 l73,147").addClass("line_darkred").attr({"stroke-width":"2px"});
+s10.rect(165,202,560,27,15).addClass("line_darkred").attr({"stroke-width":"2px"});
 
-s9_g2 = s9.g(s9.path("M210,55 l425,295").addClass("line_darkred").attr({"stroke-width":"2px"}),
-             s9.rect(615,350,285,132,15).addClass("line_darkred").attr({"stroke-width":"2px"})).addClass("hide");
+s10_g2 = s10.g(s10.path("M210,55 l425,295").addClass("line_darkred").attr({"stroke-width":"2px"}),
+             s10.rect(615,350,285,132,15).addClass("line_darkred").attr({"stroke-width":"2px"})).addClass("hide");
 
-s9_anim1 = function() {s9_g1.animate({"opacity":"1"}, 250, mina.linear, s9_anim2)};
-s9_anim2 = function() {setTimeout(function() {s9_g2.animate({"opacity":"1"}, 250, mina.linear)}, 375)};
+s10_anim1 = function() {s10_g1.animate({"opacity":"1"}, 250, mina.linear, s10_anim2)};
+s10_anim2 = function() {setTimeout(function() {s10_g2.animate({"opacity":"1"}, 250, mina.linear)}, 375)};
 
-s9.click(function() {s9_anim1()});
+s10.click(function() {s10_anim1()});
 
 </script>
 </svg></section>
 <section id="_trace_tool_builder_extended_strong_example_strong_3"><h2>Trace Tool Builder Extended: <strong>example</strong></h2><svg id="trace_tool_builder_extended_example_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s10 = Snap("#trace_tool_builder_extended_example_3");
+var s11 = Snap("#trace_tool_builder_extended_example_3");
 
-var arrow = s10.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var arrow = s11.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s10.image("images/ttbe_functions-tab.png",200,140);
-s10_g3 = s10.image("images/ttbe_functions-tab-stop.png",200,140).addClass("hide");
+s11.image("images/ttbe_functions-tab.png",200,140);
+s11_g3 = s11.image("images/ttbe_functions-tab-stop.png",200,140).addClass("hide");
 
-s10_g1 = s10.g(s10.text(230,45,"Add functions to").addClass("darkred middle"),
-               s10.text(230,80,"the pattern list").addClass("darkred middle"),
-               s10.path("M230,90 l30,137").addClass("line_darkred").attr({"marker-end":marker}));
+s11_g1 = s11.g(s11.text(230,45,"Add functions to").addClass("darkred middle"),
+               s11.text(230,80,"the pattern list").addClass("darkred middle"),
+               s11.path("M230,90 l30,137").addClass("line_darkred").attr({"marker-end":marker}));
 
-s10_g2 = s10.g(s10.text(630,95,"Start the tracing node").addClass("darkred middle"),
-               s10.path("M630,105 l209,71").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s11_g2 = s11.g(s11.text(630,95,"Start the tracing node").addClass("darkred middle"),
+               s11.path("M630,105 l209,71").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s10_g4 = s10.g(s10.text(450,450,"Run the code, stop").addClass("darkred middle"),
-               s10.text(450,485,"the node when done").addClass("darkred middle"),
-               s10.path("M600,455 l243,-262").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s11_g4 = s11.g(s11.text(450,450,"Run the code, stop").addClass("darkred middle"),
+               s11.text(450,485,"the node when done").addClass("darkred middle"),
+               s11.path("M600,455 l243,-262").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s10_anim1 = function() {s10_g1.animate({"opacity":"0"}, 250, mina.linear); s10_g2.animate({"opacity":"1"}, 375, mina.linear)};
-s10_anim2 = function() {s10_g2.animate({"opacity":"0"}, 250, mina.linear); s10_g3.animate({"opacity":"1"}, 300, mina.linear, s10_anim3)};
-s10_anim3 = function() {s10_g4.animate({"opacity":"1"}, 375, mina.linear)};
+s11_anim1 = function() {s11_g1.animate({"opacity":"0"}, 250, mina.linear); s11_g2.animate({"opacity":"1"}, 375, mina.linear)};
+s11_anim2 = function() {s11_g2.animate({"opacity":"0"}, 250, mina.linear); s11_g3.animate({"opacity":"1"}, 300, mina.linear, s11_anim3)};
+s11_anim3 = function() {s11_g4.animate({"opacity":"1"}, 375, mina.linear)};
 
-var s10_counter=1
-s10.click( function() {
-  switch(s10_counter) {
-    case 1: {s10_anim1(); s10_counter++; break};
-    case 2: {s10_anim2(); s10_counter++; break};
-    case 3: {s10_anim3(); s10_counter++; break};
+var s11_counter=1
+s11.click( function() {
+  switch(s11_counter) {
+    case 1: {s11_anim1(); s11_counter++; break};
+    case 2: {s11_anim2(); s11_counter++; break};
+    case 3: {s11_anim3(); s11_counter++; break};
     }
 } );
 
@@ -434,23 +434,23 @@ s10.click( function() {
 <section id="_trace_tool_builder_extended_strong_example_strong_4"><h2>Trace Tool Builder Extended: <strong>example</strong></h2><svg id="trace_tool_builder_extended_example_4" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s11 = Snap("#trace_tool_builder_extended_example_4");
+var s12 = Snap("#trace_tool_builder_extended_example_4");
 
-var arrow = s11.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var arrow = s12.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s11.image("images/ttbe_trace-browser.png",145,110);
+s12.image("images/ttbe_trace-browser.png",145,110);
 
-s11_g1 = s11.g(s11.text(200,40,"Select the tracing").addClass("darkred middle"),
-               s11.text(200,75,"session").addClass("darkred middle"),
-               s11.path("M260,52 l35,154").addClass("line_darkred").attr({"marker-end":marker}));
+s12_g1 = s12.g(s12.text(200,40,"Select the tracing").addClass("darkred middle"),
+               s12.text(200,75,"session").addClass("darkred middle"),
+               s12.path("M260,52 l35,154").addClass("line_darkred").attr({"marker-end":marker}));
 
-s11_g2 = s11.g(s11.image("images/ttbe_trace-tree.png",280,225).addClass(""),
-               s11.text(75,420,"Trace logs").addClass("darkred"),
-               s11.path("M230,410 l45,-20").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s12_g2 = s12.g(s12.image("images/ttbe_trace-tree.png",280,225).addClass(""),
+               s12.text(75,420,"Trace logs").addClass("darkred"),
+               s12.path("M230,410 l45,-20").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s11.click( function() { s11_g1.animate({"opacity":"0"}, 250, mina.linear);
-                        s11_g2.animate({"opacity":"1"}, 375, mina.linear)
+s12.click( function() { s12_g1.animate({"opacity":"0"}, 250, mina.linear);
+                        s12_g2.animate({"opacity":"1"}, 375, mina.linear)
                       });
 
 </script>
@@ -471,37 +471,37 @@ peter,2010-10-12 16:01:03:0000000,success
 <section id="_log_analysis_with_exago_strong_models_strong"><h2>Log Analysis with Exago: <strong>models</strong></h2><svg id="log_analysis_with_exago_models_1" style="width:1100px; height:500px;" viewBox="0 0 1100 500" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s12 = Snap("#log_analysis_with_exago_models_1");
+var s13 = Snap("#log_analysis_with_exago_models_1");
 
-var arrow = s12.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var arrow = s13.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s12.image("images/exago_models.png",65,50,1741/1.8,693/1.8);
+s13.image("images/exago_models.png",65,50,1741/1.8,693/1.8);
 
-s12_g1 = s12.g(s12.text(935,30,"Successful logins").addClass("darkred middle"),
-              s12.path("M935,40 l-165,40").addClass("line_darkred").attr({"marker-end":marker}),
-              s12.path("M935,40 l-170,64").addClass("line_darkred").attr({"marker-end":marker}),
-              s12.path("M935,40 l-160,87").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s13_g1 = s13.g(s13.text(935,30,"Successful logins").addClass("darkred middle"),
+              s13.path("M935,40 l-165,40").addClass("line_darkred").attr({"marker-end":marker}),
+              s13.path("M935,40 l-170,64").addClass("line_darkred").attr({"marker-end":marker}),
+              s13.path("M935,40 l-160,87").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s12_g2 = s12.g(s12.text(365,50,"Log off").addClass("darkred middle"),
-              s12.path("M365,60 l172,364").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s13_g2 = s13.g(s13.text(365,50,"Log off").addClass("darkred middle"),
+              s13.path("M365,60 l172,364").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s12_g3 = s12.g(s12.text(75,420,"login failures").addClass("darkred"),
-              s12.path("M275,415 l-10,-92").addClass("line_darkred").attr({"marker-end":marker}),
-              s12.path("M275,415 l150,-93").addClass("line_darkred").attr({"marker-end":marker}),
-              s12.path("M275,415 l340,-98").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s13_g3 = s13.g(s13.text(75,420,"login failures").addClass("darkred"),
+              s13.path("M275,415 l-10,-92").addClass("line_darkred").attr({"marker-end":marker}),
+              s13.path("M275,415 l150,-93").addClass("line_darkred").attr({"marker-end":marker}),
+              s13.path("M275,415 l340,-98").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s12_g4 = s12.g(s12.text(835,430,"Denied Attempts").addClass("darkred"),
-              s12.path("M915,400 l-68,-68").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s13_g4 = s13.g(s13.text(835,430,"Denied Attempts").addClass("darkred"),
+              s13.path("M915,400 l-68,-68").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 
-var s12_counter=1
-s12.click( function() {
-  switch(s12_counter) {
-    case 1: {s12_g1.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
-    case 2: {s12_g1.animate({"opacity":"0"}, 250, mina.linear); s12_g2.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
-    case 3: {s12_g2.animate({"opacity":"0"}, 250, mina.linear); s12_g3.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
-    case 4: {s12_g3.animate({"opacity":"0"}, 250, mina.linear); s12_g4.animate({"opacity":"1"}, 375, mina.linear); s12_counter++; break};
+var s13_counter=1
+s13.click( function() {
+  switch(s13_counter) {
+    case 1: {s13_g1.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
+    case 2: {s13_g1.animate({"opacity":"0"}, 250, mina.linear); s13_g2.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
+    case 3: {s13_g2.animate({"opacity":"0"}, 250, mina.linear); s13_g3.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
+    case 4: {s13_g3.animate({"opacity":"0"}, 250, mina.linear); s13_g4.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
     }
 } );
 
@@ -512,37 +512,37 @@ s12.click( function() {
 <section id="_log_analysis_with_exago_strong_models_strong_2"><h2>Log Analysis with Exago: <strong>models</strong></h2><svg id="log_analysis_with_exago_models_2" style="width:1100px; height:600px;" viewBox="0 0 1100 600" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s13 = Snap("#log_analysis_with_exago_models_2");
+var s14 = Snap("#log_analysis_with_exago_models_2");
 
-var arrow = s13.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var arrow = s14.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s13.text(10,40,"-module(sm).").addClass("code");
-s13.text(10,80,"-export([state_machine/0, row_format/0, run/0, run/1]).").addClass("code");
-s13.text(10,120,"-include(\"src/exago_state_machine.hrl\").").addClass("code");
-s13.text(10,160,"").addClass("code");
-s13.text(10,200,"state_machine() ->").addClass("code");
-s13.text(10,240,"    #state_machine{").addClass("code");
-s13.text(10,280,"       states = [#state{number=0, name=\"Logged Off\"},").addClass("code");
-s13.text(10,320,"                 #state{number=1, name=\"Fail 1\"},").addClass("code");
-s13.text(10,360,"                 #state{number=2, name=\"Fail 2\"},").addClass("code");
-s13.text(10,400,"                 #state{number=3, name=\"Locked\"},").addClass("code");
-s13.text(10,440,"                 #state{number=4, name=\"Logged On\"}],").addClass("code");
-s13.text(10,480,"").addClass("code");
-s13.text(10,520,"    ...").addClass("code");
+s14.text(10,40,"-module(sm).").addClass("code");
+s14.text(10,80,"-export([state_machine/0, row_format/0, run/0, run/1]).").addClass("code");
+s14.text(10,120,"-include(\"src/exago_state_machine.hrl\").").addClass("code");
+s14.text(10,160,"").addClass("code");
+s14.text(10,200,"state_machine() ->").addClass("code");
+s14.text(10,240,"    #state_machine{").addClass("code");
+s14.text(10,280,"       states = [#state{number=0, name=\"Logged Off\"},").addClass("code");
+s14.text(10,320,"                 #state{number=1, name=\"Fail 1\"},").addClass("code");
+s14.text(10,360,"                 #state{number=2, name=\"Fail 2\"},").addClass("code");
+s14.text(10,400,"                 #state{number=3, name=\"Locked\"},").addClass("code");
+s14.text(10,440,"                 #state{number=4, name=\"Logged On\"}],").addClass("code");
+s14.text(10,480,"").addClass("code");
+s14.text(10,520,"    ...").addClass("code");
 
-s13_g1 = s13.g(s13.text(760,190,"Contains all state").addClass("darkred middle"),
-               s13.text(760,225,"machine records").addClass("darkred middle"),
-               s13.path("M635,200 l-95,-64").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s14_g1 = s14.g(s14.text(760,190,"Contains all state").addClass("darkred middle"),
+               s14.text(760,225,"machine records").addClass("darkred middle"),
+               s14.path("M635,200 l-95,-64").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s13_g2 = s13.g(s13.text(20,410,"Possible states").addClass("darkred"),
-                s13.path("M225,385 l65,-35").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s14_g2 = s14.g(s14.text(20,410,"Possible states").addClass("darkred"),
+                s14.path("M225,385 l65,-35").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-var s13_counter=1
-s13.click( function() {
-  switch(s13_counter) {
-    case 1: {s13_g1.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
-    case 2: {s13_g1.animate({"opacity":"0"}, 250, mina.linear); s13_g2.animate({"opacity":"1"}, 375, mina.linear); s13_counter++; break};
+var s14_counter=1
+s14.click( function() {
+  switch(s14_counter) {
+    case 1: {s14_g1.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+    case 2: {s14_g1.animate({"opacity":"0"}, 250, mina.linear); s14_g2.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
     }
 } );
 
@@ -551,41 +551,41 @@ s13.click( function() {
 <section id="_log_analysis_with_exago_strong_models_strong_3"><h2>Log Analysis with Exago: <strong>models</strong></h2><svg id="log_analysis_with_exago_models_3" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s14 = Snap("#log_analysis_with_exago_models_3");
+var s15 = Snap("#log_analysis_with_exago_models_3");
 
-var arrow = s14.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var arrow = s15.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s14.text(10,60,"...").addClass("code");
-s14.text(10,100,"state_machine() ->").addClass("code");
-s14.text(10,140,"    #state_machine{").addClass("code");
-s14.text(10,180,"...").addClass("code");
-s14.text(10,220,"transitions = [#transition{from=0, to=1, input=\"fail\"},").addClass("code");
-s14.text(10,260,"               #transition{from=1, to=2, input=\"fail\"},").addClass("code");
-s14.text(10,300,"               #transition{from=2, to=3, input=\"fail\"},").addClass("code");
-s14.text(10,340,"               #transition{from=3, to=3, input=\"lock\"},").addClass("code");
-s14.text(10,380,"               #transition{from=0, to=4, input=\"success\"},").addClass("code");
-s14.text(10,420,"               #transition{from=1, to=4, input=\"success\"},").addClass("code");
-s14.text(10,460,"               #transition{from=2, to=4, input=\"success\"},").addClass("code");
-s14.text(10,500,"               #transition{from=4, to=0, ").addClass("code");
-s14.text(10,540,"                           input=\"sign off\"}],").addClass("code");
-s14.text(10,580,"...").addClass("code");
+s15.text(10,60,"...").addClass("code");
+s15.text(10,100,"state_machine() ->").addClass("code");
+s15.text(10,140,"    #state_machine{").addClass("code");
+s15.text(10,180,"...").addClass("code");
+s15.text(10,220,"transitions = [#transition{from=0, to=1, input=\"fail\"},").addClass("code");
+s15.text(10,260,"               #transition{from=1, to=2, input=\"fail\"},").addClass("code");
+s15.text(10,300,"               #transition{from=2, to=3, input=\"fail\"},").addClass("code");
+s15.text(10,340,"               #transition{from=3, to=3, input=\"lock\"},").addClass("code");
+s15.text(10,380,"               #transition{from=0, to=4, input=\"success\"},").addClass("code");
+s15.text(10,420,"               #transition{from=1, to=4, input=\"success\"},").addClass("code");
+s15.text(10,460,"               #transition{from=2, to=4, input=\"success\"},").addClass("code");
+s15.text(10,500,"               #transition{from=4, to=0, ").addClass("code");
+s15.text(10,540,"                           input=\"sign off\"}],").addClass("code");
+s15.text(10,580,"...").addClass("code");
 
-s14_g1 = s14.g(s14.text(500,30,"When in state").addClass("darkred middle"),
-               s14.path("M500,40 l30,145").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s15_g1 = s15.g(s15.text(500,30,"When in state").addClass("darkred middle"),
+               s15.path("M500,40 l30,145").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s14_g2 = s14.g(s14.text(885,65,"and encounters").addClass("darkred middle"),
-               s14.path("M885,75 l-23,110").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s15_g2 = s15.g(s15.text(885,65,"and encounters").addClass("darkred middle"),
+               s15.path("M885,75 l-23,110").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s14_g3 = s14.g(s14.text(665,110,"transitions to").addClass("darkred middle"),
-               s14.path("M665,125 l5,60").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s15_g3 = s15.g(s15.text(665,110,"transitions to").addClass("darkred middle"),
+               s15.path("M665,125 l5,60").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-var s14_counter=1
-s14.click( function() {
-  switch(s14_counter) {
-    case 1: {s14_g1.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
-    case 2: {s14_g1.animate({"opacity":"0"}, 250, mina.linear); s14_g2.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
-    case 3: {s14_g2.animate({"opacity":"0"}, 250, mina.linear); s14_g3.animate({"opacity":"1"}, 375, mina.linear); s14_counter++; break};
+var s15_counter=1
+s15.click( function() {
+  switch(s15_counter) {
+    case 1: {s15_g1.animate({"opacity":"1"}, 375, mina.linear); s15_counter++; break};
+    case 2: {s15_g1.animate({"opacity":"0"}, 250, mina.linear); s15_g2.animate({"opacity":"1"}, 375, mina.linear); s15_counter++; break};
+    case 3: {s15_g2.animate({"opacity":"0"}, 250, mina.linear); s15_g3.animate({"opacity":"1"}, 375, mina.linear); s15_counter++; break};
     }
 } );
 
@@ -614,8 +614,10 @@ state_machine() -&gt;
 <div class="ulist"><ul><li><p>Parsers are placed in the order of the items they replace in the CSV logs</p></li><li><p>Custom parser can be written</p></li><li><p>Other available parsers for fields include annotations, state objects, ignoring a column, foreign keys, etc.</p></li></ul></div></section>
 <section id="_log_analysis_with_exago_strong_log_parsing_strong_2"><h2>Log Analysis with Exago: <strong>log parsing</strong></h2><div class="literalblock"><div class="content"><pre>run(LogFile) -&gt;
     InputRows    = exago_parser:parse_csv(LogFile),
-    EventSource  = exago_event:new_source("tutorial",                        InputRows, row_format()),
-    exago_state_machine:analyse_event_source(EventSource,                        state_machine()).
+    EventSource  = exago_event:new_source("tutorial",
+                      InputRows, row_format()),
+    exago_state_machine:analyse_event_source(EventSource,
+                      state_machine()).
  
  </pre></div></div>
 <div class="ulist"><ul><li><p>Loads and run the code</p></li><li><p>Returns a data structure that contains the overview of what went right or wrong.</p></li></ul></div>
@@ -661,7 +663,8 @@ ok</pre></div></div>
 <div class="ulist"><ul><li><p><strong>meck:expect(Mod, FunName, Fun)</strong> creates a new function on the mock objects</p></li><li><p>Many functions of any arity can be attached</p></li><li><p>Functions can be removed from the mock by using <strong>meck:delete(Mod, FunName, Arity)</strong></p></li></ul></div></section>
 <section id="_mocking_with_meck_4"><h2>Mocking with Meck</h2><div class="left w_600">
 <div class="pre">7> meck:expect(fake, do,
-fun('A') -> upper end), 
+fun('A') -> upper end),
+
 fake:do('A').
 upper
 8> meck:expect(fake,y, fun() ->
@@ -704,49 +707,49 @@ false
 <section id="_type_checking_erlang_strong_success_typing_strong"><h2>Type Checking Erlang: <strong>success typing</strong></h2><svg id="type_checking_erlang_success_typing_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s15 = Snap("#type_checking_erlang_success_typing_1");
+var s16 = Snap("#type_checking_erlang_success_typing_1");
 
-var arrow = s15.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var arrow = s16.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"5"});
 
-s15.text(300,35,"Most type systems").addClass("darkred bold").attr({"text-anchor":"middle"});
-s15_g1 = s15.circle(300,130,10).addClass("shape white")
-s15_g2 = s15.path("M300,130 420,330 Q300,410 180,330 M180,330 300,130").addClass("line").addClass("hide");
-s15_g4 = s15.path("M312,130 l0,220").addClass("line").attr({"marker-end":marker}).transform("t57 -17 r-31").addClass("hide");
+s16.text(300,35,"Most type systems").addClass("darkred bold middle");
+s16_g1 = s16.circle(300,130,10).addClass("shape white")
+s16_g2 = s16.path("M300,130 420,330 Q300,410 180,330 M180,330 300,130").addClass("line").addClass("hide");
+s16_g4 = s16.path("M312,130 l0,220").addClass("line").attr({"marker-end":marker}).transform("t57 -17 r-31").addClass("hide");
 
-s15.text(700,35,"Success Types").addClass("darkred bold").attr({"text-anchor":"middle"});
-s15_g5_1 = s15.path("M580,230 Q700,150 820,230 Q700,310 580,230 M580,230 700,430 820,230").addClass("line");
-s15_g7 = s15.path("M580,230 l0,215").addClass("line").attr({"marker-end":marker}).transform("t47 -7 r-31").addClass("hide");
+s16.text(700,35,"Success Types").addClass("darkred bold middle");
+s16_g5_1 = s16.path("M580,230 Q700,150 820,230 Q700,310 580,230 M580,230 700,430 820,230").addClass("line");
+s16_g7 = s16.path("M580,230 l0,215").addClass("line").attr({"marker-end":marker}).transform("t47 -7 r-31").addClass("hide");
 
-s15.text(150,150,"Assumes very").addClass("darkred").attr({"text-anchor":"middle"});
-s15.text(150,185,"narrow types").addClass("darkred").attr({"text-anchor":"middle"});
+s16.text(150,150,"Assumes very").addClass("darkred middle");
+s16.text(150,185,"narrow types").addClass("darkred middle");
 
-s15_g3 = s15.g(s15.text(300,420,"Expands the types as").addClass("darkred").attr({"text-anchor":"middle"}),
-             s15.text(300,455,"strictly as possible given").addClass("darkred").attr({"text-anchor":"middle"}),
-             s15.text(300,490,"new information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+s16_g3 = s16.g(s16.text(300,420,"Expands the types as").addClass("darkred middle"),
+             s16.text(300,455,"strictly as possible given").addClass("darkred middle"),
+             s16.text(300,490,"new information").addClass("darkred middle")).addClass("hide");
 
-s15_g5_2 = s15.text(850,120,"Assumes the types").addClass("darkred").attr({"text-anchor":"middle"});
-s15_g5_3 = s15.text(850,155,"are very generic").addClass("darkred").attr({"text-anchor":"middle"});
+s16_g5_2 = s16.text(850,120,"Assumes the types").addClass("darkred middle");
+s16_g5_3 = s16.text(850,155,"are very generic").addClass("darkred middle");
 
-s15_g6 = s15.g(s15.text(890,390,"Narrow down the").addClass("darkred").attr({"text-anchor":"middle"}),
-             s15.text(890,425,"types given new").addClass("darkred").attr({"text-anchor":"middle"}),
-             s15.text(890,460,"information").addClass("darkred").attr({"text-anchor":"middle"})).addClass("hide");
+s16_g6 = s16.g(s16.text(890,390,"Narrow down the").addClass("darkred middle"),
+             s16.text(890,425,"types given new").addClass("darkred middle"),
+             s16.text(890,460,"information").addClass("darkred middle")).addClass("hide");
 
-s15_g5 = s15.g(s15_g5_1, s15_g5_2, s15_g5_3).addClass("hide");
+s16_g5 = s16.g(s16_g5_1, s16_g5_2, s16_g5_3).addClass("hide");
 
-s15_anim1 = function() { s15_g1.animate({"opacity":"0"}, 250, mina.linear);  s15_g2.animate({"opacity":"1"}, 250, mina.linear, s15_anim2) }
-s15_anim2 = function() { s15_g3.animate({"opacity":"1"}, 250, mina.linear, s15_anim3); }
-s15_anim3 = function() { s15_g3.animate({"opacity":"1"}, 250, mina.linear); s15_g4.animate({"opacity":"1"}, 250, mina.linear); }
+s16_anim1 = function() { s16_g1.animate({"opacity":"0"}, 250, mina.linear);  s16_g2.animate({"opacity":"1"}, 250, mina.linear, s16_anim2) }
+s16_anim2 = function() { s16_g3.animate({"opacity":"1"}, 250, mina.linear, s16_anim3); }
+s16_anim3 = function() { s16_g3.animate({"opacity":"1"}, 250, mina.linear); s16_g4.animate({"opacity":"1"}, 250, mina.linear); }
 
-s15_anim5 = function() { s15_g5.animate({"opacity":"1"}, 250, mina.linear, s15_anim6); }
-s15_anim6 = function() { s15_g6.animate({"opacity":"1"}, 250, mina.linear, s15_anim7); }
-s15_anim7 = function() { s15_g7.animate({"opacity":"1"}, 250, mina.linear); }
+s16_anim5 = function() { s16_g5.animate({"opacity":"1"}, 250, mina.linear, s16_anim6); }
+s16_anim6 = function() { s16_g6.animate({"opacity":"1"}, 250, mina.linear, s16_anim7); }
+s16_anim7 = function() { s16_g7.animate({"opacity":"1"}, 250, mina.linear); }
 
-var s15_counter=1
-s15.click( function() {
-  switch(s15_counter) {
-    case 1: {s15_anim1(); s15_counter++; break};
-    case 2: {s15_anim5(); s15_counter++; break};
+var s16_counter=1
+s16.click( function() {
+  switch(s16_counter) {
+    case 1: {s16_anim1(); s16_counter++; break};
+    case 2: {s16_anim5(); s16_counter++; break};
     }
 } );
 
@@ -775,8 +778,10 @@ s15.click( function() {
 <div class="ulist"><ul><li><p>Types can be polymorphic. The type submitted to <em>tasks(A)</em> has to be respected in both lists. The exact type of <em>A</em> is decided when using the <strong>tasks/1</strong> type in a function.</p></li><li><p>Types can be declared as <strong>opaque</strong>. Their structure is meant to be invisible to modules outside the one where they are defined.</p></li><li><p>Types can be exported with <strong>-export_type([Type])</strong>. Other modules can refer to them in declarations by using <strong>Mod:Type()</strong>.</p></li></ul></div></section>
 <section id="_type_checking_erlang_strong_function_specs_strong"><h2>Type Checking Erlang: <strong>function specs</strong></h2><div class="literalblock"><div class="content"><pre>-spec push(tasks(A), A) -&gt; tasks(A).
 push({fifo, In, Out}, X) -&gt; {fifo, [X|In], Out}.
- -spec id(X) -&gt; X when X :: tuple().
--spec convert(atom())   -&gt; string() 
+
+-spec id(X) -&gt; X when X :: tuple().
+-spec convert(atom())   -&gt; string()
+
       ;      (string()) -&gt; atom().
  </pre></div></div>
 <div class="ulist"><ul><li><p>The function <strong>push/2</strong> takes a queue of tasks of type <strong>A</strong> with a task of type <strong>A</strong> and returns a new queue of tasks.</p></li><li><p><strong>id/1</strong> only accepts tuples</p></li><li><p><strong>convert/1</strong> should return different types depending on the input it received in the first place</p></li></ul></div></section>
@@ -796,44 +801,44 @@ main() -&gt;
 <section id="_type_checking_erlang_strong_using_dialyzer_strong"><h2>Type Checking Erlang: <strong>using Dialyzer</strong></h2><svg id="type_checking_erlang_using_dialyzer_1" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s16 = Snap("#type_checking_erlang_using_dialyzer_1");
+var s17 = Snap("#type_checking_erlang_using_dialyzer_1");
 
-var arrow = s16.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
+var arrow = s17.polygon([-2,0, -4,4, 4,0, -4,-4]).transform('r0 s1.125').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s16.text(10,40,"$ dialyzer --build_plt --apps erts kernel stdlib").addClass("code darkred bold");
-s16.text(10,80,"  Compiling some key modules to native code... done in").addClass("code");
-s16.text(10,120,"0m30.74s").addClass("code");
-s16.text(10,160,"  Creating PLT...").addClass("code");
-s16.text(10,200,"...").addClass("code");
-s16.text(10,240,"").addClass("code");
-s16.text(10,280,"$ dialyzer cards.erl").addClass("code darkred bold");
-s16.text(10,320,"  Checking whether the PLT is up to date...").addClass("code");
-s16.text(10,360,"  Proceeding with analysis...").addClass("code");
-s16.text(10,400,"cards.erl:12: Function main/0 has no local return").addClass("code");
-s16.text(10,440,"cards.erl:15: The call cards:kind({'rubies',4}) breaks the").addClass("code");
-s16.text(10,480,"contract (card()) -> 'face' | 'number'").addClass("code");
-s16.text(10,520," done in 0m0.24s").addClass("code");
-s16.text(10,560,"done (warnings were emitted)").addClass("code");
+s17.text(10,40,"$ dialyzer --build_plt --apps erts kernel stdlib").addClass("code darkred bold");
+s17.text(10,80,"  Compiling some key modules to native code... done in").addClass("code");
+s17.text(10,120,"0m30.74s").addClass("code");
+s17.text(10,160,"  Creating PLT...").addClass("code");
+s17.text(10,200,"...").addClass("code");
+s17.text(10,240,"").addClass("code");
+s17.text(10,280,"$ dialyzer cards.erl").addClass("code darkred bold");
+s17.text(10,320,"  Checking whether the PLT is up to date...").addClass("code");
+s17.text(10,360,"  Proceeding with analysis...").addClass("code");
+s17.text(10,400,"cards.erl:12: Function main/0 has no local return").addClass("code");
+s17.text(10,440,"cards.erl:15: The call cards:kind({'rubies',4}) breaks the").addClass("code");
+s17.text(10,480,"contract (card()) -> 'face' | 'number'").addClass("code");
+s17.text(10,520," done in 0m0.24s").addClass("code");
+s17.text(10,560,"done (warnings were emitted)").addClass("code");
 
-s16_g1 = s16.g(s16.text(600,140,"Only needs to be done once.").addClass("darkred middle"),
-               s16.text(600,175,"Can take a long time").addClass("darkred middle"),
-               s16.path("M390,120 l-90,-70").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s17_g1 = s17.g(s17.text(600,140,"Only needs to be done once.").addClass("darkred middle"),
+               s17.text(600,175,"Can take a long time").addClass("darkred middle"),
+               s17.path("M390,120 l-90,-70").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s16_g2 = s16.g(s16.text(805,275,"'rubies' is not a correct suit!").addClass("darkred middle"),
-               s16.path("M805,285 l-112,128").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
+s17_g2 = s17.g(s17.text(805,275,"'rubies' is not a correct suit!").addClass("darkred middle"),
+               s17.path("M805,285 l-112,128").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 /*
-s16.click( function() { s16_g1.animate({"opacity":"0"}, 250, mina.linear);
-                        s16_g2.animate({"opacity":"1"}, 375, mina.linear)
+s17.click( function() { s17_g1.animate({"opacity":"0"}, 250, mina.linear);
+                        s17_g2.animate({"opacity":"1"}, 375, mina.linear)
                       });
 */
 
-var s16_counter=1
-s16.click( function() {
-  switch(s16_counter) {
-    case 1: {s16_g1.animate({"opacity":"1"}, 375, mina.linear); s16_counter++; break};
-    case 2: {s16_g1.animate({"opacity":"0"}, 250, mina.linear); s16_g2.animate({"opacity":"1"}, 375, mina.linear); s16_counter++; break};
+var s17_counter=1
+s17.click( function() {
+  switch(s17_counter) {
+    case 1: {s17_g1.animate({"opacity":"1"}, 375, mina.linear); s17_counter++; break};
+    case 2: {s17_g1.animate({"opacity":"0"}, 250, mina.linear); s17_g2.animate({"opacity":"1"}, 375, mina.linear); s17_counter++; break};
     }
 } );
 

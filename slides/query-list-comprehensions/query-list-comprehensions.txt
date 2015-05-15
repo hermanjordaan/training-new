@@ -181,7 +181,7 @@ var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkr
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
 s2.rect(10,10,1090,250).addClass("rect_code")
-s2.text(540,150,"mnesia:transaction(fun() -> qlc:eval(Query) end).").addClass("code").attr({"text-anchor":"middle"});
+s2.text(540,150,"mnesia:transaction(fun() -> qlc:eval(Query) end).").addClass("code middle");
 
 s2_g1 = s2.g(s2.text(420,50,"Query Evaluator").addClass("darkred"),
              s2.path("M530,65 l130,50").addClass("line_darkred").attr({"marker-end":marker}));
@@ -245,7 +245,7 @@ var arrow = s3.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkr
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
 s3.rect(10,10,1090,250).addClass("rect_code")
-s3.text(540,150,"mnesia:transaction(fun() -> qlc:cursor(Query) end).").addClass("code").attr({"text-anchor":"middle"});
+s3.text(540,150,"mnesia:transaction(fun() -> qlc:cursor(Query) end).").addClass("code middle");
 
 s3_g1 = s3.g(s3.text(438,50,"Query Cursor").addClass("darkred"),
              s3.path("M530,65 l130,50").addClass("line_darkred").attr({"marker-end":marker}));

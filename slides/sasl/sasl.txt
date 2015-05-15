@@ -289,8 +289,8 @@ var s1 = Snap("#report_browser_1");
 var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s1.text(290,30,"For help on the fly,").addClass("darkred").attr({"text-anchor":"middle"});;
-s1.text(290,65,"use rb:help()").addClass("darkred").attr({"text-anchor":"middle"});;
+s1.text(290,30,"For help on the fly,").addClass("darkred middle");
+s1.text(290,65,"use rb:help()").addClass("darkred middle");
 s1.path("M140,40 c-40,-5 -80,10 -120,10").addClass("line_darkred").attr({"marker-end":marker});
 
 </script>

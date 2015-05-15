@@ -208,8 +208,8 @@ s1.text(15,440,"                 [{attributes,").addClass("code
 s1.text(15,480,"                   record_info(fields, employee)}|Opts]),").addClass("code");
 s1.text(15,520,"  ...").addClass("code");
 
-s1.text(800,200,"Assumes the call is made").addClass("darkred").attr({"text-anchor":"middle"});
-s1.text(800,235,"from the O&M node").addClass("darkred").attr({"text-anchor":"middle"});
+s1.text(800,200,"Assumes the call is made").addClass("darkred middle");
+s1.text(800,235,"from the O&M node").addClass("darkred middle");
 
 s1.path("M760,245 l-20,40").addClass("line_darkred").attr({"marker-end":marker});
 
@@ -428,12 +428,12 @@ var s2 = Snap("#transactions_example_1");
 var arrow = s2.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0').addClass("darkred");
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s2.text(330,40,"Manager").addClass("darkred bold").attr({"text-anchor":"middle"});
+s2.text(330,40,"Manager").addClass("darkred bold middle");
 s2.text(100,80,"[Rec] = mnesia:read({employee, 2}),").addClass("code");
 s2.text(100,120,"NewPay= 100 + Rec#employee.salary,").addClass("code");
 s2.text(100,160,"mnesia:write(Rec#employee{salary = NewPay}).").addClass("code");
 
-s2.text(330,440,"CEO").addClass("darkred bold").attr({"text-anchor":"middle"});
+s2.text(330,440,"CEO").addClass("darkred bold middle");
 s2.text(100,480,"[Rec] = mnesia:read({employee, 2}),").addClass("code");
 s2.text(100,520,"NewPay= 150 + Rec#employee.salary,").addClass("code");
 s2.text(100,560,"mnesia:write(Rec#employee{salary = NewPay}).").addClass("code");
@@ -442,11 +442,11 @@ s2_c1 = s2.circle(70,80,14).addClass("shape darkred").addClass("hide");
 s2_c2 = s2.circle(70,480,14).addClass("shape darkred").addClass("hide");
 
 s2_r1 = s2.g(s2.rect(860,200,100,62,15).addClass("shape darkred"),
-             s2.text(910,242,"0").addClass("white").attr({"text-anchor":"middle"}));
+             s2.text(910,242,"0").addClass("white middle"));
 s2_r2 = s2.g(s2.rect(860,270,100,62,15).addClass("shape darkred"),
-             s2.text(910,312,"100").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+             s2.text(910,312,"100").addClass("white middle")).addClass("hide");
 s2_r3 = s2.g(s2.rect(860,340,100,62,15).addClass("shape darkred"),
-             s2.text(910,382,"150").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+             s2.text(910,382,"150").addClass("white middle")).addClass("hide");
 
 s2_p1 = s2.path("M910,190 Q900,60 725,75").addClass("line_darkred").attr({"marker-end":marker}).addClass("hide");
 s2_p2 = s2.path("M970,230 C1050,230 1060,410  980,450  C950,470 800,475 740,470").addClass("line_darkred").attr({"marker-end":marker}).addClass("hide");
@@ -547,11 +547,11 @@ s3_p3 = s3.path("M290,120 Q130,110 85,145").addClass("line").attr({"marker-end":
 s3_p4 = s3.path("M75,170 Q190,200 280,175").addClass("line").attr({"marker-end":marker}).addClass("hide");
 
 s3_r1 = s3.g(s3.rect(300,20,96,56,15).addClass("shape darkred"),
-             s3.text(347,60,"0").addClass("white").attr({"text-anchor":"middle"}));
+             s3.text(347,60,"0").addClass("white middle"));
 s3_r2 = s3.g(s3.rect(300,83,96,56,15).addClass("shape darkred"),
-             s3.text(347,123,"100").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+             s3.text(347,123,"100").addClass("white middle")).addClass("hide");
 s3_r3 = s3.g(s3.rect(300,146,96,56,15).addClass("shape darkred"),
-             s3.text(347,186,"150").addClass("white").attr({"text-anchor":"middle"})).addClass("hide");
+             s3.text(347,186,"150").addClass("white middle")).addClass("hide");
 
 s3_anim1 = function() {s3_c1.animate({"opacity":"1"}, 375, mina.linear);
                        s3_c2.animate({"opacity":"1"}, 375, mina.linear)};
@@ -734,8 +734,8 @@ s4.text(20,170,"[]").addClass("code");
 s4.text(20,210,"21> employee:manages(1).").addClass("code");
 s4.text(20,250,"[\"KI/ES\"]").addClass("code");
 
-s4.text(800,220,"Note the execution outside").addClass("darkred").attr({"text-anchor":"middle"});
-s4.text(800,255,"the scope of a transaction").addClass("darkred").attr({"text-anchor":"middle"});
+s4.text(800,220,"Note the execution outside").addClass("darkred middle");
+s4.text(800,255,"the scope of a transaction").addClass("darkred middle");
 
 s4.path("M870,180 Q910,65 810,40").addClass("line_darkred").attr({"marker-end":marker});
    
@@ -799,12 +799,12 @@ s5.text(10,360,"#Fun&lt;erl_eval.19.280769&gt;").addClass("code");
 s5.text(10,400,"25> mnesia:transaction(F).").addClass("code darkred bold");
 s5.text(10,440,"{atomic,[{manages,\"KI/ES\",1}]}").addClass("code");
 
-s5_g1 = s5.g(s5.text(930,30,"Executing outside").addClass("darkred").attr({"text-anchor":"middle"}),
-             s5.text(930,65,"of a transaction").addClass("darkred").attr({"text-anchor":"middle"}),
+s5_g1 = s5.g(s5.text(930,30,"Executing outside").addClass("darkred middle"),
+             s5.text(930,65,"of a transaction").addClass("darkred middle"),
              s5.path("M930,80 Q930,200 770,205").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
-s5_g2 = s5.g(s5.text(870,410,"Tuple representation").addClass("darkred").attr({"text-anchor":"middle"}),
-             s5.text(870,445,"of records").addClass("darkred").attr({"text-anchor":"middle"}),
+s5_g2 = s5.g(s5.text(870,410,"Tuple representation").addClass("darkred middle"),
+             s5.text(870,445,"of records").addClass("darkred middle"),
              s5.path("M750,435 485,400").addClass("line_darkred").attr({"marker-end":marker})).addClass("hide");
 
 s5.click(function() {s5_g1.animate({"opacity":"1"}, 500, mina.linear), 1500;
