@@ -429,7 +429,9 @@ Roster and Presence
 ++++
 <div style="position:relative; top:-115px; left:-35px;">
 <svg id="roster_and_presence_1" style="width:1000px; height:400px;" viewBox="0 0 1000 400" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#roster_and_presence_1 .code {font-size:19pt;}</style>
+<style type="text/css">
+  #roster_and_presence_1 .code {font-size:19pt;}
+</style>
 <script>
 
 s6 = Snap("#roster_and_presence_1");

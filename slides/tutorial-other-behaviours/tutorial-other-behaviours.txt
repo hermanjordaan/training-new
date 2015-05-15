@@ -68,7 +68,9 @@ Finite-State Machines
 ++++
 <div class="centre">
 <svg id="fsm_2" style="width:870; height:440px;" viewBox="0 0 870 440" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}</style>
+<style type="text/css">
+	#fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}
+</style>
 <script>
 
 var s2 = Snap("#fsm_2");

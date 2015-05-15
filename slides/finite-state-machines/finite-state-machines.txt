@@ -76,7 +76,9 @@ Finite-State Machines
 ++++
 <div class="centre">
 <svg id="fsm_2" style="width:870; height:440px;" viewBox="0 0 870 440" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}</style>
+<style type="text/css">
+  #fsm_2 .line2 {stroke-width: 3; fill: none; stroke: #4B5056;}
+</style>
 <script>
 
 var s2 = Snap("#fsm_2");
@@ -241,7 +243,9 @@ init() ->
 
 <div style="position:relative; top:-240pt; left:480pt;">
 <svg id="fsm_example_1" style="width:490; height:180px;" viewBox="0 0 490 180" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_example_1 text, #fsm_example_1 text.code {font-size: 18pt;}</style>
+<style type="text/css">
+  #fsm_example_1 text, #fsm_example_1 text.code {font-size: 18pt;}
+</style>
 <script>
 
 var s5 = Snap("#fsm_example_1");
@@ -305,7 +309,11 @@ select() ->
 
 <div style="position:relative; top:-375pt; left:600pt;">
 <svg id="fsm_example_2" style="width:360px; height:400px;" viewBox="0 0 360 400" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_example_2 text {font-size: 18pt;} #fsm_example_2 text.code {font-size: 16pt;} #fsm_example_2 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #fsm_example_2 text {font-size: 18pt;}
+  #fsm_example_2 text.code {font-size: 16pt;}
+  #fsm_example_2 .line {stroke-width:2;}
+</style>
 <script>
 
 var s6 = Snap("#fsm_example_2");
@@ -354,7 +362,11 @@ FSM Example
 
 <div style="position:relative; top:-505pt; left:500pt;">
 <svg id="fsm_example_3" style="width:480px; height:280px;" viewBox="0 0 480 280" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_example_3 text {font-size: 18pt;} #fsm_example_3 text.code {font-size: 16pt;} #fsm_example_3 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #fsm_example_3 text {font-size: 18pt;}
+  #fsm_example_3 text.code {font-size: 16pt;}
+  #fsm_example_3 .line {stroke-width:2;}
+</style>
 <script>
 
 var s7 = Snap("#fsm_example_3");
@@ -406,7 +418,11 @@ FSM Example
 
 <div style="position:relative; top:-420pt; left:500pt;">
 <svg id="fsm_example_4" style="width:410px; height:210px; background-color:;" viewBox="0 0 410 210" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_example_4 text {font-size: 18pt;} #fsm_example_4 text.code {font-size: 16pt;} #fsm_example_4 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #fsm_example_4 text {font-size: 18pt;}
+  #fsm_example_4 text.code {font-size: 16pt;}
+  #fsm_example_4 .line {stroke-width:2;}
+</style>
 <script>
 
 var s8 = Snap("#fsm_example_4");
@@ -451,7 +467,11 @@ end.
 
 <div style="position:relative; top:-393pt; left:600pt;">
 <svg id="fsm_example_5" style="width:380px; height:400px; background-color:;" viewBox="0 0 380 400" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#fsm_example_5 text {font-size: 18pt;} #fsm_example_5 text.code {font-size: 16pt;} #fsm_example_5 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #fsm_example_5 text {font-size: 18pt;}
+  #fsm_example_5 text.code {font-size: 16pt;}
+  #fsm_example_5 .line {stroke-width:2;}
+</style>
 <script>
 
 var s9 = Snap("#fsm_example_5");
@@ -726,7 +746,11 @@ select(_Other, LoopData) ->
 
 <div style="position:relative; top:-375pt; left:600pt;">
 <svg id="sending_events_asynchronous_2" style="width:360px; height:400px;" viewBox="0 0 360 400" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#sending_events_asynchronous_2 text {font-size: 18pt;} #sending_events_asynchronous_2 text.code {font-size: 16pt;} #sending_events_asynchronous_2 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #sending_events_asynchronous_2 text {font-size: 18pt;}
+  #sending_events_asynchronous_2 text.code {font-size: 16pt;}
+  #sending_events_asynchronous_2 .line {stroke-width:2;}
+</style>
 <script>
 
 var s13 = Snap("#sending_events_asynchronous_2");
@@ -774,7 +798,11 @@ payment({pay, Coin}, {Type,Price,Paid})
 ++++
 <div style="position:relative; top:-300pt; left:580pt;">
 <svg id="sending_events_asynchronous_3" style="width:315px; height:270px;" viewBox="0 0 315 270" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#sending_events_asynchronous_3 text {font-size: 18pt;} #sending_events_asynchronous_3 text.code {font-size: 16pt;} #sending_events_asynchronous_3 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #sending_events_asynchronous_3 text {font-size: 18pt;}
+  #sending_events_asynchronous_3 text.code {font-size: 16pt;}
+  #sending_events_asynchronous_3 .line {stroke-width:2;}
+</style>
 <script>
 
 var s14 = Snap("#sending_events_asynchronous_3");
@@ -821,7 +849,11 @@ payment(_Other, LoopData) ->
 ++++
 <div style="position:relative; top:-200pt; left:280pt;">
 <svg id="sending_events_asynchronous_4" style="width:410px; height:210px; background-color:;" viewBox="0 0 410 210" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#sending_events_asynchronous_4 text {font-size: 18pt;} #sending_events_asynchronous_4 text.code {font-size: 16pt;} #sending_events_asynchronous_4 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #sending_events_asynchronous_4 text {font-size: 18pt;}
+  #sending_events_asynchronous_4 text.code {font-size: 16pt;}
+  #sending_events_asynchronous_4 .line {stroke-width:2;}
+</style>
 <script>
 
 var s15 = Snap("#sending_events_asynchronous_4");
@@ -864,7 +896,11 @@ remove(_Other, LoopData) ->
 
 <div style="position:relative; top:-350pt; left:525pt;">
 <svg id="sending_events_asynchronous_5" style="width:380px; height:400px; background-color:;" viewBox="0 0 380 400" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#sending_events_asynchronous_5 text {font-size: 18pt;} #sending_events_asynchronous_5 text.code {font-size: 16pt;} #sending_events_asynchronous_5 .line {stroke-width:2;}</style>
+<style type="text/css">
+  #sending_events_asynchronous_5 text {font-size: 18pt;}
+  #sending_events_asynchronous_5 text.code {font-size: 16pt;}
+  #sending_events_asynchronous_5 .line {stroke-width:2;}
+</style>
 <script>
 
 var s16 = Snap("#sending_events_asynchronous_5");

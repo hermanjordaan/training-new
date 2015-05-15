@@ -45,9 +45,9 @@ More on Processes: *process skeleton*
 ++++
 <svg id="process_skeleton" style="width:1020px; height:620px;" viewBox="0 0 1020 620" preserveAspectRatio="xMinYMin meet">
 <style type="text/css">
-    .text {fill:#fff; font-size:20pt;}
-    .grey {fill:#959595;}
-    .code {font-size: 20pt;}
+    #process_skeleton .text {fill:#fff; font-size:20pt;}
+    #process_skeleton .grey {fill:#959595;}
+    #process_skeleton .code {font-size: 20pt;}
 </style>
 <script>
 

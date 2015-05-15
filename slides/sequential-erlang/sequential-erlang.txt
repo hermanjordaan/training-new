@@ -28,7 +28,9 @@ Conditional Evaluation: *case*
 ------------------------------
 ++++
 <svg id="conditional_evaluation_case_1" style="height:600px; width:1000px;">
-<style type="text/css">.line {stroke: #860404;}</style>
+<style type="text/css">
+  #conditional_evaluation_case_1 .line {stroke: #860404;}
+</style>
 <script>
 
 var s1 = Snap("#conditional_evaluation_case_1");
@@ -222,7 +224,9 @@ Conditional Evaluation: *if*
 
 ++++
 <svg id="conditional_evaluation_if_1" style="height:550px; width:900px;">
-<style type="text/css">.line {stroke: #860404;}</style>
+<style type="text/css">
+  #conditional_evaluation_if_1 .line {stroke: #860404;}
+</style>
 <script>
 
 var s2 = Snap("#conditional_evaluation_if_1");
@@ -601,7 +605,9 @@ Built-in Functions: *meta calls*
 ++++
 <div class="pre">
 <svg id="built_in_functions_meta_calls_1" style="height:500px; width:1010px;">
-<style type="text/css">.line {stroke: #860404;}</style>
+<style type="text/css">
+  #built_in_functions_meta_calls_1 .line {stroke: #860404;}
+</style>
 <script>
 
 var s3 = Snap("#built_in_functions_meta_calls_1");
@@ -722,7 +728,9 @@ image::images/debugger_1.png[Debugger, 660, auto]
 ++++
 <div style="margin-top:-150px; margin-left:800px;">
 <svg id="debugger_1" style="height:240px; width:240px;">
-<style type="text/css">.text {fill:#fff; font-size:20pt;}</style>
+<style type="text/css">
+  #debugger_1 .text {fill:#fff; font-size:20pt;}
+</style>
 <script>
 
 var s4 = Snap("#debugger_1");
@@ -1023,7 +1031,9 @@ Throw
 <div class="left">
 <div class="pre">
 <svg id="throw_1" style="height:400px; width:435px; margin-left:20px; margin-top:10px;">
-<style type="text/css">.text {fill:#fff; font-size:17pt;}</style>
+<style type="text/css">
+  #throw_1 .text {fill:#fff; font-size:17pt;}
+</style>
 <script>
 
 var s5 = Snap("#throw_1");

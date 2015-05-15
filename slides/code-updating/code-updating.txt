@@ -54,7 +54,10 @@ Software Upgrade: *example*
 ---------------------------
 ++++
 <svg id="software_upgrade_example_1" style="width:1090px; height:640px;" viewBox="0 0 1090 640" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">.pt17 {font-size:17pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<style type="text/css">
+  #software_upgrade_example_1 .pt17 {font-size:17pt !important;}
+  #software_upgrade_example_1 .server {stroke-width:2; fill:#fff; stroke:#000;}
+</style>
 <script>
 
 var s1 = Snap("#software_upgrade_example_1");
@@ -113,7 +116,10 @@ Software Upgrade: *example*
 ---------------------------
 ++++
 <svg id="software_upgrade_example_2" style="width:1090px; height:640px;" viewBox="0 0 1090 640" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">.pt17 {font-size:17pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<style type="text/css">
+  #software_upgrade_example_2 .pt17 {font-size:17pt !important;}
+  #software_upgrade_example_2 .server {stroke-width:2; fill:#fff; stroke:#000;}
+</style>
 <script>
 
 var s2 = Snap("#software_upgrade_example_2");
@@ -192,7 +198,10 @@ Software Upgrade: *example*
 ---------------------------
 ++++
 <svg id="software_upgrade_example_3" style="width:1090px; height:640px;" viewBox="0 0 1090 640" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">.pt17 {font-size:17pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<style type="text/css">
+  #software_upgrade_example_3 .pt17 {font-size:17pt !important;}
+  #software_upgrade_example_3 .server {stroke-width:2; fill:#fff; stroke:#000;}
+</style>
 <script>
 
 var s3 = Snap("#software_upgrade_example_3");
@@ -349,7 +358,11 @@ Software Upgrade: *example*
 ---------------------------
 ++++
 <svg id="software_upgrade_example_4" style="width:1000px; height:640px;" viewBox="0 0 1000 640" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">.pt20 {font-size:20pt !important;} .pt18 {font-size:18pt !important;} .server {stroke-width:2; fill:#fff; stroke:#000;}</style>
+<style type="text/css">
+  #software_upgrade_example_4 .pt20 {font-size:20pt !important;}
+  #software_upgrade_example_4 .pt18 {font-size:18pt !important;}
+  #software_upgrade_example_4 .server {stroke-width:2; fill:#fff; stroke:#000;}
+</style>
 <script>
 
 var s4 = Snap("#software_upgrade_example_4");

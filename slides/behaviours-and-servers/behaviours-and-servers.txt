@@ -630,7 +630,10 @@ Termination
 -----------
 ++++
 <svg id="termination_1" style="width:1000px; height:600px;" viewBox="0 0 1000 600" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#termination_1 .line2 {stroke: #4B5056;} .fill2 {fill: #4B5056;}</style>
+<style type="text/css">
+    #termination_1 .line2 {stroke: #4B5056;}
+    #termination_1 .fill2 {fill: #4B5056;}
+</style>
 <script>
 
 var s8 = Snap("#termination_1");
@@ -708,7 +711,10 @@ Termination
 -----------
 ++++
 <svg id="termination_2" style="width:1000px; height:420px;" viewBox="0 0 1000 420" preserveAspectRatio="xMinYMin meet">
-<style type="text/css">#termination_2 .line2 {stroke: #4B5056;} .fill2 {fill: #4B5056;}</style>
+<style type="text/css">
+    #termination_2 .line2 {stroke: #4B5056;}
+    #termination_2 .fill2 {fill: #4B5056;}
+</style>
 <script>
 
 var s9 = Snap("#termination_2");

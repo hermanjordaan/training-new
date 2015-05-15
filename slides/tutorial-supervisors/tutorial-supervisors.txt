@@ -345,7 +345,9 @@ Generic Supervisors: *restart strategy*
 ---------------------------------------
 ++++
 <svg id="generic_supervisors_restart_strategy_1" style="width:600px; height:620px;" viewBox="0 0 600 620" preserveAspectRatio="xMinYMin meet" class="left">
-<style type="text/css">#generic_supervisors_restart_strategy_1 text.darkred {font-size: 24pt;}</style>
+<style type="text/css">
+	#generic_supervisors_restart_strategy_1 text.darkred {font-size: 24pt;}
+</style>
 <script>
 
 var s6 = Snap("#generic_supervisors_restart_strategy_1");

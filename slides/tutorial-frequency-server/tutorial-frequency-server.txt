@@ -254,7 +254,9 @@ Finite State Machines
 ---------------------
 ++++
 <svg id="finite_state_machines_1" style="width:580px; height:400px; margin-right:50pt;" viewBox="0 0 580 400" preserveAspectRatio="xMinYMin meet" class="left">
-<style type="text/css">svg {font-size:20pt;}</style>
+<style type="text/css">
+  svg#finite_state_machines_1 {font-size:20pt;}
+</style>
 <script>
 
 var s4 = Snap("#finite_state_machines_1");

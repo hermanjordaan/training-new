@@ -121,7 +121,7 @@ Starting Applications
 ++++
 <svg id="starting_applications_1" style="height:430px; width:1120px;" viewBox="0 0 1120 450">
 <style type="text/css">
-  .lightgrey {fill:#a9a9a9;}
+  #starting_applications_1 .lightgrey {fill:#a9a9a9;}
 </style>
 <script>
 
@@ -206,7 +206,7 @@ Stopping Applications
 ++++
 <svg id="stopping_applications_1" style="height:430px; width:1120px;" viewBox="0 0 1120 450">
 <style type="text/css">
-  .lightgrey {fill:#a9a9a9;}
+  #stopping_applications_1 .lightgrey {fill:#a9a9a9;}
 </style>
 <script>
 
@@ -281,7 +281,7 @@ Application Files: *structure*
 ++++
 <svg id="application_files_structure_1" style="height:300px; width:930;">
 <style type="text/css">
-  .lightgrey {fill:#e7e7e7;}
+  #application_files_structure_1 .lightgrey {fill:#e7e7e7;}
 </style>
 <script>
 

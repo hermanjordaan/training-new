@@ -900,8 +900,8 @@ Timeouts
 ++++
 <svg id="timeouts_2" style="width:640px; height:640px;" viewBox="0 0 640 640" preserveAspectRatio="xMinYMin meet" class="left">
 <style type="text/css">
-    .msgtext {fill:#fff; font-size:16pt;}
-    .msgrect {fill:#888;}
+    #timeouts_2 .msgtext {fill:#fff; font-size:16pt;}
+    #timeouts_2 .msgrect {fill:#888;}
 </style>
 <script>
 
@@ -986,9 +986,9 @@ More on Processes: *process skeleton*
 ++++
 <svg id="process_skeleton" style="height:600px; width:1020px;" class="left">
 <style type="text/css">
-    .text {fill:#fff; font-size:20pt;}
-    .grey {fill:#959595;}
-    .code {font-size: 20pt;}
+    #process_skeleton .text {fill:#fff; font-size:20pt;}
+    #process_skeleton .grey {fill:#959595;}
+    #process_skeleton .code {font-size: 20pt;}
 </style>
 <script>
 
@@ -1064,7 +1064,7 @@ The Process Manager
 ++++
 <svg id="process_manager_1" style="height:500px; width:1020px;" class="left">
 <style type="text/css">
-    .text {fill:#fff; font-size:20pt;}
+    #process_manager_1 .text {fill:#fff; font-size:20pt;}
 </style>
 <script>
 
