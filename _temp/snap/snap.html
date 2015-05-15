@@ -37,50 +37,29 @@
 	</svg>
 </div>
 
+<div class="reveal">
 
 <!--
-img src="Untitled.png" style="width:400px; height:auto; position:absolute; top:10px; left:5px; z-index:-1; opacity:0.5" />
+<img src="Untitled.png" style="width:400px; height:auto; position:absolute; top:10px; left:5px; z-index:-1; opacity:0.5" />
 <style type="text/css">text {font-size: 18pt;} text.code {font-size: 16pt;} .line {stroke-width:2;}</style>
+<p><a href="">link</a></p>
 -->
 
+<!-- <img src="Untitled.png" style="width:1080px; height:auto; position:absolute; top:-11.5px; left:24px; z-index:-1; opacity:0.5" /> -->
 
-<svg id="sending_events_asynchronous_1" style="width:1100px; height:360px;" viewBox="0 0 1100 360" preserveAspectRatio="xMinYMin meet">
+
+<svg id="example" style="width:1100px; height:650px;" viewBox="0 0 1100 650" preserveAspectRatio="xMinYMin meet">
 <script>
 
-var s12 = Snap("#sending_events_asynchronous_1");
+var s1 = Snap("#example");
 
-var arrow = s12.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var arrow = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
 var marker = arrow.marker(-6, -6, 12, 12).attr({"markerWidth":"6"});
 
-s12.text(40,40,"gen_fsm:send_event(Name, Event)").addClass("code");
-s12.circle(300,120,40).addClass("shape grey");
-s12.text(740,115,"Name");
-s12.circle(680,120,40).addClass("shape darkred");
+var arrow_red = s1.polygon([-2,0, -5,5, 5,0, -5,-5]).transform('r0');
+var marker_red = arrow_red.marker(-6, -6, 12, 12).attr({"markerWidth":"6"}).addClass("darkred");
 
-s12_g1 = s12.g(s12.path("M595,30 l50,0").addClass("line").attr({"marker-end":marker}),
-               s12.text(670,40,"ok").addClass("code"),
-               s12.text(450,110,"Event"),
-               s12.path("M357,120 l263,0").addClass("line").attr({"marker-end":marker})).addClass("hide");
-
-s12_g2 = s12.text(460,200,"Mod:State(Event, LoopData)").addClass("code hide");
-
-s12_g3 = s12.path("M680,210 l0,40").attr({"marker-end":marker}).addClass("line hide");
-
-s12_g4 = s12.g(s12.text(365,290,"{next_state, NextState, NewLoopData}").addClass("code"),
-               s12.text(365,325,"{stop, Reason, NewLoopData}").addClass("code")).addClass("hide");
-
-s12_anim1 = function() { s12_g1.animate({"opacity":"1"}, 500, mina.linear, s12_anim2) };
-s12_anim2 = function() { s12_g2.animate({"opacity":"1"}, 500, mina.linear) };
-s12_anim3 = function() { s12_g3.animate({"opacity":"1"}, 500, mina.linear, s12_anim4) };
-s12_anim4 = function() { s12_g4.animate({"opacity":"1"}, 500, mina.linear) };
-
-var s12_counter=1
-s12.click( function() {
-  switch(s12_counter) {
-    case 1: {s12_anim1(); s12_counter++; break};
-    case 2: {s12_anim3(); s12_counter++; break};
-    }
-} );
+// Everything goes here
 
 </script>
 </svg>
