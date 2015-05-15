@@ -390,7 +390,6 @@ If Erlang Express, jump over this section.
 
 Event Handlers: *example*
 -------------------------
-
 image::images/event_handlers.png["Event Handlers: Example", auto, auto]
 
 * Alarm managers are implemented as event handlers

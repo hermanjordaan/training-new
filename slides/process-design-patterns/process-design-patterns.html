@@ -82,25 +82,30 @@ s3.text(955,80,"Server").addClass("darkred");
 s3.path("M1000,100 l0,440").attr({"marker-end":marker_red}).addClass("line_darkred").attr({"stroke-width":"5px"});
 
 s3_g1 = s3.text(150,150,"{request, Pid, allocate}").addClass("code hide");
-s3_g2 = s3.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line hide");
+s3.path("M90,170 l880,0").attr({"marker-end":marker}).addClass("line");
+s3_g2 = s3.path("M980,170 l-900,0").addClass("draw").attr({"strokeDasharray":900});
+
 
 s3_g3 = s3.text(110,230,"{reply,{error,no_frequencies} or {ok,Frequency}}").addClass("code hide");
-s3_g4 = s3.path("M965,250 l-870,0").attr({"marker-end":marker}).addClass("line hide");
+s3.path("M965,250 l-870,0").attr({"marker-end":marker}).addClass("line");
+s3_g4 = s3.path("M85,250 l900,0").addClass("draw").attr({"strokeDasharray":900});
 
 s3_g5 = s3.text(120,360,"{request, Pid, {deallocate, Frequency}}").addClass("code hide");
-s3_g6 = s3.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line hide");
+s3.path("M90,380 l880,0").attr({"marker-end":marker}).addClass("line");
+s3_g6 = s3.path("M980,380 l-900,0").addClass("draw").attr({"strokeDasharray":900});
 
-s3_g7 = s3.text(120,440,"{reply, ok}").addClass("code hide");
-s3_g8 = s3.path("M965,460 l-870,0").attr({"marker-end":marker}).addClass("line hide");
+s3_g7 = s3.text(750,440,"{reply, ok}").addClass("code hide");
+s3.path("M965,460 l-870,0").attr({"marker-end":marker}).addClass("line");
+s3_g8 = s3.path("M85,460 l900,0").addClass("draw").attr({"strokeDasharray":900});
 
-s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 400, mina.linear, s3_anim2); }
-s3_anim2 = function() { s3_g2.animate({"opacity":"1"}, 800, mina.linear, s3_anim3); }
-s3_anim3 = function() { s3_g3.animate({"opacity":"1"}, 400, mina.linear, s3_anim4); }
-s3_anim4 = function() { s3_g4.animate({"opacity":"1"}, 800, mina.linear, s3_anim5); }
-s3_anim5 = function() { s3_g5.animate({"opacity":"1"}, 400, mina.linear, s3_anim6); }
-s3_anim6 = function() { s3_g6.animate({"opacity":"1"}, 800, mina.linear, s3_anim7); }
-s3_anim7 = function() { s3_g7.animate({"opacity":"1"}, 400, mina.linear, s3_anim8); }
-s3_anim8 = function() { s3_g8.animate({"opacity":"1"}, 800, mina.linear); }
+s3_anim1 = function() { s3_g1.animate({"opacity":"1"}, 375, mina.linear, s3_anim2); }
+s3_anim2 = function() { s3_g2.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim3); }
+s3_anim3 = function() { setTimeout( function() { s3_g3.animate({"opacity":"1"}, 375, mina.linear, s3_anim4)}, 250) };
+s3_anim4 = function() { s3_g4.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim5); }
+s3_anim5 = function() { setTimeout( function() { s3_g5.animate({"opacity":"1"}, 375, mina.linear, s3_anim6)}, 250) };
+s3_anim6 = function() { s3_g6.animate({"strokeDashoffset":"900"}, 625, mina.linear, s3_anim7); }
+s3_anim7 = function() { setTimeout( function() { s3_g7.animate({"opacity":"1"}, 375, mina.linear, s3_anim8)}, 250) };
+s3_anim8 = function() { s3_g8.animate({"strokeDashoffset":"900"}, 625, mina.linear); }
 s3.click(function() { s3_anim1() });
 
 </script>
@@ -236,7 +241,8 @@ s4.click( function() {
 <aside class="notes"><div class="paragraph"><p>If Erlang Express, jump over this section.</p></div></aside></section>
 <section id="_event_handlers"><h2>Event Handlers</h2><div class="ulist"><ul><li><p>Processes can be used to implement event handlers</p></li><li><p>A handler will receive a specific type of event</p><div class="ulist"><ul><li><p>Alarms</p></li><li><p>Equipment state changes</p></li><li><p>Errors</p></li></ul></div></li><li><p>When an event is received, one or more functions are applied on the event</p></li><li><p>Some or all of these actions can be enabled and disabled during run time</p></li></ul></div>
 <aside class="notes"><div class="paragraph"><p>If Erlang Express, jump over this section.</p></div></aside></section>
-<section id="_event_handlers_strong_example_strong"><h2>Event Handlers: <strong>example</strong></h2><div class="ulist"><ul><li><p>Alarm managers are implemented as event handlers</p></li></ul></div>
+<section id="_event_handlers_strong_example_strong"><h2>Event Handlers: <strong>example</strong></h2><div class="imageblock" style=""><div class="content"><img src="images/event_handlers.png" alt="Event Handlers: Example" width="auto" height="auto"></div></div>
+<div class="ulist"><ul><li><p>Alarm managers are implemented as event handlers</p></li></ul></div>
 <aside class="notes"><div class="paragraph"><p>If Erlang Express, jump over this section.</p></div></aside></section>
 <section id="_process_design_patterns_2"><h2>Process Design Patterns</h2><div class="ulist"><ul><li><p>Client Server Models</p></li><li><p>A Server Example</p></li><li><p>Finite State Machines</p></li><li><p>Event Handlers</p></li></ul></div></section></div></div><script src="reveal.js/lib/js/head.min.js"></script><script src="reveal.js/js/reveal.min.js"></script><script type="text/javascript">// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
 Reveal.initialize({
